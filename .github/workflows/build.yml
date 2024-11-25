@@ -50,9 +50,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: npx sonar-scanner \-Dsonar.projectKey=SE2-Group08_KirunaExplorer \-Dsonar.organization=SE2-Group08 \-Dsonar.host.url=https://sonarcloud.io/
 
-      - name: Upload Surefire reports
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: surefire-reports
-          path: backend/target/surefire-reports
+          #- name: Upload Surefire reports
+          #if: always()
+          #uses: actions/upload-artifact@v3
+          #with:
+          #name: surefire-reports
+        #path: backend/target/surefire-reports
