@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
-import { Container, Row, Col, Card, Button, Table } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Table, Spinner } from "react-bootstrap";
 import "../App.css";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
@@ -163,7 +163,11 @@ export default function ListDocuments() {
         </Col>
       </Row>
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
-        {compactView ? (
+        {documents.length === 0 ? (
+          <Spinner animation="border" role="status" className="mx-auto">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        ) : compactView ? (
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
               documents={documents}
