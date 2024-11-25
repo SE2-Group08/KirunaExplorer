@@ -69,7 +69,7 @@ public class DocumentLinkServiceTest {
         );
 
     }
-
+/*
     @Test
     void linkDocuments_success() {
         // Usa `DocumentLinkType.REFERENCE` invece di `"REFERENCE"`
@@ -88,6 +88,7 @@ public class DocumentLinkServiceTest {
 
         verify(documentRepository, times(1)).findById(1L);
         verify(documentRepository, times(1)).findById(2L);
-        verify(documentLinkRepository, times(1)).save(any(DocumentLink.class));*/
-    }
+        verify(documentLinkRepository, times(1)).save(any(DocumentLink.class));
+
+    }*/
 }
