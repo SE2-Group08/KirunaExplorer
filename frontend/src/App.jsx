@@ -39,7 +39,10 @@ function App() {
                 </>
               }
             >
-              <Route path="/documents" element={<ListDocuments />} />
+              <Route
+                path="/documents"
+                element={<ListDocuments shouldRefresh={shouldRefresh} />}
+              />
               <Route path="/map" element={<Map />} />
               <Route path="/" element={<SplashPage />} />
               <Route
@@ -63,7 +66,11 @@ function App() {
             position="top-end"
             className="position-fixed end-0 m-3"
           >
-            <ToastBody>{feedback}</ToastBody>
+            <ToastBody>
+              {feedback.type === "danger" && <i className="bi bi-exclamation-circle-fill text-danger me-2"></i>}
+              {feedback.type === "success" && <i className="bi bi-check-circle-fill text-success me-2"></i>}
+              {feedback.message}
+            </ToastBody>
           </Toast>
         </Container>
         <Footer />

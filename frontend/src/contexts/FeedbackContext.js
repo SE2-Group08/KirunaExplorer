@@ -1,8 +1,9 @@
+/* eslint-disable no-unused-vars */
 import React from "react";
 
 const FeedbackContext = React.createContext({
-    setFeedback: (message) => {},
-    setFeedbackFromError: (error) => {},
+    setFeedback: ({type, message}) => {},
+    setFeedbackFromError: ({type, error}) => {},
     setShouldRefresh: (value) => {}
 });
 
