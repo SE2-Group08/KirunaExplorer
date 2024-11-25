@@ -4,7 +4,7 @@ on:
     branches:
       - dev
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
 jobs:
   build:
     name: Build and analyze
@@ -30,8 +30,22 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build and analyze
+        #- name: Build and analyze
+        #env:
+        #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        #  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=SE2-Group08_KirunaExplorer
+      - name: Run SonarCloud for Backend
+        working-directory: ./backend
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=SE2-Group08_KirunaExplorer
+
+        # Esegui l'analisi del frontend
+
+      - name: Run SonarCloud for Frontend
+        working-directory: ./frontend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: npx sonar-scanner \-Dsonar.projectKey=SE2-Group08_KirunaExplorer \-Dsonar.organization=SE2-Group08 \-Dsonar.host.url=https://sonarcloud.io/
