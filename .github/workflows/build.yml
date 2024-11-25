@@ -30,11 +30,22 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Run SonarCloud
-        working-directory: ./
+      - name: Run SonarCloud for Backend
+        working-directory: ./backend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn clean install -DskipTests
-          npx sonar-scanner
+          mvn -f pom.xml clean verify \
+            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=SE2-Group08_KirunaExplorer
+
+      - name: Run SonarCloud for Frontend
+        working-directory: ./frontend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          npx sonar-scanner \
+            -Dsonar.projectKey=SE2-Group08_KirunaExplorer \
+            -Dsonar.organization=se2-group08 \
+            -Dsonar.host.url=https://sonarcloud.io
