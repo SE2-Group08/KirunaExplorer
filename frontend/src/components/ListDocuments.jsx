@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
-import { Container, Row, Col, Card, Button, Table } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Table, Spinner } from "react-bootstrap";
 import "../App.css";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
 import LinkModal from "./LinkModal";
+import { useContext } from "react";
+import FeedbackContext from "../contexts/FeedbackContext";
 
-export default function ListDocuments() {
+export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
   const [show, setShow] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -17,14 +19,22 @@ export default function ListDocuments() {
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
 
+  const { setFeedbackFromError, setShouldRefresh, setFeedback } =
+    useContext(FeedbackContext);
+
   useEffect(() => {
-    API.getAllDocumentSnippets()
-      .then(setDocuments)
-      .catch((error) => console.error("Error fetching documents:", error));
-  }, []);
+    if (shouldRefresh) {
+      API.getAllDocumentSnippets()
+        .then(setDocuments)
+        .then(() => setShouldRefresh(false))
+        .catch((error) => setFeedbackFromError(error));
+    }
+  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
 
   const handleSelection = async (document) => {
-    const newDoc = await API.getDocumentById(document.id);
+    const newDoc = await API.getDocumentById(document.id).catch((error) =>
+      setFeedbackFromError(error)
+    );
     setSelectedDocument(newDoc);
     if (linking) {
       if (
@@ -53,22 +63,49 @@ export default function ListDocuments() {
   const handleSave = (document) => {
     API.updateDocument(document.id, document)
       .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error saving document:", error));
+      .then(() => setShouldRefresh(false))
+      .then(() =>
+        setFeedback({
+          type: "success",
+          message: "Document updated successfully",
+        })
+      )
+      .catch((error) =>
+        setFeedbackFromError(error)
+      );
     setShow(false);
+    setShouldRefresh(true);
   };
 
   const handleAdd = (document) => {
     API.addDocument(document)
       .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error adding document:", error));
+      .then(() => setShouldRefresh(false))
+      .then(() =>
+        setFeedback({ type: "success", message: "Document added successfully" })
+      )
+      .catch((error) =>
+        setFeedbackFromError(error)
+      );
     setShow(false);
+    setShouldRefresh(true);
   };
 
   const handleDelete = (documentId) => {
     API.deleteDocument(documentId)
       .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error deleting document:", error));
+      .then(() => setShouldRefresh(false))
+      .then(() =>
+        setFeedback({
+          type: "success",
+          message: "Document deleted successfully",
+        })
+      )
+      .catch((error) =>
+        setFeedbackFromError(error)
+      );
     setShow(false);
+    setShouldRefresh(true);
   };
 
   const handleLinkToClick = () => {
@@ -88,12 +125,12 @@ export default function ListDocuments() {
           API.createLink(selectedDocumentToLink, linkedDoc)
         )
       );
-      alert("Links created successfully!");
+      setFeedback({ type: "success", message: "Document linked successfully" });
+      setShouldRefresh(true);
       setLinking(false);
       setSelectedLinkDocuments([]);
     } catch (error) {
-      console.error("Error linking documents:", error);
-      alert("Failed to create links. Please try again.");
+      setFeedbackFromError(error);
     }
   };
 
@@ -178,7 +215,11 @@ export default function ListDocuments() {
         </Col>
       </Row>
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
-        {compactView ? (
+        {documents.length === 0 ? (
+          <Spinner animation="border" role="status" className="mx-auto">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        ) : compactView ? (
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
               documents={documents}
@@ -234,6 +275,7 @@ export default function ListDocuments() {
 
 ListDocuments.propTypes = {
   thinCardLayout: PropTypes.bool,
+  shouldRefresh: PropTypes.bool.isRequired,
 };
 
 function DocumentSnippetTableComponent({
