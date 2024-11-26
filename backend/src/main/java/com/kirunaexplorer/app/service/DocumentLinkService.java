@@ -38,6 +38,18 @@ public class DocumentLinkService {
         Document linkedDocument = documentRepository.findById(request.documentId())
             .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + request.documentId()));
 
+        // Check if the documents are the same
+        if (document.equals(linkedDocument)) {
+            throw new IllegalArgumentException("Cannot link a document to itself");
+        }
+
+        // Check if the link already exists
+        boolean linkExists = documentLinkRepository.existsByDocumentAndLinkedDocumentAndType(document, linkedDocument, request.type()) ||
+            documentLinkRepository.existsByDocumentAndLinkedDocumentAndType(linkedDocument, document, request.type());
+        if (linkExists) {
+            throw new IllegalArgumentException("Link between the documents already exists with the same type");
+        }
+
         // Create a new document link
         DocumentLink documentLink = new DocumentLink();
 
@@ -83,6 +95,7 @@ public class DocumentLinkService {
      * @param id Document id
      * @return List<DocumentBriefLinksResponseDTO>
      */
+    @Transactional
     public List<DocumentBriefLinksResponseDTO> getDocumentLinks(Long id) {
         // Fetch the document by id
         Document document = documentRepository.findById(id)
