@@ -4,7 +4,7 @@
     "title": "Kiruna eXplorer",
     "description": "REST APIs for the interaction with the Kiruna eXplorer service.",
     "termsOfService": "http://swagger.io/terms/",
-    "version": "0.4"
+    "version": "0.5"
   },
   "components": {
     "schemas": {
@@ -443,11 +443,11 @@
         }
       }
     },
-    "/api/v1/documents/links": {
+    "/api/v1/links": {
       "put": {
         "summary": "Update a link",
         "tags": [
-          "document"
+          "link"
         ],
         "requestBody": {
           "required": true,
@@ -483,6 +483,35 @@
         }
       }
     },
+    "/api/v1/links/{linkId}": {
+      "delete": {
+        "summary": "Delete the {linkId} link for a document",
+        "tags": [
+          "link"
+        ],
+        "parameters": [
+          {
+            "name": "linkId",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/documents/{id}/links": {
       "parameters": [
         {
@@ -497,7 +526,7 @@
       "get": {
         "summary": "Get all links of a document",
         "tags": [
-          "document"
+          "link"
         ],
         "responses": {
           "200": {
@@ -551,7 +580,7 @@
       "post": {
         "summary": "Create a new link for the {id} document",
         "tags": [
-          "document"
+          "link"
         ],
         "requestBody": {
           "required": true,
@@ -577,43 +606,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        }
-      }
-    },
-    "/api/v1/documents/{id}/links/{linkId}": {
-      "delete": {
-        "summary": "Delete the {linkId} link for a document",
-        "tags": [
-          "document"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "schema": {
-              "type": "integer"
-            },
-            "in": "path",
-            "required": true
-          },
-          {
-            "name": "linkId",
-            "schema": {
-              "type": "integer"
-            },
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No content"
           },
           "404": {
             "description": "Not found"

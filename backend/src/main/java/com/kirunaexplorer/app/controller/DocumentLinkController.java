@@ -5,6 +5,7 @@ import com.kirunaexplorer.app.dto.response.DocumentBriefLinksResponseDTO;
 import com.kirunaexplorer.app.dto.response.LinkDocumentsResponseDTO;
 import com.kirunaexplorer.app.service.DocumentLinkService;
 import com.kirunaexplorer.app.validation.groups.link.PostLink;
+import com.kirunaexplorer.app.validation.groups.link.PutLink;
 import jakarta.validation.groups.Default;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,7 +16,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/documents")
+@RequestMapping("/api/v1")
 public class DocumentLinkController {
 
     private final DocumentLinkService documentLinkService;
@@ -30,7 +31,7 @@ public class DocumentLinkController {
      * @param request LinkDocumentsRequestDTO
      * @return ResponseEntity<Void>
      */
-    @PostMapping("/{id}/links")
+    @PostMapping("/documents/{id}/links")
     public ResponseEntity<Void> linkDocuments(@PathVariable Long id, @RequestBody @Validated({Default.class, PostLink.class}) LinkDocumentsRequestDTO request) {
         LinkDocumentsResponseDTO response = documentLinkService.linkDocuments(id, request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -46,7 +47,7 @@ public class DocumentLinkController {
      * @return ResponseEntity<Void>
      */
     @PutMapping("/links")
-    public ResponseEntity<Void> updateLink(@RequestBody LinkDocumentsRequestDTO request) {
+    public ResponseEntity<Void> updateLink(@RequestBody @Validated({Default.class, PutLink.class}) LinkDocumentsRequestDTO request) {
         documentLinkService.updateLink(request);
         return ResponseEntity.noContent().build();
     }
@@ -57,7 +58,7 @@ public class DocumentLinkController {
      * @param linkId Document link id
      * @return ResponseEntity<Void>
      */
-    @DeleteMapping("/{id}/links/{linkId}")
+    @DeleteMapping("/links/{linkId}")
     public ResponseEntity<Void> deleteLink(@PathVariable Long id, @PathVariable Long linkId) {
         documentLinkService.deleteLink(id, linkId);
         return ResponseEntity.noContent().build();
@@ -68,7 +69,7 @@ public class DocumentLinkController {
      * @param id Document id
      * @return ResponseEntity<List < DocumentBriefLinksResponseDTO>>
      */
-    @GetMapping("/{id}/links")
+    @GetMapping("/documents/{id}/links")
     public ResponseEntity<List<DocumentBriefLinksResponseDTO>> getDocumentLinks(@PathVariable Long id) {
         return ResponseEntity.ok(documentLinkService.getDocumentLinks(id));
     }
