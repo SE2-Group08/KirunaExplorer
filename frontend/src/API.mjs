@@ -1,6 +1,7 @@
 import { Document, DocumentSnippet } from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
 import { DocumentType } from "./model/DocumentType.mjs";
+import { Scale } from "./model/Scale.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
 
@@ -272,6 +273,80 @@ const deleteDocumentType = async (documentTypeId) => {
 }
 
 /* ************************** *
+  *       Scale APIs      *
+  * ************************** */
+
+const scales = [
+  { id: 1, name: "Blueprint/Material effects" },
+  { id: 2, name: "Text" },
+  { id: 3, name: "1:1" },
+  { id: 4, name: "1:100" },
+  { id: 5, name: "1:1000" },
+]
+
+// Retrieve all scales
+const getAllScales = async () => {
+  const sc = [];
+  scales.forEach((s) => sc.push(Scale.fromJSON(s)));
+  sc.sort((a, b) => {
+    const isANumeric = /^\d+:\d+$/.test(a.name);
+    const isBNumeric = /^\d+:\d+$/.test(b.name);
+
+    if (!isANumeric && !isBNumeric) {
+      return a.name.localeCompare(b.name);
+    } else if (!isANumeric) {
+      return -1;
+    } else if (!isBNumeric) {
+      return 1;
+    } else {
+      const aValue = parseInt(a.name.split(":")[1], 10);
+      const bValue = parseInt(b.name.split(":")[1], 10);
+      return aValue - bValue;
+    }
+  });
+  return sc;
+}
+
+// Create a new scale
+const addScale = async (scale) => {
+  const existingScale = scales.find((s) => s.name === scale);
+  if (!existingScale) {
+    const newId = scales.length
+      ? scales[scales.length - 1].id + 1
+      : 1;
+    const newScale = { id: newId, name: scale };
+    scales.push(newScale);
+  }
+}
+
+// Retrieve a scale by id
+const getScaleById = async (scaleId) => {
+  return Scale.fromJSON(
+    scales.find((scale) => scale.id === scaleId)
+  );
+}
+
+// Update a scale given its id
+const updateScale = async (scaleId, nextScale) => {
+  const index = scales.findIndex(
+    (scale) => scale.id === scaleId
+  );
+  if (index !== -1) {
+    scales[index] = nextScale;
+  }
+}
+
+// Delete a scale given its id
+const deleteScale = async (scaleId) => {
+  const index = scales.findIndex(
+    (scale) => scale.id === scaleId
+  );
+  if (index !== -1) {
+    scales.splice(index, 1);
+  }
+}
+
+/* ************************** *
  *       Helper functions      *
  * ************************** */
 
@@ -324,24 +399,34 @@ async function mapAPISnippetsToSnippet(apiSnippets) {
 }
 
 const API = {
+  /* Document */
   getAllDocumentSnippets,
   addDocument,
   getDocumentById,
   updateDocument,
   deleteDocument,
+  /* Stakeholder */
   getAllStakeholders,
   addStakeholder,
   getStakeholderById,
   updateStakeholder,
   deleteStakeholder,
+  /* Link */
   createLink,
   getAllLinksOfDocument,
   updateLink,
   deleteLink,
+  /* Document Type */
   getAllDocumentTypes,
   addDocumentType,
   getDocumentTypeById,
   updateDocumentType,
   deleteDocumentType,
+  /* Scale */
+  getAllScales,
+  addScale,
+  getScaleById,
+  updateScale,
+  deleteScale,
 };
 export default API;

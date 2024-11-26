@@ -506,6 +506,7 @@ function DocumentFormComponent({
   ]);
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
+  const [allScales, setAllScales] = useState([]);
 
   const dayRef = useRef(null);
   const monthRef = useRef(null);
@@ -517,6 +518,9 @@ function DocumentFormComponent({
     });
     API.getAllDocumentTypes().then((documentTypes) => {
       setAllDocumentTypes(documentTypes);
+    });
+    API.getAllScales().then((scales) => {
+      setAllScales(scales);
     });
   }, []);
 
@@ -696,94 +700,59 @@ function DocumentFormComponent({
       {/* SCALE */}
       <Form.Group className="mb-3" controlId="formDocumentScale">
         <Form.Label>Scale *</Form.Label>
-        {/* Predefined Scale Options */}
-        <Form.Check
-          type="radio"
-          label="Text"
-          name="scaleOptions"
-          id="scaleText"
-          value="Text"
-          checked={document.scale === "Text"}
-          onChange={(e) => {
-            handleChange("scale", e.target.value);
-            setCustomScaleValue(""); // Clear custom scale when switching to predefined scale
-            setEnableCustomScale(false); // Disable custom scale inputs
-          }}
+        <Form.Control
+          as="select"
+          value={document.scale}
+          onChange={(e) => handleChange("scale", e.target.value)}
           isInvalid={!!errors.scale}
-        />
-        <Form.Check
-          type="radio"
-          label="Blueprint/Material effects"
-          name="scaleOptions"
-          id="scaleBlueprint"
-          value="Blueprint/Material effects"
-          checked={document.scale === "Blueprint/Material effects"}
-          onChange={(e) => {
-            handleChange("scale", e.target.value);
-            setCustomScaleValue(""); // Clear custom scale when switching to predefined scale
-            setEnableCustomScale(false); // Disable custom scale inputs
-          }}
-          isInvalid={!!errors.scale}
-        />
-        {/* Custom Scale Option */}
-        <Form.Check
-          type="radio"
-          name="scaleOptions"
-          id="scaleCustom"
-          value="Custom"
-          checked={
-            enableCustomScale ||
-            (document.scale &&
-              !["Text", "Blueprint/Material effects"].includes(document.scale))
-          }
-          onChange={() => {
-            setEnableCustomScale(true); // Enable custom scale inputs
-            handleChange("scale", customScaleValue); // Set scale to the current custom value
-          }}
-          isInvalid={!!errors.scale}
-          label={
-            <div className="d-flex align-items-center">
-              <Form.Control
-                type="number"
-                min={1}
-                value={customScaleValue.split(":")[0] || ""}
-                disabled={!enableCustomScale}
-                onChange={(e) =>
-                  setCustomScaleValue(
-                    `${e.target.value}:${customScaleValue.split(":")[1] || ""}`
-                  )
+          required
+        >
+          <option value="">Select scale</option>
+          {allScales.map((scaleOption) => (
+            <option key={scaleOption.id} value={scaleOption.name}>
+              {scaleOption.name}
+            </option>
+          ))}
+          <option value="Custom">Custom</option>
+        </Form.Control>
+        {document.scale === "Custom" && (
+          <div className="d-flex mt-2">
+            <Form.Control
+              type="text"
+              placeholder="Enter custom scale"
+              value={document.customScale || ""}
+              onChange={(e) => handleChange("customScale", e.target.value)}
+              isInvalid={!!errors.scale}
+              className="me-2"
+            />
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (
+                  document.customScale &&
+                  !allScales.some((s) => s.name === document.customScale)
+                ) {
+                  API.addScale(document.customScale).then(() => {
+                    setAllScales([
+                      ...allScales,
+                      { id: Date.now(), name: document.customScale },
+                    ]);
+                    handleChange("scale", document.customScale);
+                  });
                 }
-                onBlur={() => handleChange("scale", customScaleValue)}
-                isInvalid={!!errors.scale}
-                className="me-1"
-                style={{ width: "80px" }}
-              />
-              <span>:</span>
-              <Form.Control
-                type="number"
-                min={1}
-                value={customScaleValue.split(":")[1] || ""}
-                disabled={!enableCustomScale}
-                onChange={(e) =>
-                  setCustomScaleValue(
-                    `${customScaleValue.split(":")[0] || ""}:${e.target.value}`
-                  )
-                }
-                onBlur={() => handleChange("scale", customScaleValue)}
-                isInvalid={!!errors.scale}
-                className="ms-1"
-                style={{ width: "100px" }}
-              />
-            </div>
-          }
-        />
-        <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+              }}
+              title="Add custom scale"
+            >
+              <i className="bi bi-plus-square"></i>
+            </Button>
+          </div>
+        )}
+        <Form.Control.Feedback type="invalid">
           {errors.scale}
-        </div>
+        </Form.Control.Feedback>
       </Form.Group>
 
       <div className="divider" />
-
       {/* ISSUANCE DATE */}
       <Form.Group className="mb-3" controlId="formDocumentIssuanceDate">
         <Form.Label>Issuance Date *</Form.Label>
