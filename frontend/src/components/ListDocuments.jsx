@@ -101,7 +101,10 @@ export default function ListDocuments() {
     const allStakeholders = await API.getAllStakeholders();
     const uniqueStakeholders = [
       ...new Map(
-        document.stakeholders.map((stakeholder) => [stakeholder.name, stakeholder])
+        document.stakeholders.map((stakeholder) => [
+          stakeholder.name,
+          stakeholder,
+        ])
       ).values(),
     ];
     const newStakeholders = uniqueStakeholders.filter(

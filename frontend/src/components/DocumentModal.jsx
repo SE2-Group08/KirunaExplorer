@@ -171,16 +171,8 @@ export default function DocumentModal(props) {
         "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
     }
 
-    const validTypes = [
-      "Design document",
-      "Material effect",
-      "Technical document",
-      "Prescriptive document",
-      "Informative document",
-    ];
-    if (!validTypes.includes(document.type)) {
-      newErrors.type =
-        "Type is required and must be one of the predefined values.";
+    if (!document.type || (document.type === "Other" && !document.customType)) {
+      newErrors.type = "Type is required.";
     }
 
     if (
@@ -384,6 +376,7 @@ DocumentModal.propTypes = {
   handleAdd: PropTypes.func.isRequired,
   onLinkToClick: PropTypes.func.isRequired,
   onLinksClick: PropTypes.func.isRequired,
+  onSnippetClick: PropTypes.func.isRequired,
 };
 
 function ModalBodyComponent({ document }) {
@@ -512,16 +505,20 @@ function DocumentFormComponent({
       : defaultPosition[1],
   ]);
   const [allStakeholders, setAllStakeholders] = useState([]);
+  const [allDocumentTypes, setAllDocumentTypes] = useState([]);
 
   const dayRef = useRef(null);
   const monthRef = useRef(null);
   const yearRef = useRef(null);
 
   useEffect(() => {
-      API.getAllStakeholders().then((stakeholders) => {
-        setAllStakeholders(stakeholders);
-      });
-    }, []);
+    API.getAllStakeholders().then((stakeholders) => {
+      setAllStakeholders(stakeholders);
+    });
+    API.getAllDocumentTypes().then((documentTypes) => {
+      setAllDocumentTypes(documentTypes);
+    });
+  }, []);
 
   const handleDayChange = (e) => {
     const value = e.target.value;
@@ -634,7 +631,9 @@ function DocumentFormComponent({
             onChange={(e) => {
               const newStakeholders = e.target.checked
                 ? [...document.stakeholders, stakeholderOption.name]
-                : document.stakeholders.filter((s) => s !== stakeholderOption.name);
+                : document.stakeholders.filter(
+                    (s) => s !== stakeholderOption.name
+                  );
               handleChange("stakeholders", newStakeholders);
             }}
             isInvalid={!!errors.stakeholders}
@@ -841,16 +840,49 @@ function DocumentFormComponent({
           required
         >
           <option value="">Select type</option>
-          <option value="Design document">Design document</option>
-          <option value="Material effect">Material effect</option>
-          <option value="Technical document">Technical document</option>
-          <option value="Prescriptive document">Prescriptive document</option>
-          <option value="Informative document">Informative document</option>
+          {allDocumentTypes.map((typeOption) => (
+            <option key={typeOption.id} value={typeOption.name}>
+              {typeOption.name}
+            </option>
+          ))}
+          <option value="Other">Other</option>
         </Form.Control>
-        <Form.Control.Feedback type="invalid">
-          {errors.type}
-        </Form.Control.Feedback>
+        {document.type === "Other" && (
+          <div className="d-flex mt-2">
+            <Form.Control
+              type="text"
+              placeholder="Enter custom type"
+              value={document.customType || ""}
+              onChange={(e) => handleChange("customType", e.target.value)}
+              isInvalid={!!errors.type}
+              className="me-2"
+            />
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (
+                  document.customType &&
+                  !allDocumentTypes.some((t) => t.name === document.customType)
+                ) {
+                  API.addDocumentType(document.customType).then(() => {
+                    setAllDocumentTypes([
+                      ...allDocumentTypes,
+                      { id: Date.now(), name: document.customType },
+                    ]);
+                    handleChange("type", document.customType);
+                  });
+                }
+              }}
+              title="Add custom type"
+            >
+              <i className="bi bi-plus-square"></i>
+            </Button>
+          </div>
+        )}
       </Form.Group>
+      <Form.Control.Feedback type="invalid">
+        {errors.type}
+      </Form.Control.Feedback>
 
       <div className="divider" />
 

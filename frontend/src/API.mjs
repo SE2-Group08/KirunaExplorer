@@ -1,5 +1,6 @@
 import { Document, DocumentSnippet } from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
+import { DocumentType } from "./model/DocumentType.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
 
@@ -162,9 +163,14 @@ const addStakeholder = async (stakeholder) => {
   //     },
   //     body: JSON.stringify(stakeholder),
   //   }).then(handleInvalidRiesponse);
-  const newId = stakeholders.length ? stakeholders[stakeholders.length - 1].id + 1 : 1;
-  const newStakeholder = { id: newId, name: stakeholder };
-  stakeholders.push(newStakeholder);
+  const existingStakeholder = stakeholders.find((s) => s.name === stakeholder);
+  if (!existingStakeholder) {
+    const newId = stakeholders.length
+      ? stakeholders[stakeholders.length - 1].id + 1
+      : 1;
+    const newStakeholder = { id: newId, name: stakeholder };
+    stakeholders.push(newStakeholder);
+  }
 };
 
 // Retrieve a stakeholder by id
@@ -207,6 +213,63 @@ const deleteStakeholder = async (stakeholderId) => {
     stakeholders.splice(index, 1);
   }
 };
+
+/* ************************** *
+ *     Document Type APIs     *
+ * ************************** */
+const documentTypes = [
+  { id: 1, name: "Design document" },
+  { id: 2, name: "Material effect" },
+  { id: 3, name: "Technical document" },
+  { id: 4, name: "Prescriptive document" },
+  { id: 5, name: "Informative document" },
+]
+
+// Retrieve all document types
+const getAllDocumentTypes = async () => {
+  const dt = [];
+  documentTypes.forEach((t) => dt.push(DocumentType.fromJSON(t)));
+  return dt;
+}
+
+// Create a new document type
+const addDocumentType = async (documentType) => {
+  const existingDocumentType = documentTypes.find((t) => t.name === documentType);
+  if (!existingDocumentType) {
+    const newId = documentTypes.length
+      ? documentTypes[documentTypes.length - 1].id + 1
+      : 1;
+    const newDocumentType = { id: newId, name: documentType };
+    documentTypes.push(newDocumentType);
+  }
+}
+
+// Retrieve a document type by id
+const getDocumentTypeById = async (documentTypeId) => {
+  return DocumentType.fromJSON(
+    documentTypes.find((documentType) => documentType.id === documentTypeId)
+  );
+}
+
+// Update a document type given its id
+const updateDocumentType = async (documentTypeId, nextDocumentType) => {
+  const index = documentTypes.findIndex(
+    (documentType) => documentType.id === documentTypeId
+  );
+  if (index !== -1) {
+    documentTypes[index] = nextDocumentType;
+  }
+}
+
+// Delete a document type given its id
+const deleteDocumentType = async (documentTypeId) => {
+  const index = documentTypes.findIndex(
+    (documentType) => documentType.id === documentTypeId
+  );
+  if (index !== -1) {
+    documentTypes.splice(index, 1);
+  }
+}
 
 /* ************************** *
  *       Helper functions      *
@@ -275,5 +338,10 @@ const API = {
   getAllLinksOfDocument,
   updateLink,
   deleteLink,
+  getAllDocumentTypes,
+  addDocumentType,
+  getDocumentTypeById,
+  updateDocumentType,
+  deleteDocumentType,
 };
 export default API;
