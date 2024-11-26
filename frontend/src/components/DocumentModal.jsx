@@ -134,22 +134,10 @@ export default function DocumentModal(props) {
       newErrors.stakeholders = "Stakeholders must not contain duplicates.";
     }
 
-    const scalePatterns = [
-      "Text",
-      "Blueprint/Material effects",
-      /^[1-9]:[1-9][0-9]*$/,
-    ];
-    if (
-      typeof document.scale !== "string" ||
-      !document.scale.trim() ||
-      !scalePatterns.some((pattern) =>
-        typeof pattern === "string"
-          ? pattern === document.scale
-          : pattern.test(document.scale)
-      )
-    ) {
+    // Scale validation
+    if (typeof document.scale !== "string" || !document.scale.trim()) {
       newErrors.scale =
-        "Scale is required and must match one of the defined patterns.";
+        "Scale must be present.";
     } else if (document.scale.includes(":")) {
       const [first, second] = document.scale.split(":").map(Number);
       if (first > second) {
@@ -485,16 +473,16 @@ function DocumentFormComponent({
   handleChange,
   kirunaBorderCoordinates,
 }) {
-  const [customScaleValue, setCustomScaleValue] = useState(
-    document.scale !== "Text" && document.scale !== "Blueprint/Material effects"
-      ? document.scale
-      : ""
-  );
-  const [enableCustomScale, setEnableCustomScale] = useState(
-    document.scale !== "Text" &&
-      document.scale !== "Blueprint/Material effects" &&
-      document.scale !== ""
-  );
+  // const [customScaleValue, setCustomScaleValue] = useState(
+  //   document.scale !== "Text" && document.scale !== "Blueprint/Material effects"
+  //     ? document.scale
+  //     : ""
+  // );
+  // const [enableCustomScale, setEnableCustomScale] = useState(
+  //   document.scale !== "Text" &&
+  //     document.scale !== "Blueprint/Material effects" &&
+  //     document.scale !== ""
+  // );
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const [markerPosition, setMarkerPosition] = useState([
     document.geolocation.latitude
