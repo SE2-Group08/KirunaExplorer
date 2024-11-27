@@ -1,5 +1,4 @@
 import { Document, DocumentSnippet } from "./model/Document.mjs";
-import { User } from "./model/User.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
@@ -58,40 +57,36 @@ const getUserById = async (userId) => {
     .then(User.fromJson);
 };
 
-/* ********************* *
- *       Link APIs       *
- * ********************* */
+/* ************************** *
+ *       Link APIs      *
+ * ************************** */
 
 const createLink = async (document, linkedDocument) => {
+  console.log("CREATE LINK: ", document, linkedDocument);
   const requestBody = {
     type: linkedDocument.linkType.toUpperCase(),
     linkId: null,
     documentId: linkedDocument.document.id,
   };
+  console.log("REQUEST BODY: ", requestBody);
+
+  // ("REQUEST BODY: ", requestBody);
   requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
+  console.log(document.id)
   try {
-    const response = await fetch(
-      `${SERVER_URL}/documents/${document.id}/links`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(requestBody),
-      }
-    );
+    const response = await fetch(`${SERVER_URL}/documents/${document.id}/links`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody)
+    });
 
     if (response.ok) {
-      const responseData =
-        response.status !== 201 ? await response.json() : null;
+      const responseData = response.status !== 201 ? await response.json() : null;
       console.log("Link creato con successo:", responseData);
     } else {
-      console.error(
-        "Errore nella creazione del link:",
-        response.status,
-        response.statusText
-      );
+      console.error("Errore nella creazione del link:", response.status, response.statusText);
     }
   } catch (error) {
     console.error("Errore nella richiesta:", error);
@@ -100,9 +95,7 @@ const createLink = async (document, linkedDocument) => {
 
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
-  const links = await fetch(
-    `${SERVER_URL}/api/v1/documents/${documentId}/links`
-  )
+  const links = await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`)
     .then(handleInvalidResponse)
     .then((response) => response.json());
   return links;
@@ -115,20 +108,15 @@ const updateLink = async (documentId, linkId, updatedLink) => {
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
     body: JSON.stringify(updatedLink),
   }).then(handleInvalidResponse);
 };
 
 // Delete a link for a document
 const deleteLink = async (documentId, linkId) => {
-  return await fetch(
-    `${SERVER_URL}/api/v1/documents/${documentId}/links/${linkId}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    }
-  ).then(handleInvalidResponse);
+  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links/${linkId}`, {
+    method: "DELETE",
+  }).then(handleInvalidResponse);
 };
 
 /* ************************** *
@@ -140,7 +128,7 @@ const getAllDocumentSnippets = async (filter) => {
   const documents = await fetch(`${SERVER_URL}/documents`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
-    .then((jsonArray) => jsonArray.map(DocumentSnippet.fromJson));
+    .then(mapAPISnippetsToSnippet);
   return documents;
 };
 
@@ -152,7 +140,6 @@ const addDocument = async (document) => {
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
     body: JSON.stringify(document),
   }).then(handleInvalidResponse);
 };
@@ -162,7 +149,7 @@ const getDocumentById = async (documentId) => {
   const document = await fetch(`${SERVER_URL}/documents/${documentId}`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
-    .then(Document.fromJson);
+    .then(mapAPIDocumentToDocument);
   return document;
 };
 
@@ -173,7 +160,6 @@ const updateDocument = async (documentId, nextDocument) => {
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
     body: JSON.stringify(nextDocument),
   }).then(handleInvalidResponse);
 };
@@ -182,7 +168,6 @@ const updateDocument = async (documentId, nextDocument) => {
 const deleteDocument = async (documentId) => {
   return await fetch(`${SERVER_URL}/documents/${documentId}`, {
     method: "DELETE",
-    credentials: "include",
   }).then(handleInvalidResponse);
 };
 
@@ -249,6 +234,43 @@ function handleInvalidResponse(response) {
     throw new TypeError(`Expected JSON, got ${type}`);
   }
   return response;
+}
+
+function mapAPIStakeholdersToStakeholders(apiStakeholders) {
+  return apiStakeholders.map(
+    (apiStakeholder) => new Stakeholder(apiStakeholder.id, apiStakeholder.name)
+  );
+}
+
+async function mapAPIDocumentToDocument(apiDocument) {
+  return new Document(
+    apiDocument.id,
+    apiDocument.title,
+    apiDocument.stakeholders,
+    apiDocument.scale,
+    apiDocument.issuanceDate,
+    apiDocument.type,
+    apiDocument.nrConnections,
+    apiDocument.language,
+    apiDocument.nrPages,
+    apiDocument.geolocation,
+    apiDocument.description
+  );
+}
+
+async function mapAPISnippetsToSnippet(apiSnippets) {
+  return apiSnippets.map(
+    (apiSnippet) =>
+      new DocumentSnippet(
+        apiSnippet.id,
+        apiSnippet.title,
+        apiSnippet.scale,
+        apiSnippet.issuanceDate,
+        apiSnippet.type,
+        apiSnippet.geolocation,
+        apiSnippet.stakeholders
+      )
+  );
 }
 
 const API = {
