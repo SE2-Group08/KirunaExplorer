@@ -74,7 +74,7 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + id));
 
-        document.updateFromDTO(documentRequest); // Update fields
+        document.updateFromDocumentRequestDTO(documentRequest); // Update fields
         documentRepository.save(document);
 
         GeoReference geoReference = geoReferenceRepository.findById(document.getId())

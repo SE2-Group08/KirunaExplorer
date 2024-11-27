@@ -1,7 +1,7 @@
 package com.kirunaexplorer.app.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.kirunaexplorer.app.constants.DocumentLinkType;
+import com.kirunaexplorer.app.dto.inout.LinksDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +22,6 @@ public class DocumentLink {
 
     @ManyToOne
     @JoinColumn(name = "document_id", nullable = false)
-    @JsonBackReference
     private Document document; // The originating document
 
     @ManyToOne
@@ -34,4 +33,22 @@ public class DocumentLink {
 
     private LocalDateTime createdAt;
 
+
+    @PrePersist
+    @PreUpdate
+    private void enforceUndirectedOrder() {
+        if (document.getId() > linkedDocument.getId()) {
+            Document temp = document;
+            document = linkedDocument;
+            linkedDocument = temp;
+        }
+    }
+
+    /***
+     * Convert to LinksDTO
+     * @return LinksDTO
+     */
+    public LinksDTO toLinksDTO() {
+        return new LinksDTO(document.getId(), type);
+    }
 }

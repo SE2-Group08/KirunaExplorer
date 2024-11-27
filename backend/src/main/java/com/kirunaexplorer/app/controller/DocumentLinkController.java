@@ -1,9 +1,11 @@
 package com.kirunaexplorer.app.controller;
 
 import com.kirunaexplorer.app.dto.request.LinkDocumentsRequestDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefLinksResponseDTO;
 import com.kirunaexplorer.app.dto.response.LinkDocumentsResponseDTO;
 import com.kirunaexplorer.app.service.DocumentLinkService;
 import com.kirunaexplorer.app.validation.groups.link.PostLink;
+import com.kirunaexplorer.app.validation.groups.link.PutLink;
 import jakarta.validation.groups.Default;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -11,9 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/documents")
+@RequestMapping("/api/v1")
 public class DocumentLinkController {
 
     private final DocumentLinkService documentLinkService;
@@ -22,10 +25,14 @@ public class DocumentLinkController {
         this.documentLinkService = documentLinkService;
     }
 
-
-    @PostMapping("/{id}/links")
+    /***
+     * Endpoint to link two documents
+     * @param id Document id
+     * @param request LinkDocumentsRequestDTO
+     * @return ResponseEntity<Void>
+     */
+    @PostMapping("/documents/{id}/links")
     public ResponseEntity<Void> linkDocuments(@PathVariable Long id, @RequestBody @Validated({Default.class, PostLink.class}) LinkDocumentsRequestDTO request) {
-        System.out.println("Linking documents");
         LinkDocumentsResponseDTO response = documentLinkService.linkDocuments(id, request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
             .path("/{id}")
@@ -34,9 +41,36 @@ public class DocumentLinkController {
         return ResponseEntity.created(location).build();
     }
 
-    @PutMapping("/{id}/links")
-    public ResponseEntity<Void> updateLink(@PathVariable Long id, @RequestBody LinkDocumentsRequestDTO request) {
-        documentLinkService.updateLink(id, request);
+    /***
+     * Endpoint to update a document link
+     * @param request LinkDocumentsRequestDTO
+     * @return ResponseEntity<Void>
+     */
+    @PutMapping("/links")
+    public ResponseEntity<Void> updateLink(@RequestBody @Validated({Default.class, PutLink.class}) LinkDocumentsRequestDTO request) {
+        documentLinkService.updateLink(request);
         return ResponseEntity.noContent().build();
+    }
+
+    /***
+     * Endpoint to delete a document link
+     * @param id Document id
+     * @param linkId Document link id
+     * @return ResponseEntity<Void>
+     */
+    @DeleteMapping("/links/{linkId}")
+    public ResponseEntity<Void> deleteLink(@PathVariable Long id, @PathVariable Long linkId) {
+        documentLinkService.deleteLink(id, linkId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /***
+     * Endpoint to get all links for a document
+     * @param id Document id
+     * @return ResponseEntity<List < DocumentBriefLinksResponseDTO>>
+     */
+    @GetMapping("/documents/{id}/links")
+    public ResponseEntity<List<DocumentBriefLinksResponseDTO>> getDocumentLinks(@PathVariable Long id) {
+        return ResponseEntity.ok(documentLinkService.getDocumentLinks(id));
     }
 }
