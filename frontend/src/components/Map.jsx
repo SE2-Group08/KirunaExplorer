@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polygon, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import "leaflet/dist/leaflet.css";
@@ -17,8 +17,6 @@ import prescriptiveDocument_Kommun from "../public/icons/Prescriptive-document-K
 import informativeDocument_KommunResidents from "../public/icons/Informative-document-KOMMUN-RESIDENTS.png";
 import designDocument_KommunWhiteArkitekter from "../public/icons/Design-document-KOMMUN-ARKITEKTER.png";
 import getKirunaArea from "./KirunaArea";
-import { useContext } from "react";
-import FeedbackContext from "../contexts/FeedbackContext";
 
 // Icon mapping
 const iconMapping = {
@@ -94,6 +92,7 @@ const defaultIcon = new L.Icon({
 const getIconForDocument = (type, stakeholders) => {
   if (iconMapping[type]) {
     const stakeholdersKey = stakeholders.sort().join(",");
+    console.log(stakeholdersKey);
     return iconMapping[type][stakeholdersKey] || defaultIcon;
   }
   return defaultIcon;
@@ -116,7 +115,6 @@ ZoomToMarker.propTypes = {
   zoomLevel: PropTypes.number,
 };
 
-
 const MapKiruna = () => {
   const [documents, setDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -124,22 +122,22 @@ const MapKiruna = () => {
   const kirunaPosition = [67.8400, 20.2253];
   const zoomLevel = 12;
 
-  const { setFeedbackFromError } = useContext(FeedbackContext);
+  // Per gestire il Polygon dinamico
+  const kirunaPolygonRef = useRef(null);
 
   useEffect(() => {
     API.getAllDocumentSnippets()
       .then(setDocuments)
-      .catch((error) => setFeedbackFromError(error));
+      .catch((error) => console.error("Error fetching documents:", error));
   }, []);
 
   const handleDocumentClick = (document) => {
-    console.log(documents)
     API.getDocumentById(document.id)
       .then((response) => {
         setSelectedDocument(response);
         setShow(true);
       })
-      .catch((error) => setFeedbackFromError(error));
+      .catch((error) => console.error("Error fetching document:", error));
   };
 
   const closeSidePanel = () => {
@@ -148,7 +146,6 @@ const MapKiruna = () => {
   };
 
   const kirunaBorderCoordinates = getKirunaArea();
-  
 
   return (
     <div style={{ display: "flex", height: "90vh", position: "relative" }}>
@@ -158,14 +155,9 @@ const MapKiruna = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
           />
-          { selectedDocument && 
-            selectedDocument.geolocation.municipality === "Entire municipality" && 
-            <Polygon positions={kirunaBorderCoordinates} color="purple" weight={3} fillOpacity={0.1} />
-            }
-            <MarkerClusterGroup>
+          <MarkerClusterGroup>
             {documents.map((doc, index) => {
               const position = doc.geolocation.latitude ? [doc.geolocation.latitude, doc.geolocation.longitude] : kirunaPosition;
-              //const icon = iconMapping[doc.type] || defaultIcon;
 
               return (
                 <Marker
@@ -174,6 +166,37 @@ const MapKiruna = () => {
                   icon={getIconForDocument(doc.type, doc.stakeholders)}
                   eventHandlers={{
                     click: () => handleDocumentClick(doc),
+                    mouseover: (e) => {
+                      const marker = e.target;
+                      // Showing the title of the document as a tooltip
+                      marker.bindTooltip(doc.title, { 
+                        permanent: false, 
+                        offset: [2, -33],
+                        direction: 'top',
+                      }).openTooltip();
+                      // Showing the polygon when mouseover on the document
+                      if (doc.geolocation.municipality === "Entire municipality") {
+                        const map = marker._map;
+                        if (!kirunaPolygonRef.current) {
+                          kirunaPolygonRef.current = L.polygon(kirunaBorderCoordinates, {
+                            color: "purple",
+                            weight: 3,
+                            fillOpacity: 0.1,
+                          }).addTo(map);
+                        }
+                      }
+                    },
+                    mouseout: (e) => {
+                      const marker = e.target;
+                      marker.closeTooltip();
+
+                      // Removing the polygon when mouseout
+                      if (kirunaPolygonRef.current) {
+                        const map = marker._map;
+                        map.removeLayer(kirunaPolygonRef.current);
+                        kirunaPolygonRef.current = null;
+                      }
+                    },
                   }}
                 />
               );
@@ -183,24 +206,24 @@ const MapKiruna = () => {
             <ZoomToMarker
               position={[
                 selectedDocument.geolocation.latitude,
-                selectedDocument.geolocation.longitude
+                selectedDocument.geolocation.longitude,
               ]}
-              zoomLevel={15} // Zoom to level 15 for the selected document
+              zoomLevel={15}
             />
           ) : (
-            <ZoomToMarker position={kirunaPosition} zoomLevel={12} /> // Reset to initial view
+            <ZoomToMarker position={kirunaPosition} zoomLevel={12} />
           )}
         </MapContainer>
       </div>
-  
-      {selectedDocument && show &&(
+
+      {selectedDocument && show && (
         <DocumentSidePanel
           document={selectedDocument}
           onClose={closeSidePanel}
         />
-        )}
+      )}
     </div>
   );
 };
 
-export default MapKiruna; 
+export default MapKiruna;
