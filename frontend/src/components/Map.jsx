@@ -17,6 +17,7 @@ import prescriptiveDocument_Kommun from "../public/icons/Prescriptive-document-K
 import informativeDocument_KommunResidents from "../public/icons/Informative-document-KOMMUN-RESIDENTS.png";
 import designDocument_KommunWhiteArkitekter from "../public/icons/Design-document-KOMMUN-ARKITEKTER.png";
 import getKirunaArea from "./KirunaArea";
+import MapStyleToggle from "./MapStyleToggle";
 
 // Icon mapping
 const iconMapping = {
@@ -121,6 +122,7 @@ const MapKiruna = () => {
   const [show, setShow] = useState(true);
   const kirunaPosition = [67.8400, 20.2253];
   const zoomLevel = 12;
+  const [tileLayer, setTileLayer] = useState("satellite");
 
   // Per gestire il Polygon dinamico
   const kirunaPolygonRef = useRef(null);
@@ -149,11 +151,20 @@ const MapKiruna = () => {
 
   return (
     <div style={{ display: "flex", height: "90vh", position: "relative" }}>
+      <MapStyleToggle setTileLayer={setTileLayer} />
       <div style={{ flex: 2, position: "relative" }}>
         <MapContainer center={kirunaPosition} zoom={zoomLevel} style={{ height: "100%", width: "100%" }}>
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution="&copy; OpenStreetMap contributors"
+              url={
+                tileLayer === "paper"
+                    ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              }
+              attribution={
+                tileLayer === "paper"
+                    ? "&copy; OpenStreetMap contributors"
+                    : "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+              }
           />
           <MarkerClusterGroup>
             {documents.map((doc, index) => {
