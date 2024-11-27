@@ -1,91 +1,93 @@
-import React, { useEffect, useState } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
-import PropTypes from 'prop-types';
+import { useState, useEffect } from "react";
+import { Modal, Button, Form } from "react-bootstrap";
+import PropTypes from "prop-types";
 
-const LinkModal = ({ showModal, handleClose, document, setSelectedLinkDocuments, selectedLinkDocuments }) => {
-  const [selectedLinks, setSelectedLinks] = useState([{ id: Date.now(), value: '' }]);
+const LinkModal = ({
+  showModal,
+  handleClose,
+  document,
+  setSelectedLinkDocuments,
+  links
+}) => {
+  const [selectedLinks, setSelectedLinks] = useState([]);
   const [errors, setErrors] = useState({});
 
-  const handleChange = (id, value) => {
-    setSelectedLinks((prevLinks) =>
-      prevLinks.map((link) => (link.id === id ? { ...link, value } : link))
+  const linkTypes = [
+    "Direct consequence",
+    "Collateral consequence",
+    "Prevision",
+    "Update",
+  ];
+
+  useEffect(() => {
+    if (showModal) {
+      // Initialize selectedLinks based on the links prop
+      const initialSelectedLinks = links
+        .filter((link) => link.document.id === document.id)
+        .map((link) => link.linkType);
+      setSelectedLinks(initialSelectedLinks);
+    }
+  }, [showModal, links, document.id]);
+
+  const handleChange = (e) => {
+    const { value, checked } = e.target;
+    setSelectedLinks((prevSelectedLinks) =>
+      checked
+        ? [...prevSelectedLinks, value]
+        : prevSelectedLinks.filter((link) => link !== value)
     );
   };
 
-  const handleAddType = () => {
-    setSelectedLinks((prevLinks) => [
-      ...prevLinks,
-      { id: Date.now(), value: '' },
-    ]);
-  };
-
-  const handleConfirm = () => {
-    const invalidLinks = selectedLinks.filter((link) => !link.value);
-    if (invalidLinks.length > 0) {
-      setErrors({ type: 'Please select a link type for all fields.' });
-      return;
+  const handleSave = () => {
+    if (selectedLinks.length === 0) {
+      setErrors({ type: "At least one link type must be selected." });
+    } else {
+      setErrors({});
+      setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
+        ...prevSelectedLinkDocuments,
+        ...selectedLinks.map((linkType) => ({ document, linkType })),
+      ]);
+      setSelectedLinks([]);
+      handleClose();
     }
-    setSelectedLinkDocuments((prevDocuments) => [
-      ...prevDocuments,
-      ...selectedLinks.map((link) => ({
-        document,
-        linkType: link.value,
-      })),
-    ]);
-    setSelectedLinks([{ id: Date.now(), value: '' }]);
-    handleClose();
-  };
-
-  const handleRemoveType = (id) => {
-    setSelectedLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
   };
 
   return (
-    <Modal show={showModal} onHide={handleClose} centered className="document-modal">
+    <Modal
+      show={showModal}
+      onHide={handleClose}
+      centered
+      className="document-modal"
+    >
       <Modal.Header closeButton>
-        <Modal.Title>Select a Link</Modal.Title>
+        <Modal.Title>Select Link Types</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form>
-          {selectedLinks.map((link) => (
-            <div className="d-flex mb-3 align-items-center" key={link.id}>
-              <Form.Control
-                as="select"
-                value={link.value}
-                onChange={(e) => handleChange(link.id, e.target.value)}
-                isInvalid={!!errors.type && !link.value}
-                required
-                className="me-2"
-              >
-                <option value="">Select type</option>
-                <option value="Direct consequence">Direct consequence</option>
-                <option value="Collateral consequence">Collateral consequence</option>
-                <option value="Prevision">Prevision</option>
-                <option value="Update">Update</option>
-              </Form.Control>
-              <Button
-                variant="danger"
-                onClick={() => handleRemoveType(link.id)}
-                title="Delete link"
-              >
-                <i className="bi bi-trash"></i>
-              </Button>
-            </div>
+        <Form.Group className="mb-3" controlId="formLinkTypes">
+          <Form.Label>Link Types *</Form.Label>
+          {linkTypes.map((linkType) => (
+            <Form.Check
+              key={linkType}
+              type="checkbox"
+              label={linkType}
+              value={linkType}
+              checked={selectedLinks.includes(linkType)}
+              onChange={handleChange}
+              isInvalid={!!errors.type}
+            />
           ))}
-          <Button className="mt-2" variant="primary" onClick={handleAddType} title="Add type">
-            <i className="bi bi-plus-square"></i>
-          </Button>
-          {errors.type && (
-            <div className="text-danger mt-2">{errors.type}</div>
-          )}
-        </Form>
+          <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+            {errors.type}
+          </div>
+        </Form.Group>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
-          Close
-        </Button>
-        <Button variant="primary" onClick={handleConfirm}>
-          Confirm
+        <Button
+          variant="primary"
+          disabled={!selectedLinks.length}
+          onClick={handleSave}
+        >
+          Save
         </Button>
       </Modal.Footer>
     </Modal>
@@ -93,12 +95,11 @@ const LinkModal = ({ showModal, handleClose, document, setSelectedLinkDocuments,
 };
 
 LinkModal.propTypes = {
-  handleAddType: PropTypes.func.isRequired,
   showModal: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   document: PropTypes.object.isRequired,
   setSelectedLinkDocuments: PropTypes.func.isRequired,
-  selectedLinkDocuments: PropTypes.array.isRequired,
+  links: PropTypes.array.isRequired
 };
 
 export default LinkModal;

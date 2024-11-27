@@ -16,6 +16,7 @@ export default function ListDocuments() {
   const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
+  const [links, setLinks] = useState([]);
 
   useEffect(() => {
     API.getAllDocumentSnippets()
@@ -24,29 +25,25 @@ export default function ListDocuments() {
   }, []);
 
   const handleSelection = async (document) => {
-    const newDoc = await API.getDocumentById(document.id);
-    setSelectedDocument(newDoc);
-    if (linking) {
-      if (
-        selectedDocumentToLink &&
-        document.id === selectedDocumentToLink?.id
-      ) {
-        return;
-      }
-      const alreadySelected = selectedLinkDocuments.some(
-        (doc) => doc.document.id === document.id
-      );
-      if (alreadySelected) {
-        setSelectedLinkDocuments((prevDocuments) =>
-          prevDocuments.filter((doc) => doc.document.id !== document.id)
-        );
-      } else {
-        setShowLinkModal(true);
-        setSelectedDocument(newDoc);
-      }
-    } else {
+    try {
+      const newDoc = await API.getDocumentById(document.id);
       setSelectedDocument(newDoc);
-      setShow(true);
+
+      if (linking) {
+        const dLinks = await API.getAllLinksOfDocument(newDoc.id);
+        setLinks(dLinks);
+        if (
+          selectedDocumentToLink &&
+          document.id === selectedDocumentToLink.id
+        ) {
+          return;
+        }
+        setShowLinkModal(true);
+      } else {
+        setShow(true);
+      }
+    } catch (error) {
+      console.error("Error fetching document details:", error);
     }
   };
 
@@ -140,8 +137,9 @@ export default function ListDocuments() {
                 <i className="bi bi-check-square"></i>
               </Button>
               <Button
-                title="Exit link mode"
                 variant="secondary"
+                style={{ width: "70px" }}
+                title="Exit link mode"
                 onClick={() => {
                   handleExitLinkMode();
                 }}
@@ -225,6 +223,7 @@ export default function ListDocuments() {
             selectedLinkDocuments={selectedLinkDocuments}
             document={selectedDocument}
             onLinkConfirm={handleLinkConfirm}
+            links={links}
           />
         )}
       </Row>
