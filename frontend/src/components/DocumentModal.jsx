@@ -340,13 +340,13 @@ export default function DocumentModal(props) {
           </Button>
         ) : (
           <div className="d-flex align-items-center">
-            {/* <Button
+            <Button
               variant="primary"
               onClick={handleLinksClick}
               className="me-2"
             >
               Links
-            </Button> */}
+            </Button> 
             <Button
               variant="primary"
               onClick={handleLinkToClick}
