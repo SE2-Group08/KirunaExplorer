@@ -26,8 +26,9 @@ public class DocumentService {
         this.documentLinkRepository = documentLinkRepository;
     }
 
-    /***
+    /**
      * Get all documents in brief format
+     *
      * @return List of DocumentBriefResponseDTO
      */
     public List<DocumentBriefResponseDTO> getAllDocuments() {
@@ -36,8 +37,9 @@ public class DocumentService {
             .toList();
     }
 
-    /***
+    /**
      * Get a document by id
+     *
      * @param id Document id
      * @return DocumentResponseDTO
      */
@@ -48,8 +50,9 @@ public class DocumentService {
             .toResponseDTO(documentLinkRepository.countByDocumentId(id));
     }
 
-    /***
+    /**
      * Create a document
+     *
      * @param documentRequest DocumentRequestDTO
      * @return DocumentRequestDTO
      */
@@ -64,8 +67,9 @@ public class DocumentService {
         return document.getId();
     }
 
-    /***
+    /**
      * Update a document
+     *
      * @param documentRequest DocumentRequestDTO
      */
     @Transactional

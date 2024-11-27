@@ -24,8 +24,9 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
-    /***
+    /**
      * Endpoint to get all documents in brief format
+     *
      * @return List of DocumentBriefResponseDTO
      */
     @GetMapping
@@ -33,8 +34,9 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.getAllDocuments());
     }
 
-    /***
+    /**
      * Endpoint to get a document by id
+     *
      * @param id Document id
      * @return DocumentResponseDTO
      */
@@ -43,8 +45,9 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 
-    /***
+    /**
      * Endpoint to create a document
+     *
      * @param document DocumentRequestDTO
      * @return ResponseEntity<Void>
      */
@@ -58,8 +61,9 @@ public class DocumentController {
         return ResponseEntity.created(location).build();
     }
 
-    /***
+    /**
      * Endpoint to update a document
+     *
      * @param document DocumentRequestDTO
      * @return ResponseEntity<Void>
      */
