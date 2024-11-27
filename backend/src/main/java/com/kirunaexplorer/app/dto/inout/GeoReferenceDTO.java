@@ -12,12 +12,12 @@ import org.locationtech.jts.geom.Point;
 
 @OneOfGeoReference
 public record GeoReferenceDTO(
-    @DecimalMin(value = "67.82295")
-    @DecimalMax(value = "67.88398")
+    @DecimalMin(value = "67.3564329180828")
+    @DecimalMax(value = "69.05958911620179")
     Double latitude,  // Latitude as a Double to match the "number" type
 
-    @DecimalMin(value = "20.14402")
-    @DecimalMax(value = "20.3687")
+    @DecimalMin(value = "17.89900836116174")
+    @DecimalMax(value = "23.28669305841499")
     Double longitude,  // Longitude as a Double to match the "number" type
 
     @Size(min = 2, max = 64)

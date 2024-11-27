@@ -49,8 +49,9 @@ export default function ListDocuments() {
 
   const handleSave = (document) => {
     API.updateDocument(document.id, document)
-      .then(() => setShow(false))
+      .then(() => API.getAllDocumentSnippets().then(setDocuments))
       .catch((error) => console.error("Error saving document:", error));
+    setShow(false);
   };
 
   const handleAdd = (document) => {
@@ -138,12 +139,13 @@ export default function ListDocuments() {
               <Button
                 variant="secondary"
                 style={{ width: "70px" }}
+                title="Exit link mode"
                 onClick={() => {
                   handleExitLinkMode();
                 }}
                 className="ms-2"
               >
-                Exit
+                <i className="bi bi-box-arrow-left"></i>
               </Button>
             </>
           ) : (
@@ -207,6 +209,7 @@ export default function ListDocuments() {
             handleSave={handleSave}
             handleDelete={handleDelete}
             handleAdd={handleAdd}
+            onSnippetClick={handleSelection}
           />
         )}
         {selectedDocumentToLink && showLinkModal && (

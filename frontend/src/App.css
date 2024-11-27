@@ -215,6 +215,23 @@ button:hover {
   opacity: 1;
 }
 
+.slider .snippet-item {
+  padding: 5px; /* Reduce padding for snippet items in slider view */
+}
+
+.slider-card {
+  padding: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.slider-card .document-card-title {
+  font-size: 1rem;
+}
+
+.slider-card .document-card-text {
+  font-size: 0.8rem;
+}
+
 .close-button {
   position: absolute;
   bottom: 10px;
@@ -223,7 +240,6 @@ button:hover {
 }
 
 .snippet-item {
-  padding: 10px;
   border-bottom: 1px solid #e7ebda;
 }
 
@@ -240,10 +256,14 @@ button:hover {
 }
 
 .snippet-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   max-height: calc(100% - 40px); /* Adjust based on header and padding */
   overflow-y: auto;
   scrollbar-width: none; /* For Firefox */
   -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+  padding-top: 20px; /* Add this line to add padding to the top */
 }
 
 .snippet-list::-webkit-scrollbar {

@@ -32,10 +32,10 @@ const ListDocumentLinks = ({ documentId, isOpen, onClose, onSnippetClick }) => {
   return (
     <div className={`slider ${isOpen ? 'open' : ''}`}>
       <div className="snippet-list">
-        <Row xs={1} className="g-4" style={{ width: "109%" }}>
+        <Row xs={1} className="g-4" style={{ width: "100%" }}>
           {snippets.map((snippet) => (
             <Col key={snippet.id}>
-              <Card className="document-card h-100" onClick={() => handleSnippetClick(snippet)}>
+              <Card className="document-card slider-card" onClick={() => handleSnippetClick(snippet)}>
                 <Card.Body>
                   <Card.Title className="document-card-title">
                     {snippet.title}

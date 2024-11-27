@@ -193,7 +193,7 @@ public class DataInitializer implements CommandLineRunner {
                 "After two extensions of the land acquisition agreement, necessary because this document in Sweden is valid for only two years, construction of the hotel finally began in 2019.",
                 "LKAB",
                 "Material effect",
-                "bluesprints/effects",
+                "Blueprint/Material effects",
                 LocalDate.of(2019, 4, 19),
                 DatePrecision.FULL_DATE,
                 null,

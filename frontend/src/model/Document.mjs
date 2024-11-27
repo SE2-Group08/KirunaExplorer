@@ -35,11 +35,7 @@ export class DocumentSnippet {
     scale,
     issuanceDate,
     type,
-    geolocation = {
-      latitude: null,
-      longitude: null,
-      municipality: "Whole municipality",
-    },
+    geolocation,
     stakeholders
   ) {
     this.id = id;
