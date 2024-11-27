@@ -49,6 +49,6 @@ public class DocumentLink {
      * @return LinksDTO
      */
     public LinksDTO toLinksDTO() {
-        return new LinksDTO(document.getId(), type);
+        return new LinksDTO(this.id, type);
     }
 }
