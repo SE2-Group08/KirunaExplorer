@@ -11,16 +11,22 @@ import { LoginComponent } from "./components/LoginPage";
 import "./App.css";
 import { useState } from "react";
 import API from "./API";
+import error from "eslint-plugin-react/lib/util/error.js";
 
 function App() {
   const [user, setUser] = useState(null);
   const [loggedIn, setLoggedIn] = useState(false);
 
   const handleLogin = async (credentials) => {
-    console.log("App.handleLogin", credentials);
-    const user = await API.logIn(credentials);
-    setUser(user);
-    setLoggedIn(true);
+
+    API.logIn(credentials)
+        .then (() => {
+          setLoggedIn(true);
+          API.getUserInfo()
+              .then(setUser)
+              .catch(error)
+        })
+        .catch(error);
   }
   
   const handleLogout = async () => {
@@ -41,7 +47,9 @@ function App() {
               </>
             }
           >
-            <Route path="/documents" element={<ListDocuments />} />
+          { loggedIn &&
+            user.role === "Urban Planner" &&
+            <Route path="/documents" element={<ListDocuments loggedIn={loggedIn} user={user}/>} /> }
             <Route path="/map" element={<Map />} />
             <Route path="/login" element={<LoginComponent login={handleLogin}/>} />
             <Route path="/" element={<SplashPage />} />
