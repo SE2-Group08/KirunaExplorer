@@ -172,14 +172,22 @@ const deleteDocument = async (documentId) => {
  * ************************** */
 
 function handleInvalidResponse(response) {
-  if (!response.ok) {
-    throw Error(response.statusText);
+  try {
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+    let type = response.headers.get("content-type");
+    if (type != null && type.indexOf("application/json") === -1) {
+      throw new TypeError(`Expected JSON, got ${type}`);
+    }
+    return response;
+  } catch (error) {
+    // Handle error silently
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-  let type = response.headers.get("content-type");
-  if (type != null && type.indexOf("application/json") === -1) {
-    throw new TypeError(`Expected JSON, got ${type}`);
-  }
-  return response;
 }
 
 function mapAPIStakeholdersToStakeholders(apiStakeholders) {
