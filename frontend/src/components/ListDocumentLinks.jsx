@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Button, Card, Row, Col, ListGroup } from 'react-bootstrap';
 import API from '../API.mjs';
 import '../App.css';
+import LinkModal from './LinkModal.jsx';
 
-const ListDocumentLinks = ({ documentId, isOpen, onClose, onSnippetClick }) => {
+const ListDocumentLinks = ({ documentId, isOpen, onClose, onSnippetClick, document }) => {
   const [snippets, setSnippets] = useState([]);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [selectedSnippet, setSelectedSnippet] = useState({});
+  const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
+  const [links, setLinks] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -24,9 +29,12 @@ const ListDocumentLinks = ({ documentId, isOpen, onClose, onSnippetClick }) => {
     }
   }, [isOpen]);
 
-  const handleSnippetClick = (snippet) => {
-    onSnippetClick(snippet);
-    onClose();
+  const handleSnippetClick = async(snippet) => {
+    setShowLinkModal(true);
+    const dLinks = await API.getAllLinksOfDocument(snippet.document.id);
+    console.log("DLINKS: ", dLinks);
+    setLinks(dLinks);
+    setSelectedSnippet(snippet);
   };
 
   return (
@@ -72,6 +80,17 @@ const ListDocumentLinks = ({ documentId, isOpen, onClose, onSnippetClick }) => {
       <Button variant="secondary" onClick={onClose} className="close-button">
         Close
       </Button>
+
+      {showLinkModal && (
+        <LinkModal
+          showModal={showLinkModal}
+          handleClose={() => setShowLinkModal(false)}
+          document={selectedSnippet}
+          links={links}
+          selectedDocumentToLink={document}
+          setSelectedLinkDocuments={setSelectedLinkDocuments}
+        />
+      )}
     </div>
   );
 };

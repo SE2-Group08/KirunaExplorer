@@ -370,6 +370,7 @@ export default function DocumentModal(props) {
         isOpen={isSliderOpen}
         onClose={handleCloseSlider}
         onSnippetClick={handleSnippetClick}
+        document={props.document}
       />
     </Modal>
   );
