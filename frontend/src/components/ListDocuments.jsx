@@ -224,6 +224,7 @@ export default function ListDocuments() {
             document={selectedDocument}
             onLinkConfirm={handleLinkConfirm}
             links={links}
+            selectedDocumentToLink={selectedDocumentToLink}
           />
         )}
       </Row>

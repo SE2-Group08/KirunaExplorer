@@ -7,27 +7,32 @@ const LinkModal = ({
   handleClose,
   document,
   setSelectedLinkDocuments,
-  links
+  links,
+  selectedDocumentToLink
 }) => {
   const [selectedLinks, setSelectedLinks] = useState([]);
   const [errors, setErrors] = useState({});
 
-  const linkTypes = [
-    "Direct consequence",
-    "Collateral consequence",
-    "Prevision",
-    "Update",
-  ];
+  // Map dei tipi di link per coerenza
+  const linkTypesMap = {
+    DIRECT_CONSEQUENCE: "Direct consequence",
+    COLLATERAL_CONSEQUENCE: "Collateral consequence",
+    PREVISION: "Prevision",
+    UPDATE: "Update",
+  };
+
+  const linkTypes = Object.values(linkTypesMap);
 
   useEffect(() => {
     if (showModal) {
-      // Initialize selectedLinks based on the links prop
-      const initialSelectedLinks = links
-        .filter((link) => link.document.id === document.id)
-        .map((link) => link.linkType);
+      const selectedDocument = links.find((link) => link.document.id === selectedDocumentToLink.id);
+      const initialSelectedLinks = selectedDocument
+        ? selectedDocument.links.map((linkDetail) => linkTypesMap[linkDetail.linkType])
+        : [];
+
       setSelectedLinks(initialSelectedLinks);
     }
-  }, [showModal, links, document.id]);
+  }, [showModal, links, document.id, selectedDocumentToLink.id]);
 
   const handleChange = (e) => {
     const { value, checked } = e.target;
@@ -99,7 +104,8 @@ LinkModal.propTypes = {
   handleClose: PropTypes.func.isRequired,
   document: PropTypes.object.isRequired,
   setSelectedLinkDocuments: PropTypes.func.isRequired,
-  links: PropTypes.array.isRequired
+  links: PropTypes.array.isRequired,
+  selectedDocumentToLink: PropTypes.object.isRequired,
 };
 
 export default LinkModal;
