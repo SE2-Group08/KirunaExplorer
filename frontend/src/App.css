@@ -259,13 +259,11 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-height: calc(100% - 40px); /* Adjust based on header and padding */
+  max-height: calc(100% - 60px); /* Increase max-height */
   overflow-y: auto;
   scrollbar-width: none; /* For Firefox */
   -ms-overflow-style: none;  /* For Internet Explorer and Edge */
   padding-top: 20px; /* Add this line to add padding to the top */
-}
-
-.snippet-list::-webkit-scrollbar {
-  display: none; /* For Chrome, Safari, and Opera */
+  padding-bottom: 20px; /* Add padding to the bottom */
+  margin-bottom: 0; /* Remove margin from bottom */
 }
