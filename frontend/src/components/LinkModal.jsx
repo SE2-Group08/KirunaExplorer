@@ -24,6 +24,11 @@ const LinkModal = ({
   const linkTypes = Object.values(linkTypesMap);
 
   useEffect(() => {
+    console.log("LinkModal useEffect");
+    console.log(showModal, links, document);
+  }, []);
+
+  useEffect(() => {
     if (showModal) {
       const selectedDocument = links.find((link) => link.document.id === selectedDocumentToLink.id);
       const initialSelectedLinks = selectedDocument
