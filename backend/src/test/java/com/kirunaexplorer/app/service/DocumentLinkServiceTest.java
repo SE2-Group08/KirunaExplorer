@@ -2,10 +2,12 @@ package com.kirunaexplorer.app.service;
 
 import com.kirunaexplorer.app.constants.DocumentLinkType;
 import com.kirunaexplorer.app.dto.request.LinkDocumentsRequestDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefLinksResponseDTO;
 import com.kirunaexplorer.app.dto.response.LinkDocumentsResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.Document;
 import com.kirunaexplorer.app.model.DocumentLink;
+import com.kirunaexplorer.app.model.GeoReference;
 import com.kirunaexplorer.app.repository.DocumentLinkRepository;
 import com.kirunaexplorer.app.repository.DocumentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -142,33 +146,168 @@ class DocumentLinkServiceTest {
     @Nested
     class UpdateLinkTests {
 
-        @Test
-        void testUpdateLink() {
-            // Add tests for updateLink method
+        private LinkDocumentsRequestDTO request;
+        private DocumentLink documentLink;
+
+        @BeforeEach
+        void setUp() {
+            request = new LinkDocumentsRequestDTO(DocumentLinkType.DIRECT_CONSEQUENCE, 1L, 2L);
+            documentLink = new DocumentLink();
+            documentLink.setId(1L);
+            documentLink.setType(DocumentLinkType.DIRECT_CONSEQUENCE);
         }
 
-        // Add more tests for other scenarios
+        /**
+         * Test the updateLink method with a successful scenario
+         */
+        @Test
+        void testUpdateLink_successful() {
+            when(documentLinkRepository.findById(request.linkId())).thenReturn(Optional.of(documentLink));
+
+            documentLinkService.updateLink(request);
+
+            verify(documentLinkRepository, times(1)).save(documentLink);
+            assertEquals(DocumentLinkType.DIRECT_CONSEQUENCE, documentLink.getType(), "The document link type should be updated");
+        }
+
+        /**
+         * Test the updateLink method when the document link is not found
+         */
+        @Test
+        void testUpdateLink_documentLinkNotFound() {
+            when(documentLinkRepository.findById(request.linkId())).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () -> documentLinkService.updateLink(request), "Expected ResourceNotFoundException when document link is not found");
+        }
     }
 
     @Nested
     class DeleteLinkTests {
 
-        @Test
-        void testDeleteLink() {
-            // Add tests for deleteLink method
+        private Long documentId;
+        private Long linkId;
+        private DocumentLink documentLink;
+
+        @BeforeEach
+        void setUp() {
+            documentId = 1L;
+            linkId = 1L;
+            documentLink = new DocumentLink();
+            documentLink.setId(linkId);
         }
 
-        // Add more tests for other scenarios
+        /**
+         * Test the deleteLink method with a successful scenario
+         */
+        @Test
+        void testDeleteLink_successful() {
+            when(documentLinkRepository.findById(linkId)).thenReturn(Optional.of(documentLink));
+
+            documentLinkService.deleteLink(documentId, linkId);
+
+            verify(documentLinkRepository, times(1)).delete(documentLink);
+        }
+
+        /**
+         * Test the deleteLink method when the document link is not found
+         */
+        @Test
+        void testDeleteLink_documentLinkNotFound() {
+            when(documentLinkRepository.findById(linkId)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () -> documentLinkService.deleteLink(documentId, linkId), "Expected ResourceNotFoundException when document link is not found");
+        }
     }
 
     @Nested
     class GetDocumentLinksTests {
 
-        @Test
-        void testGetDocumentLinks() {
-            // Add tests for getDocumentLinks method
+        private Long documentId;
+        private Document document;
+        private DocumentLink documentLink;
+        private List<DocumentLink> documentLinks;
+
+        @BeforeEach
+        void setUp() {
+            documentId = 1L;
+            document = new Document();
+            document.setId(documentId);
+            document.setStakeholders("");
+
+            Document linkedDocument = new Document();
+            linkedDocument.setId(2L);
+
+            documentLink = new DocumentLink();
+            documentLink.setId(1L);
+            documentLink.setDocument(document);
+            documentLink.setLinkedDocument(linkedDocument);
+            documentLink.setType(DocumentLinkType.DIRECT_CONSEQUENCE);
+
+            documentLinks = List.of(documentLink);
         }
 
-        // Add more tests for other scenarios
+        /**
+         * Test the getDocumentLinks method with a successful scenario
+         */
+        @Test
+        void testGetDocumentLinks_successful() {
+            // Create the main document
+            document.setStakeholders("stakeholder1/stakeholder2");
+            document.setDatePrecision(Document.DatePrecision.FULL_DATE);
+            document.setIssuanceDate(LocalDate.now());
+            document.setGeoReference(new GeoReference());
+
+            // Create the linked documents
+            Document linkedDocument1 = new Document();
+            linkedDocument1.setId(2L);
+            linkedDocument1.setStakeholders("stakeholder3/stakeholder4");
+            linkedDocument1.setDatePrecision(Document.DatePrecision.FULL_DATE);
+            linkedDocument1.setIssuanceDate(LocalDate.now());
+            linkedDocument1.setGeoReference(new GeoReference());
+
+            Document linkedDocument2 = new Document();
+            linkedDocument2.setId(3L);
+            linkedDocument2.setStakeholders("stakeholder5/stakeholder6");
+            linkedDocument2.setDatePrecision(Document.DatePrecision.FULL_DATE);
+            linkedDocument2.setIssuanceDate(LocalDate.now());
+            linkedDocument2.setGeoReference(new GeoReference());
+
+            // Create the document links
+            DocumentLink documentLink1 = new DocumentLink();
+            documentLink1.setId(1L);
+            documentLink1.setDocument(document);
+            documentLink1.setLinkedDocument(linkedDocument1);
+            documentLink1.setType(DocumentLinkType.DIRECT_CONSEQUENCE);
+
+            DocumentLink documentLink2 = new DocumentLink();
+            documentLink2.setId(2L);
+            documentLink2.setDocument(document);
+            documentLink2.setLinkedDocument(linkedDocument2);
+            documentLink2.setType(DocumentLinkType.COLLATERAL_CONSEQUENCE);
+
+            documentLinks = List.of(documentLink1, documentLink2);
+
+            // Mock the repository methods
+            when(documentRepository.findById(documentId)).thenReturn(Optional.of(document));
+            when(documentLinkRepository.findByDocumentOrLinkedDocument(document, document)).thenReturn(documentLinks);
+
+            // Call the service method
+            List<DocumentBriefLinksResponseDTO> response = documentLinkService.getDocumentLinks(documentId);
+
+            // Verify the results
+            assertNotNull(response, "The response should not be null");
+            assertEquals(2, response.size(), "The response size should be 2");
+            verify(documentLinkRepository, times(1)).findByDocumentOrLinkedDocument(document, document);
+        }
+
+        /**
+         * Test the getDocumentLinks method when the document is not found
+         */
+        @Test
+        void testGetDocumentLinks_documentNotFound() {
+            when(documentRepository.findById(documentId)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () -> documentLinkService.getDocumentLinks(documentId), "Expected ResourceNotFoundException when document is not found");
+        }
     }
 }
