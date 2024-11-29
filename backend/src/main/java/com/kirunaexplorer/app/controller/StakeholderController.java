@@ -1,14 +1,10 @@
 package com.kirunaexplorer.app.controller;
 
-import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
-import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
-import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
-import com.kirunaexplorer.app.service.DocumentService;
-import com.kirunaexplorer.app.validation.groups.document.PostDocument;
-import com.kirunaexplorer.app.validation.groups.document.PutDocument;
-import jakarta.validation.groups.Default;
+import com.kirunaexplorer.app.dto.request.StakeholderRequestDTO;
+import com.kirunaexplorer.app.dto.response.StakeholderResponseDTO;
+import com.kirunaexplorer.app.service.StakeholderService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -16,58 +12,37 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/stakeholder")
+@RequestMapping("/api/v1/stakeholders")
 public class StakeholderController {
-    private final DocumentService documentService;
+    private final StakeholderService stakeholderService;
 
-    public StakeholderController(DocumentService documentService) {
-        this.documentService = documentService;
+    public StakeholderController(StakeholderService stakeholderService) {
+        this.stakeholderService = stakeholderService;
     }
 
-    /***
-     * Endpoint to get all documents in brief format
-     * @return List of DocumentBriefResponseDTO
+    /**
+     * Get all stakeholders
+     *
+     * @return List of stakeholders
      */
     @GetMapping
-    public ResponseEntity<List<DocumentBriefResponseDTO>> getAllDocuments() {
-        return ResponseEntity.ok(documentService.getAllDocuments());
+    public ResponseEntity<List<StakeholderResponseDTO>> getAllStakeholders() {
+        return ResponseEntity.ok(stakeholderService.getAllStakeholders());
     }
 
-    /***
-     * Endpoint to get a document by id
-     * @param id Document id
-     * @return DocumentResponseDTO
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<DocumentResponseDTO> getDocumentById(@PathVariable Long id) {
-        return ResponseEntity.ok(documentService.getDocumentById(id));
-    }
-
-    /***
-     * Endpoint to create a document
-     * @param document DocumentRequestDTO
-     * @return ResponseEntity<Void>
+    /**
+     * Create a stakeholder
+     *
+     * @param stakeholder StakeholderRequestDTO
+     * @return ResponseEntity
      */
     @PostMapping
-    public ResponseEntity<Void> createDocument(@RequestBody @Validated({Default.class, PostDocument.class}) DocumentRequestDTO document) {
-        Long documentId = documentService.createDocument(document);
+    public ResponseEntity<Void> createStakeholder(@RequestBody @Valid StakeholderRequestDTO stakeholder) {
+        Long documentId = stakeholderService.createStakeholder(stakeholder);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
             .path("/{id}")
             .buildAndExpand(documentId)
             .toUri();
         return ResponseEntity.created(location).build();
     }
-
-    /***
-     * Endpoint to update a document
-     * @param document DocumentRequestDTO
-     * @return ResponseEntity<Void>
-     */
-    @PutMapping
-    public ResponseEntity<Void> updateDocument(@RequestBody @Validated({Default.class, PutDocument.class}) DocumentRequestDTO document) {
-        documentService.updateDocument(document);
-        return ResponseEntity.noContent().build();
-    }
 }
-
-
