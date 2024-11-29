@@ -213,6 +213,41 @@ public class DataInitializer implements CommandLineRunner {
             geometryFactory.createPoint(new Coordinate(20.2500, 67.9000)) // Specific location
         );
         geoReferenceRepository.save(geoRef7);
+
+        for (int i = 0; i < 100; i++) {
+            addNewDocument(i);
+        }
+
+
+    }
+
+
+    private void addNewDocument(int documentNumber) {
+        Document document = new Document(null,
+            "Construction of Scandic Hotel begins - Document " + documentNumber,
+            "After two extensions of the land acquisition agreement, necessary because this document in Sweden is valid for only two years, construction of the hotel finally began in 2019.",
+            "LKAB",
+            "Material effect",
+            "Blueprint/Material effects",
+            LocalDate.of(2019, 4, 19),
+            DatePrecision.FULL_DATE,
+            null,
+            null,
+            LocalDateTime.now(),
+            null,
+            new HashSet<>(),
+            null,
+            new HashSet<>());
+
+        document = documentRepository.save(document);
+
+        GeoReference geoRef = new GeoReference(
+            null,
+            document,
+            false,
+            geometryFactory.createPoint(new Coordinate(20.2500, 67.9000)) // Specific location
+        );
+        geoReferenceRepository.save(geoRef);
     }
 
 }
