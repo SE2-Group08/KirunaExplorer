@@ -60,35 +60,65 @@ export default function ListDocuments({ shouldRefresh }) {
     }
   };
 
-  const handleSave = (document) => {
-    API.updateDocument(document.id, document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({
-          type: "success",
-          message: "Document updated successfully",
-        })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
-    setShow(false);
-    setShouldRefresh(true);
+  const handleStakeholders = async (document) => {
+    const allStakeholders = await API.getAllStakeholders();
+    const uniqueStakeholders = [
+      ...new Map(
+        document.stakeholders.map((stakeholder) => [
+          stakeholder.name,
+          stakeholder,
+        ])
+      ).values(),
+    ];
+    const newStakeholders = uniqueStakeholders.filter(
+      (stakeholder) =>
+        !allStakeholders.some(
+          (existingStakeholder) => existingStakeholder.name === stakeholder.name
+        )
+    );
+
+    await Promise.all(
+      newStakeholders.map((stakeholder) => API.addStakeholder(stakeholder))
+    );
   };
 
-  const handleAdd = (document) => {
-    API.addDocument(document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({ type: "success", message: "Document added successfully" })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
+const handleSave = async (document) => {
+  try {
+    await handleStakeholders(document);
+    await API.updateDocument(document.id, document);
+    const updatedDocuments = await API.getAllDocumentSnippets();
+    setDocuments(updatedDocuments);
+    setShouldRefresh(false);
+    setFeedback({
+      type: "success",
+      message: "Document updated successfully",
+    });
+  } catch (error) {
+    setFeedbackFromError(error);
+  } finally {
     setShow(false);
     setShouldRefresh(true);
+  }
+};
+
+const handleAdd = async (document) => {
+  try {
+    await handleStakeholders(document);
+    await API.addDocument(document);
+    const updatedDocuments = await API.getAllDocumentSnippets();
+    setDocuments(updatedDocuments);
+    setShouldRefresh(false);
+    setFeedback({
+      type: "success",
+      message: "Document added successfully",
+    });
+  } catch (error) {
+    setFeedbackFromError(error);
+  } finally {
+    setShow(false);
+    setShouldRefresh(true);
+  }
+};
   };
 
   const handleDelete = (documentId) => {
