@@ -813,7 +813,7 @@
         }
       }
     },
-    "/api/v1/documentType": {
+    "/api/v1/document-type": {
       "get": {
         "summary": "Get all document types",
         "tags": [
