@@ -17,6 +17,8 @@ import prescriptiveDocument_Kommun from "../public/icons/Prescriptive-document-K
 import informativeDocument_KommunResidents from "../public/icons/Informative-document-KOMMUN-RESIDENTS.png";
 import designDocument_KommunWhiteArkitekter from "../public/icons/Design-document-KOMMUN-ARKITEKTER.png";
 import getKirunaArea from "./KirunaArea";
+import { useContext } from "react";
+import FeedbackContext from "../contexts/FeedbackContext";
 
 // Icon mapping
 const iconMapping = {
@@ -92,7 +94,6 @@ const defaultIcon = new L.Icon({
 const getIconForDocument = (type, stakeholders) => {
   if (iconMapping[type]) {
     const stakeholdersKey = stakeholders.sort().join(",");
-    console.log(stakeholdersKey);
     return iconMapping[type][stakeholdersKey] || defaultIcon;
   }
   return defaultIcon;
@@ -123,10 +124,12 @@ const MapKiruna = () => {
   const kirunaPosition = [67.8400, 20.2253];
   const zoomLevel = 12;
 
+  const { setFeedbackFromError } = useContext(FeedbackContext);
+
   useEffect(() => {
     API.getAllDocumentSnippets()
       .then(setDocuments)
-      .catch((error) => console.error("Error fetching documents:", error));
+      .catch((error) => setFeedbackFromError(error));
   }, []);
 
   const handleDocumentClick = (document) => {
@@ -136,11 +139,10 @@ const MapKiruna = () => {
         setSelectedDocument(response);
         setShow(true);
       })
-      .catch((error) => console.error("Error fetching document:", error));
+      .catch((error) => setFeedbackFromError(error));
   };
 
   const closeSidePanel = () => {
-    console.log("closeSidePanel");
     setShow(false);
     setSelectedDocument(null);
   };

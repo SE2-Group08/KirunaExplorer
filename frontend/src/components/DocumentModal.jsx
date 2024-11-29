@@ -362,9 +362,9 @@ DocumentModal.propTypes = {
   document: PropTypes.object.isRequired,
   handleSave: PropTypes.func.isRequired,
   handleAdd: PropTypes.func.isRequired,
-  onLinkToClick: PropTypes.func.isRequired,
-  onLinksClick: PropTypes.func.isRequired,
-  onSnippetClick: PropTypes.func.isRequired,
+  onLinkToClick: PropTypes.func,
+  onLinksClick: PropTypes.func,
+  onSnippetClick: PropTypes.func,
 };
 
 function ModalBodyComponent({ document }) {
@@ -924,7 +924,6 @@ function DocumentFormComponent({
           max={23.28669305841499}
           step={0.00001}
           value={document.geolocation.longitude}
-          isInvalid={!!errors.longitude}
           onChange={handleLongitudeChange}
           disabled={document.geolocation.municipality === "Entire municipality"}
         />
