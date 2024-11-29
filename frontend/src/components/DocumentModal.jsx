@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { Button, Modal, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import {
   MapContainer,
@@ -15,6 +15,7 @@ import ListDocumentLinks from "./ListDocumentLinks.jsx";
 import dayjs from "dayjs";
 import "../App.css";
 import API from "../API.mjs";
+import FeedbackContext from "../contexts/FeedbackContext.js";
 
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
@@ -36,6 +37,7 @@ export default function DocumentModal(props) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [isEditable, setIsEditable] = useState(false);
   const [isSliderOpen, setSliderOpen] = useState(false);
+  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
 
   const [document, setDocument] = useState({
     title: "",
@@ -136,8 +138,7 @@ export default function DocumentModal(props) {
 
     // Scale validation
     if (typeof document.scale !== "string" || !document.scale.trim()) {
-      newErrors.scale =
-        "Scale must be present.";
+      newErrors.scale = "Scale must be present.";
     } else if (document.scale.includes(":")) {
       const [first, second] = document.scale.split(":").map(Number);
       if (first > second) {
@@ -265,15 +266,15 @@ export default function DocumentModal(props) {
     props.onHide();
   };
   const handleChange = (field, value) => {
-    setDocument((prevDocument) => ({
-      ...prevDocument,
-      [field]: value,
-    }));
+      setDocument((prevDocument) => ({
+        ...prevDocument,
+        [field]: value,
+      }));
   };
 
-  const handleLinksClick = () => {
-    setSliderOpen(!isSliderOpen);
-  };
+  // const handleLinksClick = () => {
+  //   setSliderOpen(!isSliderOpen);
+  // };
 
   const handleCloseSlider = () => {
     setSliderOpen(false);
@@ -495,21 +496,28 @@ function DocumentFormComponent({
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
   const [allScales, setAllScales] = useState([]);
+  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
 
   const dayRef = useRef(null);
   const monthRef = useRef(null);
   const yearRef = useRef(null);
 
   useEffect(() => {
-    API.getAllStakeholders().then((stakeholders) => {
-      setAllStakeholders(stakeholders);
-    });
-    API.getAllDocumentTypes().then((documentTypes) => {
-      setAllDocumentTypes(documentTypes);
-    });
-    API.getAllScales().then((scales) => {
-      setAllScales(scales);
-    });
+    API.getAllStakeholders()
+      .catch((e) => setFeedbackFromError(e))
+      .then((stakeholders) => {
+        setAllStakeholders(stakeholders);
+      });
+    API.getAllDocumentTypes()
+      .catch((e) => setFeedbackFromError(e))
+      .then((documentTypes) => {
+        setAllDocumentTypes(documentTypes);
+      });
+    API.getAllScales()
+      .catch((e) => setFeedbackFromError(e))
+      .then((scales) => {
+        setAllScales(scales);
+      });
   }, []);
 
   const handleDayChange = (e) => {

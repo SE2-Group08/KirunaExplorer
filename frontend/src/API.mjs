@@ -95,7 +95,6 @@ const getAllDocumentSnippets = async (filter) => {
 
 // Create a new document
 const addDocument = async (document) => {
-  console.log("ADD DOCUMENT: ", document);
   return await fetch(`${SERVER_URL}/documents`, {
     method: "POST",
     headers: {
@@ -136,83 +135,33 @@ const deleteDocument = async (documentId) => {
  *      Stakeholders APIs     *
  * ************************** */
 
-const stakeholders = [
-  { id: 1, name: "LKAB" },
-  { id: 2, name: "Municipality" },
-  { id: 3, name: "Regional authority" },
-  { id: 4, name: "Architecture firms" },
-  { id: 5, name: "Citizen" },
-];
-
 // // Retrieve all stakeholders
 const getAllStakeholders = async () => {
-  // const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
-  //   .then(handleInvalidResponse)
-  //   .then((response) => response.json())
-  //   .then(mapAPIStakeholdersToStakeholders);
-  const sh = [];
-  stakeholders.forEach((s) => sh.push(Stakeholder.fromJSON(s)));
-  return sh;
+  const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then(stakeholders => stakeholders.map(stakeholder => Stakeholder.fromJSON(stakeholder)));
+  return stakeholders
 };
 
 // Create a new stakeholder
 const addStakeholder = async (stakeholder) => {
-  //   return await fetch(`${SERVER_URL}/stakeholders`, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify(stakeholder),
-  //   }).then(handleInvalidRiesponse);
-  const existingStakeholder = stakeholders.find((s) => s.name === stakeholder);
-  if (!existingStakeholder) {
-    const newId = stakeholders.length
-      ? stakeholders[stakeholders.length - 1].id + 1
-      : 1;
-    const newStakeholder = { id: newId, name: stakeholder };
-    stakeholders.push(newStakeholder);
-  }
-};
-
-// Retrieve a stakeholder by id
-const getStakeholderById = async (stakeholderId) => {
-  //   const stakeholder = await fetch(`${SERVER_URL}/stakeholders/${stakeholderId}`)
-  //     .then(handleInvalidResponse)
-  //     .then((response) => response.json());
-  //   return stakeholder;
-  return Stakeholder.fromJSON(
-    stakeholders.find((stakeholder) => stakeholder.id === stakeholderId)
-  );
-};
-
-// Update a stakeholder given its id
-const updateStakeholder = async (stakeholderId, nextStakeholder) => {
-  //   return await fetch(`${SERVER_URL}/stakeholders/`, {
-  //     method: "PUT",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify(nextStakeholder),
-  //   }).then(handleInvalidResponse);
-  const index = stakeholders.findIndex(
-    (stakeholder) => stakeholder.id === stakeholderId
-  );
-  if (index !== -1) {
-    stakeholders[index] = nextStakeholder;
-  }
-};
-
-// Delete a stakeholder given its id
-const deleteStakeholder = async (stakeholderId) => {
-  //   return await fetch(`${SERVER_URL}/stakeholders/${stakeholderId}`, {
-  //     method: "DELETE",
-  //   }).then(handleInvalidResponse);
-  const index = stakeholders.findIndex(
-    (stakeholder) => stakeholder.id === stakeholderId
-  );
-  if (index !== -1) {
-    stakeholders.splice(index, 1);
-  }
+  console.log("ADD STAKEHOLDER: ", stakeholder);
+  return await fetch(`${SERVER_URL}/stakeholders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(stakeholder),
+  }).then(handleInvalidResponse);
+  // const existingStakeholder = stakeholders.find((s) => s.name === stakeholder);
+  // if (!existingStakeholder) {
+  //   const newId = stakeholders.length
+  //     ? stakeholders[stakeholders.length - 1].id + 1
+  //     : 1;
+  //   const newStakeholder = { id: newId, name: stakeholder };
+  //   stakeholders.push(newStakeholder);
+  // }
 };
 
 /* ************************** *
@@ -416,9 +365,6 @@ const API = {
   /* Stakeholder */
   getAllStakeholders,
   addStakeholder,
-  getStakeholderById,
-  updateStakeholder,
-  deleteStakeholder,
   /* Link */
   createLink,
   getAllLinksOfDocument,
