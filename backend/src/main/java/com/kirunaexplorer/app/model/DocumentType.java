@@ -19,12 +19,13 @@ public class DocumentType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String type_name;
+    @Column(nullable = false, unique = true)
+    private String typeName;
 
     public DocumentTypeResponseDTO toResponseDTO() {
         return new DocumentTypeResponseDTO(
             this.id.intValue(),
-            this.type_name
+            this.typeName
         );
     }
 

@@ -14,7 +14,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/documents")
+@RequestMapping("/api/v1/document-type")
 public class DocumentTypeController {
     private final DocumentTypeService documentTypeService;
 
@@ -45,7 +45,6 @@ public class DocumentTypeController {
             .toUri();
         return ResponseEntity.created(location).build();
     }
-
 
 
 }

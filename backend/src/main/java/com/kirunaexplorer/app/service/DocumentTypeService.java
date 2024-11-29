@@ -17,27 +17,33 @@ public class DocumentTypeService {
         this.documentTypeRepository = documentTypeRepository;
     }
 
-    /***
-     * Get all documents in brief format
-     * @return List of DocumentBriefResponseDTO
+    /**
+     * Get all document types
+     *
+     * @return List of DocumentTypeResponseDTO
      */
+    @Transactional
     public List<DocumentTypeResponseDTO> getAllDocumentTypes() {
         return documentTypeRepository.findAll().stream()
             .map(DocumentType::toResponseDTO)
             .toList();
     }
 
-
-    /***
-     * Create a document
+    /**
+     * Create a document type
+     *
      * @param documentTypeRequest DocumentTypeRequestDTO
-     * @return DocumentRequestDTO
+     * @return created document type id
      */
     @Transactional
     public Long createDocumentType(DocumentTypeRequestDTO documentTypeRequest) {
+        Boolean documentTypeExists = documentTypeRepository.existsByTypeName((documentTypeRequest.name()));
+        if (documentTypeExists) {
+            throw new IllegalArgumentException("Document type already exists");
+        }
+
         DocumentType type = documentTypeRequest.toDocumentType();
         type = documentTypeRepository.save(type);
-
 
         return type.getId();
     }

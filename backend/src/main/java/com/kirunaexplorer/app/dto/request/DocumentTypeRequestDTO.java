@@ -11,7 +11,7 @@ public record DocumentTypeRequestDTO(
 
     @NotNull
     @Size(min = 2, max = 64)
-    String title
+    String name
 ) {
 
     /***
@@ -20,9 +20,9 @@ public record DocumentTypeRequestDTO(
      */
     public DocumentType toDocumentType() {
         return new DocumentType(
-                id,
-                title
-            );
+            id,
+            name
+        );
     }
 
 
