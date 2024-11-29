@@ -2,9 +2,11 @@ package com.kirunaexplorer.app.config;
 
 import com.kirunaexplorer.app.model.Document;
 import com.kirunaexplorer.app.model.Document.DatePrecision;
+import com.kirunaexplorer.app.model.DocumentType;
 import com.kirunaexplorer.app.model.GeoReference;
 import com.kirunaexplorer.app.model.Stakeholder;
 import com.kirunaexplorer.app.repository.DocumentRepository;
+import com.kirunaexplorer.app.repository.DocumentTypeRepository;
 import com.kirunaexplorer.app.repository.GeoReferenceRepository;
 import com.kirunaexplorer.app.repository.StakeholderRepository;
 import org.locationtech.jts.geom.Coordinate;
@@ -23,12 +25,19 @@ public class DataInitializer implements CommandLineRunner {
     private final DocumentRepository documentRepository;
     private final GeoReferenceRepository geoReferenceRepository;
     private final StakeholderRepository stakeholderRepository;
+    private final DocumentTypeRepository documentTypeRepository;
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
-    public DataInitializer(DocumentRepository documentRepository, GeoReferenceRepository geoReferenceRepository, StakeholderRepository stakeholderRepository) {
+    public DataInitializer(
+        DocumentRepository documentRepository,
+        GeoReferenceRepository geoReferenceRepository,
+        StakeholderRepository stakeholderRepository,
+        DocumentTypeRepository documentTypeRepository
+    ) {
         this.documentRepository = documentRepository;
         this.geoReferenceRepository = geoReferenceRepository;
         this.stakeholderRepository = stakeholderRepository;
+        this.documentTypeRepository = documentTypeRepository;
     }
 
     @Override
@@ -220,6 +229,7 @@ public class DataInitializer implements CommandLineRunner {
 
 
         initializeStakeholders();
+        initializeDocumentType();
     }
 
     private void initializeStakeholders() {
@@ -227,6 +237,14 @@ public class DataInitializer implements CommandLineRunner {
         stakeholderRepository.save(new Stakeholder(null, "Residents"));
         stakeholderRepository.save(new Stakeholder(null, "White Arkitekter"));
         stakeholderRepository.save(new Stakeholder(null, "LKAB"));
+    }
+
+    private void initializeDocumentType() {
+        documentTypeRepository.save(new DocumentType(null, "Informative document"));
+        documentTypeRepository.save(new DocumentType(null, "Design document"));
+        documentTypeRepository.save(new DocumentType(null, "Technical document"));
+        documentTypeRepository.save(new DocumentType(null, "Prescriptive document"));
+        documentTypeRepository.save(new DocumentType(null, "Material effect"));
     }
 
 }
