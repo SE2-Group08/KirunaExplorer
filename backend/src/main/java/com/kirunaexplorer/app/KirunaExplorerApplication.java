@@ -3,11 +3,15 @@ package com.kirunaexplorer.app;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 @SpringBootApplication
 public class KirunaExplorerApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(KirunaExplorerApplication.class, args);
+		 Dotenv dotenv = Dotenv.load();
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+        SpringApplication.run(KirunaExplorerApplication.class, args);
 	}
 
 }
