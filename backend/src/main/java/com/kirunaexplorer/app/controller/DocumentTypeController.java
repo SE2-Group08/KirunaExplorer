@@ -14,7 +14,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/document-type")
+@RequestMapping("/api/v1/document-types")
 public class DocumentTypeController {
     private final DocumentTypeService documentTypeService;
 

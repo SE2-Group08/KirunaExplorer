@@ -35,7 +35,7 @@ public record DocumentRequestDTO(
     String issuanceDate,
 
     @NotNull
-    @Pattern(regexp = "Design document|Material effect|Technical document|Prescriptive document|Informative document")
+    @Size(min = 2, max = 64)
     String type,
 
     @Min(0)
