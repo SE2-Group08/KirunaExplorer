@@ -146,7 +146,6 @@ const getAllStakeholders = async () => {
 
 // Create a new stakeholder
 const addStakeholder = async (stakeholder) => {
-  console.log("ADD STAKEHOLDER: ", stakeholder);
   return await fetch(`${SERVER_URL}/stakeholders`, {
     method: "POST",
     headers: {
@@ -154,71 +153,31 @@ const addStakeholder = async (stakeholder) => {
     },
     body: JSON.stringify(stakeholder),
   }).then(handleInvalidResponse);
-  // const existingStakeholder = stakeholders.find((s) => s.name === stakeholder);
-  // if (!existingStakeholder) {
-  //   const newId = stakeholders.length
-  //     ? stakeholders[stakeholders.length - 1].id + 1
-  //     : 1;
-  //   const newStakeholder = { id: newId, name: stakeholder };
-  //   stakeholders.push(newStakeholder);
-  // }
 };
 
 /* ************************** *
  *     Document Type APIs     *
  * ************************** */
-const documentTypes = [
-  { id: 1, name: "Design document" },
-  { id: 2, name: "Material effect" },
-  { id: 3, name: "Technical document" },
-  { id: 4, name: "Prescriptive document" },
-  { id: 5, name: "Informative document" },
-]
 
 // Retrieve all document types
 const getAllDocumentTypes = async () => {
-  const dt = [];
-  documentTypes.forEach((t) => dt.push(DocumentType.fromJSON(t)));
-  return dt;
+  const documentTypes = await fetch(`${SERVER_URL}/document-types`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then(documentTypes => documentTypes.map(documentType => DocumentType.fromJSON(documentType)));
+    console.log(documentTypes);
+  return documentTypes;
 }
 
 // Create a new document type
 const addDocumentType = async (documentType) => {
-  const existingDocumentType = documentTypes.find((t) => t.name === documentType);
-  if (!existingDocumentType) {
-    const newId = documentTypes.length
-      ? documentTypes[documentTypes.length - 1].id + 1
-      : 1;
-    const newDocumentType = { id: newId, name: documentType };
-    documentTypes.push(newDocumentType);
-  }
-}
-
-// Retrieve a document type by id
-const getDocumentTypeById = async (documentTypeId) => {
-  return DocumentType.fromJSON(
-    documentTypes.find((documentType) => documentType.id === documentTypeId)
-  );
-}
-
-// Update a document type given its id
-const updateDocumentType = async (documentTypeId, nextDocumentType) => {
-  const index = documentTypes.findIndex(
-    (documentType) => documentType.id === documentTypeId
-  );
-  if (index !== -1) {
-    documentTypes[index] = nextDocumentType;
-  }
-}
-
-// Delete a document type given its id
-const deleteDocumentType = async (documentTypeId) => {
-  const index = documentTypes.findIndex(
-    (documentType) => documentType.id === documentTypeId
-  );
-  if (index !== -1) {
-    documentTypes.splice(index, 1);
-  }
+  return await fetch(`${SERVER_URL}/document-types`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(documentType),
+  }).then(handleInvalidResponse);
 }
 
 /* ************************** *
@@ -373,9 +332,6 @@ const API = {
   /* Document Type */
   getAllDocumentTypes,
   addDocumentType,
-  getDocumentTypeById,
-  updateDocumentType,
-  deleteDocumentType,
   /* Scale */
   getAllScales,
   addScale,

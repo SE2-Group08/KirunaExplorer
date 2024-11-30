@@ -5,7 +5,7 @@ export class DocumentType {
     }
 
     static fromJSON(json) {
-        return new DocumentType(json.id, json.name);
+        return new DocumentType(json.id, json.type_name);
     }
   }
   

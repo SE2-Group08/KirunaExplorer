@@ -134,6 +134,10 @@ export default function DocumentModal(props) {
       document.stakeholders.length
     ) {
       newErrors.stakeholders = "Stakeholders must not contain duplicates.";
+    } else if (
+      document.stakeholders.some((s) => s.trim().toLowerCase() === "other")
+    ) {
+      newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
     }
 
     // Scale validation
@@ -162,6 +166,10 @@ export default function DocumentModal(props) {
 
     if (!document.type || (document.type === "Other" && !document.customType)) {
       newErrors.type = "Type is required.";
+    } else if (document.type === "Other") {
+      newErrors.type = "Type cannot be 'Other'.";
+    } else if (document.type.length > 64 && document.type.length < 2) {
+      newErrors.type = "Type must be less than 64 characters.";
     }
 
     if (
@@ -266,10 +274,10 @@ export default function DocumentModal(props) {
     props.onHide();
   };
   const handleChange = (field, value) => {
-      setDocument((prevDocument) => ({
-        ...prevDocument,
-        [field]: value,
-      }));
+    setDocument((prevDocument) => ({
+      ...prevDocument,
+      [field]: value,
+    }));
   };
 
   // const handleLinksClick = () => {
@@ -829,13 +837,11 @@ function DocumentFormComponent({
                   document.customType &&
                   !allDocumentTypes.some((t) => t.name === document.customType)
                 ) {
-                  API.addDocumentType(document.customType).then(() => {
-                    setAllDocumentTypes([
-                      ...allDocumentTypes,
-                      { id: Date.now(), name: document.customType },
-                    ]);
-                    handleChange("type", document.customType);
+                  allDocumentTypes.push({
+                    id: Date.now(),
+                    name: document.customType,
                   });
+                  handleChange("type", document.customType);
                 }
               }}
               title="Add custom type"
@@ -845,9 +851,9 @@ function DocumentFormComponent({
           </div>
         )}
       </Form.Group>
-      <Form.Control.Feedback type="invalid">
+      <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
         {errors.type}
-      </Form.Control.Feedback>
+      </div>
 
       <div className="divider" />
 
