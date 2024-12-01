@@ -2,6 +2,7 @@ package com.kirunaexplorer.app.controller;
 
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.service.DocumentService;
 import com.kirunaexplorer.app.validation.groups.document.PostDocument;
@@ -45,6 +46,16 @@ public class DocumentController {
     @GetMapping("/{id}")
     public ResponseEntity<DocumentResponseDTO> getDocumentById(@PathVariable Long id) {
         return ResponseEntity.ok(documentService.getDocumentById(id));
+    }
+
+    /**
+     * Endpoint to get all documents in brief format
+     *
+     * @return List of DocumentBriefResponseDTO
+     */
+    @GetMapping("/map")
+    public ResponseEntity<List<DocumentBriefResponseDTO>> getAllDocuments() {
+        return ResponseEntity.ok(documentService.getAllDocuments());
     }
 
     /**
