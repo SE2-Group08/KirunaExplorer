@@ -2,6 +2,7 @@ package com.kirunaexplorer.app.service;
 
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.Document;
@@ -91,6 +92,17 @@ public class DocumentService {
 
         geoReference.updateFromDTO(documentRequest.geolocation()); // Update geolocation
         geoReferenceRepository.save(geoReference);
+    }
+
+    /**
+     * Get all documents in brief format
+     *
+     * @return List of DocumentBriefResponseDTO
+     */
+    public List<DocumentBriefResponseDTO> getAllDocuments() {
+        return documentRepository.findAll().stream()
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
     }
 }
 
