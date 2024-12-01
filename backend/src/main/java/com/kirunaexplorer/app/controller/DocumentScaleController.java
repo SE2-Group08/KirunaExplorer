@@ -14,7 +14,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/documents")
+@RequestMapping("/api/v1/scales")
 public class DocumentScaleController {
     private final DocumentScaleService documentScaleService;
 

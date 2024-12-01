@@ -27,7 +27,7 @@ public record DocumentRequestDTO(
     List<@Size(min = 2, max = 64) String> stakeholders,
 
     @NotNull
-    @Pattern(regexp = "Text|Blueprint/Material effects|^[1-9]:[1-9][0-9]*$")
+    @Size(min = 2, max = 64)
     String scale,
 
     @NotNull

@@ -61,6 +61,8 @@ public class DocumentService {
         GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
         geoReferenceRepository.save(geoReference);
 
+        
+
         return document.getId();
     }
 
