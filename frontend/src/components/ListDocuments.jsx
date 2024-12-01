@@ -8,6 +8,7 @@ import API from "../API";
 import LinkModal from "./LinkModal";
 import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
+import Pagination from "./Pagination";
 
 export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
@@ -18,18 +19,29 @@ export default function ListDocuments({ shouldRefresh }) {
   const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const { setFeedbackFromError, setShouldRefresh, setFeedback } =
     useContext(FeedbackContext);
 
-  useEffect(() => {
-    if (shouldRefresh) {
-      API.getDocumentsByPageNumber()
-        .then(setDocuments)
-        .then(() => setShouldRefresh(false))
-        .catch((error) => setFeedbackFromError(error));
-    }
-  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
+    useEffect(() => {
+      window.scrollTo(0, 0);
+      if (shouldRefresh) {
+        API.getDocumentsByPageNumber(currentPage)
+          .then((response) => {
+            setDocuments(response[0].documentSnippets);
+            setTotalPages(response[0].totalPages);
+          })
+          .then(() => setShouldRefresh(false))
+          .catch((error) => setFeedbackFromError(error));
+      }
+    }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
+
+    const handlePageChange = (pageNumber) => {
+      setCurrentPage(pageNumber);
+      setShouldRefresh(true);
+    };
 
   const handleSelection = async (document) => {
     const newDoc = await API.getDocumentById(document.id).catch((error) =>
@@ -239,6 +251,13 @@ export default function ListDocuments({ shouldRefresh }) {
             ))}
           </Row>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+
         {/* Modals for viewing, adding, or linking documents */}
         {selectedDocument && (
           <DocumentModal

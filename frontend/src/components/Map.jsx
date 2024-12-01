@@ -135,9 +135,12 @@ const MapKiruna = () => {
   const kirunaPolygonRef = useRef(null);
 
   useEffect(() => {
-    API.getAllDocumentSnippets()
-      .then(setDocuments)
-      .catch((error) => setFeedbackFromError(error));
+    API.getDocumentsByPageNumber()
+    .then((response) => {
+      setDocuments(response[0].documentSnippets);
+    })
+    .then(() => setShouldRefresh(false))
+    .catch((error) => setFeedbackFromError(error));
   }, []);
 
   const handleDocumentClick = (document) => {

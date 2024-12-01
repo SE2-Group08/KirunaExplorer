@@ -86,7 +86,6 @@ const getDocumentsByPageNumber = async (pageNo = 0) => {
       throw new Error(`Failed to fetch documents for page ${pageNo}: ${response.statusText}`);
     }
     const documents = await response.json();
-    console.log("DOCUMENTS: ", documents);
     return documents;
   } catch (error) {
     console.error("Errore durante il recupero dei documenti per pagina:", error);
