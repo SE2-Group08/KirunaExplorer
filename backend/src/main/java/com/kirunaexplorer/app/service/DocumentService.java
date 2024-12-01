@@ -5,6 +5,7 @@ import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.Document;
+import com.kirunaexplorer.app.model.DocumentScale;
 import com.kirunaexplorer.app.model.DocumentType;
 import com.kirunaexplorer.app.model.GeoReference;
 import com.kirunaexplorer.app.model.Stakeholder;
@@ -20,6 +21,7 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final GeoReferenceRepository geoReferenceRepository;
     private final DocumentLinkRepository documentLinkRepository;
+    private final DocumentScaleRepository documentScaleRepository;
     private final StakeholderRepository stakeholderRepository;
     private final DocumentTypeRepository documentTypeRepository;
 
@@ -29,12 +31,14 @@ public class DocumentService {
         DocumentLinkRepository documentLinkRepository,
         StakeholderRepository stakeholderRepository,
         DocumentTypeRepository documentTypeRepository
+        DocumentScaleRepository documentScaleRepository
     ) {
         this.geoReferenceRepository = geoReferenceRepository;
         this.documentRepository = documentRepository;
         this.documentLinkRepository = documentLinkRepository;
         this.stakeholderRepository = stakeholderRepository;
         this.documentTypeRepository = documentTypeRepository;
+        this.documentScaleRepository = documentScaleRepository;
     }
 
     /**
@@ -95,6 +99,15 @@ public class DocumentService {
         // Save geolocation
         GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
         geoReferenceRepository.save(geoReference);
+
+        // Get existing scales
+        List<DocumentScale> existingScales = documentScaleRepository.findAll();
+        // Get new scale to add to the db
+        DocumentScale newScale =  DocumentFieldsChecker.getNewScale(documentRequest.scale(), existingScales);
+        // Add new scale to the db
+        if(newScale != null) {
+            documentScaleRepository.save(newScale);
+        }
 
         return document.getId();
     }
