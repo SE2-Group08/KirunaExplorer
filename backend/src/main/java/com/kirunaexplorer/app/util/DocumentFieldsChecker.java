@@ -2,6 +2,7 @@ package com.kirunaexplorer.app.util;
 
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
 import com.kirunaexplorer.app.dto.request.StakeholderRequestDTO;
+import com.kirunaexplorer.app.model.DocumentScale;
 import com.kirunaexplorer.app.model.DocumentType;
 import com.kirunaexplorer.app.model.Stakeholder;
 import jakarta.validation.constraints.NotNull;
@@ -44,6 +45,19 @@ public class DocumentFieldsChecker {
     public static DocumentType getNewDocumentType(String type, List<DocumentType> existingDocumentTypes) {
         if (existingDocumentTypes.stream().noneMatch(existing -> existing.getTypeName().equals(type))) {
             return new DocumentType(null, type);
+        }
+        return null;
+    }
+
+    /**
+     * Get new document scale
+     * @param scale                     Scale to check
+     * @param existingDocumentScales    List of existing document scales
+     * @return                          New document scale
+      */
+    public static DocumentScale getNewDocumentScale(String scale, List<DocumentScale> existingDocumentScales) {
+        if (existingDocumentScales.stream().noneMatch(existing -> existing.getScale().equals(scale))) {
+            return new DocumentScale(null, scale);
         }
         return null;
     }

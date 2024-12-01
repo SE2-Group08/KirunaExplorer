@@ -30,7 +30,7 @@ public class DocumentService {
         GeoReferenceRepository geoReferenceRepository,
         DocumentLinkRepository documentLinkRepository,
         StakeholderRepository stakeholderRepository,
-        DocumentTypeRepository documentTypeRepository
+        DocumentTypeRepository documentTypeRepository,
         DocumentScaleRepository documentScaleRepository
     ) {
         this.geoReferenceRepository = geoReferenceRepository;
@@ -103,7 +103,7 @@ public class DocumentService {
         // Get existing scales
         List<DocumentScale> existingScales = documentScaleRepository.findAll();
         // Get new scale to add to the db
-        DocumentScale newScale =  DocumentFieldsChecker.getNewScale(documentRequest.scale(), existingScales);
+        DocumentScale newScale =  DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
         // Add new scale to the db
         if(newScale != null) {
             documentScaleRepository.save(newScale);
