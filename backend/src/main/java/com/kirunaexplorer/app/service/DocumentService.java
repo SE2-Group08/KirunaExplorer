@@ -5,10 +5,10 @@ import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.Document;
+import com.kirunaexplorer.app.model.DocumentScale;
 import com.kirunaexplorer.app.model.GeoReference;
-import com.kirunaexplorer.app.repository.DocumentLinkRepository;
-import com.kirunaexplorer.app.repository.DocumentRepository;
-import com.kirunaexplorer.app.repository.GeoReferenceRepository;
+import com.kirunaexplorer.app.repository.*;
+import com.kirunaexplorer.app.util.DocumentFieldsChecker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +19,13 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final GeoReferenceRepository geoReferenceRepository;
     private final DocumentLinkRepository documentLinkRepository;
+    private final DocumentScaleRepository documentScaleRepository;
 
-    public DocumentService(DocumentRepository documentRepository, GeoReferenceRepository geoReferenceRepository, DocumentLinkRepository documentLinkRepository) {
+    public DocumentService(DocumentRepository documentRepository, GeoReferenceRepository geoReferenceRepository, DocumentLinkRepository documentLinkRepository, DocumentScaleRepository documentScaleRepository) {
         this.geoReferenceRepository = geoReferenceRepository;
         this.documentRepository = documentRepository;
         this.documentLinkRepository = documentLinkRepository;
+        this.documentScaleRepository = documentScaleRepository;
     }
 
     /***
@@ -61,7 +63,14 @@ public class DocumentService {
         GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
         geoReferenceRepository.save(geoReference);
 
-        
+        // Get existing scales
+        List<DocumentScale> existingScales = documentScaleRepository.findAll();
+        // Get new scale to add to the db
+        DocumentScale newScale =  DocumentFieldsChecker.getNewScale(documentRequest.scale(), existingScales);
+        // Add new scale to the db
+        if(newScale != null) {
+            documentScaleRepository.save(newScale);
+        }
 
         return document.getId();
     }
