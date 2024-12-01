@@ -80,7 +80,6 @@ const getAllDocumentSnippets = async (filter) => {
 
 // Create a new document
 const addDocument = async (document) => {
-  console.log("ADD DOCUMENT: ", document);
   return await fetch(`${SERVER_URL}/documents`, {
     method: "POST",
     headers: {
