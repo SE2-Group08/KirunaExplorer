@@ -1,0 +1,82 @@
+.resource-container {
+    position: relative;
+    width: 100%;
+}
+
+.icon-wrapper {
+    position: relative;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.icon-wrapper:hover {
+    transform: scale(1.05);
+}
+
+.resource-hover-actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 5px; /* Spacing between buttons */
+    z-index: 2;
+}
+
+.resource-container {
+    position: relative;
+    width: 100%;
+}
+
+.icon-wrapper {
+    position: relative;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.resource-hover-actions {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 8px;
+    justify-content: center;
+    align-items: end;
+    gap: 5px; /* Spacing between buttons */
+    z-index: 2;
+}
+
+.icon-wrapper:hover .resource-hover-actions {
+    display: flex;
+}
+
+.hover-btn {
+    font-size: 12px;
+    padding: 4px 6px;
+}
+
+.resource-name {
+    margin-top: 10px;
+    max-width: 100%;
+    font-size: 0.9rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}

@@ -17,6 +17,7 @@ import "../App.css";
 
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
+import DocumentResources from "./DocumentResources.jsx";
 dayjs.extend(customParseFormat);
 // import { useMap } from "react-leaflet";
 
@@ -35,7 +36,6 @@ export default function DocumentModal(props) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [isEditable, setIsEditable] = useState(false);
   const [isSliderOpen, setSliderOpen] = useState(false);
-
   const [document, setDocument] = useState({
     title: "",
     stakeholders: [],
@@ -387,98 +387,155 @@ DocumentModal.propTypes = {
 };
 
 function ModalBodyComponent({ document }) {
+  const [resources, setResources] = useState([
+    {name: "RESOURCES1.pdf", url: "RESOURCES1"},
+    {name: "RESOURCES2.docx", url: "RESOURCES2"},
+    {name: "RESOURCES3.jpeg", url: "RESOURCES3"},
+    {name: "RESOURCES4.xlsx", url: "RESOURCES4"},
+    {name: "RESOURCES1.pdf", url: "RESOURCES1"},
+    {name: "RESOURCES2.docx", url: "RESOURCES2"},
+    {name: "RESOURCES3.jpeg", url: "RESOURCES3"},
+    {name: "RESOURCES4.xlsx", url: "RESOURCES4"},
+    {name: "RESOURCES1.pdf", url: "RESOURCES1"},
+    {name: "RESOURCES2.docx", url: "RESOURCES2"},
+    {name: "RESOURCES3.jpeg", url: "RESOURCES3"},
+    {name: "RESOURCES4.xlsx", url: "RESOURCES4"},
+  ]);
+  const [viewMode, setViewMode] = useState("list");
+  const handleDelete = (resource) => {
+    setResources((prevResources) => prevResources.filter((res) => res.name !== resource.name));
+  };
+
+  const handleDownload = (resource) => {
+
+    //TODO retrieve the selected resource with the API
+    /*const link = document.createElement("a");
+    link.href = resource.url;
+    link.download = resource.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);*/
+  };
   return (
-    <div className="document-info">
-      <div className="info-section">
-        <div className="info-item">
-          <label>Stakeholders:</label>
-          <span>
+      <div className="modal-body-component">
+        <Row>
+          <Col md={6}>
+            <div className="info-section">
+              <div className="info-item">
+                <label>Stakeholders:</label>
+                <span>
             {document.stakeholders ? document.stakeholders.join(", ") : ""}
-          </span>
-        </div>
+                </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Scale:</label>
+                <span>{document.scale}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Issuance Date:</label>
+                <span>
+                {dayjs(document.issuanceDate).format(
+                    document.issuanceDate.length === 4
+                        ? "YYYY"
+                        : document.issuanceDate.length === 7
+                            ? "MM/YYYY"
+                            : "DD/MM/YYYY"
+                )}
+              </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Type:</label>
+                <span>{document.type}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Connections:</label>
+                <span>
+                {document.nrConnections === 0 ? (
+                    <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            This document has no links yet. Remember to add them.
+                          </Tooltip>
+                        }
+                    >
+                      <i className="bi bi-exclamation-triangle"></i>
+                    </OverlayTrigger>
+                ) : (
+                    document.nrConnections
+                )}
+              </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Language:</label>
+                <span>{document.language ? `${document.language}` : "-"}</span>
+              </div>
+              <div className="divider"></div>
+
+              <div className="info-item">
+                <label>Pages:</label>
+                <span>{document.nrPages > 0 ? `${document.nrPages}` : "-"}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Location:</label>
+                <span>
+                {document.geolocation.latitude && document.geolocation.longitude ? (
+                    `${document.geolocation.latitude}, ${document.geolocation.longitude}`
+                ) : document.geolocation.municipality ? (
+                    `${document.geolocation.municipality}`
+                ) : (
+                    <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            This document hasn&apos;t been geolocated yet. Remember to
+                            add it.
+                          </Tooltip>
+                        }
+                    >
+                      <i className="bi bi-exclamation-triangle"></i>
+                    </OverlayTrigger>
+                )}
+              </span>
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="description-area">
+              <label>Description:</label>
+              <p>{document.description}</p>
+            </div>
+          </Col>
+        </Row>
         <div className="divider"></div>
-        <div className="info-item">
-          <label>Scale:</label>
-          <span>{document.scale}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Issuance Date:</label>
-          <span>
-            {dayjs(document.issuanceDate).format(
-              document.issuanceDate.length === 4
-                ? "YYYY"
-                : document.issuanceDate.length === 7
-                ? "MM/YYYY"
-                : "DD/MM/YYYY"
-            )}
-          </span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Type:</label>
-          <span>{document.type}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Connections:</label>
-          <span>
-            {document.nrConnections === 0 ? (
-              <OverlayTrigger
-                placement="top"
-                overlay={
-                  <Tooltip>
-                    This document has no links yet. Remember to add them.
-                  </Tooltip>
-                }
-              >
-                <i className="bi bi-exclamation-triangle"></i>
-              </OverlayTrigger>
-            ) : (
-              document.nrConnections
-            )}
-          </span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Language:</label>
-          <span>{document.language ? `${document.language}` : "-"}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Pages:</label>
-          <span>{document.nrPages > 0 ? `${document.nrPages}` : "-"}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Location:</label>
-          <span>
-            {document.geolocation.latitude && document.geolocation.longitude ? (
-              `${document.geolocation.latitude}, ${document.geolocation.longitude}`
-            ) : document.geolocation.municipality ? (
-              `${document.geolocation.municipality}`
-            ) : (
-              <OverlayTrigger
-                placement="top"
-                overlay={
-                  <Tooltip>
-                    This document hasn&apos;t been geolocated yet. Remember to
-                    add it.
-                  </Tooltip>
-                }
-              >
-                <i className="bi bi-exclamation-triangle"></i>
-              </OverlayTrigger>
-            )}
-          </span>
-        </div>
+        <Row className="mt-4">
+          <Col>
+            <div className="document-resources-section">
+              <div className="info-item d-flex justify-content-between align-items-center mb-3">
+                <label>Resources: </label>
+                <Button
+                    onClick={() => setViewMode((prev) => (prev === "list" ? "grid" : "list"))}
+                    title={`Switch to ${viewMode === "list" ? "grid" : "list"} view`}
+                >
+                  <i className={`bi ${viewMode === "list" ? "bi-grid" : "bi-list-task"}`}></i>
+                </Button>
+              </div>
+              <DocumentResources
+                  resources={resources}
+                  onDelete={handleDelete}
+                  onDownload={handleDownload}
+                  viewMode={viewMode}
+              />
+            </div>
+          </Col>
+        </Row>
       </div>
-      <div className="divider-vertical"></div>
-      <div className="description-area">
-        <label>Description:</label>
-        <p>{document.description}</p>
-      </div>
-    </div>
   );
 }
 
@@ -521,8 +578,10 @@ function DocumentFormComponent({
   const monthRef = useRef(null);
   const yearRef = useRef(null);
   const [files, setFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleFileChange = (e) => {
+    setSelectedFile(event.target.files[0]);
     const newFiles = Array.from(e.target.files);
     const newFilePreviews = {};
 
@@ -532,7 +591,7 @@ function DocumentFormComponent({
     });
 
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    setFilePreviews((prevPreviews) => ({ ...prevPreviews, ...newFilePreviews }));
+    setFilePreviews((prevPreviews) => ({...prevPreviews, ...newFilePreviews}));
     updateFiles([...files, ...newFiles]);
   };
 
@@ -543,7 +602,7 @@ function DocumentFormComponent({
     URL.revokeObjectURL(filePreviews[fileToRemove.name]);
 
     const updatedFiles = files.filter((_, index) => index !== indexToRemove);
-    const updatedPreviews = { ...filePreviews };
+    const updatedPreviews = {...filePreviews};
     delete updatedPreviews[fileToRemove.name];
 
     setFiles(updatedFiles);
@@ -557,7 +616,6 @@ function DocumentFormComponent({
     // existingFiles = existingFiles.filter((file) => file.id !== fileId);
   };
 
-  // Clean up object URLs when the component unmounts
   useEffect(() => {
     return () => {
       Object.values(filePreviews).forEach((url) => URL.revokeObjectURL(url));
