@@ -34,6 +34,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    // Handle Duplicate Document Type (400)
+    @ExceptionHandler(DuplicateDocumentTypeException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateDocumentTypeException(DuplicateDocumentTypeException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            ex.getMessage(),
+            request.getDescription(false),
+            LocalDateTime.now());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+      
+    // Handle Duplicate Stakeholder Exception (400)
+    @ExceptionHandler(DuplicateStakeholderException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateStakeholderException(DuplicateStakeholderException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            ex.getMessage(),
+            request.getDescription(false),
+            LocalDateTime.now());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     // Handle generic exceptions (500)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
