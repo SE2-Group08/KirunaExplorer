@@ -169,7 +169,7 @@ export default function DocumentModal(props) {
     } else if (document.type === "Other") {
       newErrors.type = "Type cannot be 'Other'.";
     } else if (document.type.length > 64 && document.type.length < 2) {
-      newErrors.type = "Type must be less than 64 characters.";
+      newErrors.type = "Type must be between 2 and 64 characters.";
     }
 
     if (
@@ -736,13 +736,11 @@ function DocumentFormComponent({
                   document.customScale &&
                   !allScales.some((s) => s.name === document.customScale)
                 ) {
-                  API.addScale(document.customScale).then(() => {
-                    setAllScales([
-                      ...allScales,
-                      { id: Date.now(), name: document.customScale },
-                    ]);
-                    handleChange("scale", document.customScale);
+                  allScales.push({
+                    id: Date.now(),
+                    name: document.customScale,
                   });
+                  handleChange("scale", document.customScale);
                 }
               }}
               title="Add custom scale"

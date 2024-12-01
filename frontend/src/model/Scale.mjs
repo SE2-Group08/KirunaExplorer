@@ -5,7 +5,7 @@ export class Scale {
     }
 
     static fromJSON(json) {
-        return new Scale(json.id, json.name);
+        return new Scale(json.id, json.scale);
     }
   }
   

@@ -140,8 +140,10 @@ const getAllStakeholders = async () => {
   const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
-    .then(stakeholders => stakeholders.map(stakeholder => Stakeholder.fromJSON(stakeholder)));
-  return stakeholders
+    .then((stakeholders) =>
+      stakeholders.map((stakeholder) => Stakeholder.fromJSON(stakeholder))
+    );
+  return stakeholders;
 };
 
 // Create a new stakeholder
@@ -164,10 +166,11 @@ const getAllDocumentTypes = async () => {
   const documentTypes = await fetch(`${SERVER_URL}/document-types`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
-    .then(documentTypes => documentTypes.map(documentType => DocumentType.fromJSON(documentType)));
-    console.log(documentTypes);
+    .then((documentTypes) =>
+      documentTypes.map((documentType) => DocumentType.fromJSON(documentType))
+    );
   return documentTypes;
-}
+};
 
 // Create a new document type
 const addDocumentType = async (documentType) => {
@@ -178,81 +181,40 @@ const addDocumentType = async (documentType) => {
     },
     body: JSON.stringify(documentType),
   }).then(handleInvalidResponse);
-}
+};
 
 /* ************************** *
-  *       Scale APIs      *
-  * ************************** */
-
-const scales = [
-  { id: 1, name: "Blueprint/Material effects" },
-  { id: 2, name: "Text" },
-  { id: 3, name: "1:1" },
-  { id: 4, name: "1:100" },
-  { id: 5, name: "1:1000" },
-]
+ *       Scale APIs      *
+ * ************************** */
 
 // Retrieve all scales
 const getAllScales = async () => {
-  const sc = [];
-  scales.forEach((s) => sc.push(Scale.fromJSON(s)));
-  sc.sort((a, b) => {
-    const isANumeric = /^\d+:\d+$/.test(a.name);
-    const isBNumeric = /^\d+:\d+$/.test(b.name);
-
-    if (!isANumeric && !isBNumeric) {
-      return a.name.localeCompare(b.name);
-    } else if (!isANumeric) {
-      return -1;
-    } else if (!isBNumeric) {
-      return 1;
-    } else {
-      const aValue = parseInt(a.name.split(":")[1], 10);
-      const bValue = parseInt(b.name.split(":")[1], 10);
-      return aValue - bValue;
-    }
-  });
-  return sc;
-}
+  const scales = await fetch(`${SERVER_URL}/scales`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((scales) => {
+      const textScales = scales.filter(scale => !scale.scale.includes(':')).sort();
+      const numericScales = scales.filter(scale => scale.scale.includes(':')).sort((a, b) => {
+        const numA = parseInt(a.scale.split(':')[1], 10);
+        const numB = parseInt(b.scale.split(':')[1], 10);
+        return numA - numB;
+      });
+      return [...textScales, ...numericScales];
+    })
+    .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));
+  return scales;
+};
 
 // Create a new scale
 const addScale = async (scale) => {
-  const existingScale = scales.find((s) => s.name === scale);
-  if (!existingScale) {
-    const newId = scales.length
-      ? scales[scales.length - 1].id + 1
-      : 1;
-    const newScale = { id: newId, name: scale };
-    scales.push(newScale);
-  }
-}
-
-// Retrieve a scale by id
-const getScaleById = async (scaleId) => {
-  return Scale.fromJSON(
-    scales.find((scale) => scale.id === scaleId)
-  );
-}
-
-// Update a scale given its id
-const updateScale = async (scaleId, nextScale) => {
-  const index = scales.findIndex(
-    (scale) => scale.id === scaleId
-  );
-  if (index !== -1) {
-    scales[index] = nextScale;
-  }
-}
-
-// Delete a scale given its id
-const deleteScale = async (scaleId) => {
-  const index = scales.findIndex(
-    (scale) => scale.id === scaleId
-  );
-  if (index !== -1) {
-    scales.splice(index, 1);
-  }
-}
+  return await fetch(`${SERVER_URL}/scales`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(scale),
+  }).then(handleInvalidResponse);
+};
 
 /* ************************** *
  *       Helper functions      *
@@ -335,8 +297,5 @@ const API = {
   /* Scale */
   getAllScales,
   addScale,
-  getScaleById,
-  updateScale,
-  deleteScale,
 };
 export default API;

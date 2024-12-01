@@ -307,7 +307,7 @@
             "type": "integer",
             "description": "The unique identifier of the scale"
           },
-          "value": {
+          "scale": {
             "type": "string",
             "description": "The name of the scale",
             "minLength": 2,
@@ -315,7 +315,7 @@
           }
         },
         "required": [
-          "value"
+          "scale"
         ]
       },
       "DocumentType": {
@@ -750,7 +750,7 @@
         }
       }
     },
-    "/api/v1/scale": {
+    "/api/v1/scales": {
       "get": {
         "summary": "Get all scales",
         "tags": [
