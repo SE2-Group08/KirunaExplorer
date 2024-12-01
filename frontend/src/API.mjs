@@ -78,6 +78,22 @@ const getAllDocumentSnippets = async (filter) => {
   return documents;
 };
 
+// Retrieve documents by page number
+const getDocumentsByPageNumber = async (pageNo = 0) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/documents?pageNo=${pageNo}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch documents for page ${pageNo}: ${response.statusText}`);
+    }
+    const documents = await response.json();
+    console.log("DOCUMENTS: ", documents);
+    return documents;
+  } catch (error) {
+    console.error("Errore durante il recupero dei documenti per pagina:", error);
+    throw error;
+  }
+};
+
 // Create a new document
 const addDocument = async (document) => {
   console.log("ADD DOCUMENT: ", document);
@@ -242,5 +258,6 @@ const API = {
   getAllLinksOfDocument,
   updateLink,
   deleteLink,
+  getDocumentsByPageNumber,
 };
 export default API;

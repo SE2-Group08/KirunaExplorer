@@ -24,7 +24,7 @@ export default function ListDocuments({ shouldRefresh }) {
 
   useEffect(() => {
     if (shouldRefresh) {
-      API.getAllDocumentSnippets()
+      API.getDocumentsByPageNumber()
         .then(setDocuments)
         .then(() => setShouldRefresh(false))
         .catch((error) => setFeedbackFromError(error));
@@ -385,7 +385,9 @@ const DocumentSnippetCardComponent = ({
           </Card.Text>
           <Card.Text className="document-card-text">
             <strong>Issuance Date:</strong>{" "}
-            {dayjs(document.issuanceDate).format(
+            {console.log(document)}
+            {
+            dayjs(document.issuanceDate).format(
               document.issuanceDate.length === 4
                 ? "YYYY"
                 : document.issuanceDate.length === 7
