@@ -109,6 +109,10 @@ public class Document {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void addFile(DocumentFile file) {
+        this.documentFiles.add(file);
+    }
+
     /**
      * Parse the date to a string given the precision
      *
