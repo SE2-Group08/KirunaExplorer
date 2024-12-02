@@ -79,11 +79,10 @@ public class DocumentLinkService {
 
     /***
      * Delete a document link
-     * @param id Document id
      * @param linkId Document link id
      */
     @Transactional
-    public void deleteLink(Long id, Long linkId) {
+    public void deleteLink(Long linkId) {
         DocumentLink documentLink = documentLinkRepository.findById(linkId)
             .orElseThrow(() -> new ResourceNotFoundException("Document link not found with ID " + linkId));
 

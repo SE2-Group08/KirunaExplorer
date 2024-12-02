@@ -54,13 +54,12 @@ public class DocumentLinkController {
 
     /***
      * Endpoint to delete a document link
-     * @param id Document id
      * @param linkId Document link id
      * @return ResponseEntity<Void>
      */
     @DeleteMapping("/links/{linkId}")
-    public ResponseEntity<Void> deleteLink(@PathVariable Long id, @PathVariable Long linkId) {
-        documentLinkService.deleteLink(id, linkId);
+    public ResponseEntity<Void> deleteLink(@PathVariable Long linkId) {
+        documentLinkService.deleteLink(linkId);
         return ResponseEntity.noContent().build();
     }
 

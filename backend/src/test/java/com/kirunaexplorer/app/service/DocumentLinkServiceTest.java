@@ -203,7 +203,7 @@ class DocumentLinkServiceTest {
         void testDeleteLink_successful() {
             when(documentLinkRepository.findById(linkId)).thenReturn(Optional.of(documentLink));
 
-            documentLinkService.deleteLink(documentId, linkId);
+            documentLinkService.deleteLink(linkId);
 
             verify(documentLinkRepository, times(1)).delete(documentLink);
         }
@@ -215,7 +215,7 @@ class DocumentLinkServiceTest {
         void testDeleteLink_documentLinkNotFound() {
             when(documentLinkRepository.findById(linkId)).thenReturn(Optional.empty());
 
-            assertThrows(ResourceNotFoundException.class, () -> documentLinkService.deleteLink(documentId, linkId), "Expected ResourceNotFoundException when document link is not found");
+            assertThrows(ResourceNotFoundException.class, () -> documentLinkService.deleteLink(linkId), "Expected ResourceNotFoundException when document link is not found");
         }
     }
 
