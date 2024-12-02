@@ -1,12 +1,17 @@
 package com.kirunaexplorer.app.service;
 
 import com.kirunaexplorer.app.dto.request.FileUploadRequestDTO;
+import com.kirunaexplorer.app.dto.response.FileSnippetResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.Document;
 import com.kirunaexplorer.app.model.DocumentFile;
 import com.kirunaexplorer.app.repository.DocumentRepository;
 import com.kirunaexplorer.app.repository.FileRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class FileService {
@@ -25,6 +30,7 @@ public class FileService {
      * @param request    FileUploadRequestDTO
      * @return Long
      */
+    @Transactional
     public Long storeFile(Long documentId, FileUploadRequestDTO request) {
         // Get the document
         Document document = documentRepository.findById(documentId)
@@ -37,9 +43,7 @@ public class FileService {
         // Add file to the document files
         document.addFile(file);
         documentRepository.save(document);
-
-        // Save the file
-        file = fileRepository.save(file);
+        
 
         return file.getId();
     }
@@ -51,6 +55,7 @@ public class FileService {
      * @param fileId File id
      * @return byte[]
      */
+    @Transactional
     public byte[] getFile(Long fileId) {
         return fileRepository.findById(fileId)
             .map(DocumentFile::getContent)
@@ -62,6 +67,7 @@ public class FileService {
      *
      * @param fileId File id
      */
+    @Transactional
     public void deleteFile(Long fileId) {
         // Get the file
         DocumentFile file = fileRepository.findById(fileId)
@@ -74,5 +80,26 @@ public class FileService {
 
         // Delete the file
         fileRepository.delete(file);
+    }
+
+    /**
+     * Get files snippet for a document
+     *
+     * @param id Document id
+     * @return List of FileSnippetResponseDTO
+     */
+    @Transactional
+    public List<FileSnippetResponseDTO> getFilesSnippet(Long id) {
+        // Get the document
+        Document document = documentRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + id));
+
+        // Get the files
+        Set<DocumentFile> files = document.getDocumentFiles();
+
+        // Transform the files to FileSnippetResponseDTO
+        return files.stream()
+            .map(DocumentFile::toFileSnippetResponseDTO)
+            .toList();
     }
 }

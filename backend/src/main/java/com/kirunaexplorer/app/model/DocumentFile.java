@@ -1,10 +1,9 @@
 package com.kirunaexplorer.app.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kirunaexplorer.app.dto.response.FileSnippetResponseDTO;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -16,11 +15,11 @@ import java.time.LocalDateTime;
 public class DocumentFile {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
+    @ManyToOne
+    @JoinColumn(name = "document_id")
     @JsonIgnore
     private Document document;
 
@@ -30,4 +29,9 @@ public class DocumentFile {
 
     @Lob
     private byte[] content;
+
+
+    public FileSnippetResponseDTO toFileSnippetResponseDTO() {
+        return new FileSnippetResponseDTO(id, name, extension, size);
+    }
 }

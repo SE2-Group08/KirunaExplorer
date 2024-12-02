@@ -54,7 +54,7 @@ public class Document {
     @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private GeoReference geoReference; // One-to-one relationship
 
-    @OneToMany(mappedBy = "id")
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DocumentFile> documentFiles;
 
 
