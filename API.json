@@ -318,32 +318,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "$schema": {
-            "type": "string",
-            "format": "uri",
-            "description": "path to the JSON schema to use for the validation of the JSON file describing a file"
-          },
-          "id": {
-            "type": "integer",
-            "description": "The unique identifier of the file"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the file",
-            "minLength": 2,
-            "maxLength": 64
-          },
-          "extension": {
-            "type": "string",
-            "description": "The MIME type of the file",
-            "minLength": 2,
-            "maxLength": 64
-          },
-          "size": {
-            "type": "integer",
-            "description": "The size of the file in bytes",
-            "minimum": 0
-          },
           "file": {
             "type": "string",
             "format": "binary",
@@ -351,8 +325,6 @@
           }
         },
         "required": [
-          "name",
-          "extension",
           "file"
         ]
       }
