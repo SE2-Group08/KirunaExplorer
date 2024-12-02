@@ -13,7 +13,7 @@ const createLink = async (documentId, link) => {
     type: link.type.toUpperCase().replace(/ /g, "_"),
     documentId: link.documentId,
   };
-
+  console.log("API CREATE LINK: ", requestBody);
   return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
     method: "POST",
     headers: {
@@ -28,6 +28,7 @@ const getAllLinksOfDocument = async (documentId) => {
   const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
     .then(handleInvalidResponse)
     .then((response) => response.json());
+    console.log("API GET ALL LINKS: ", links);
   return links;
 };
 
@@ -44,6 +45,7 @@ const getAllLinksOfDocument = async (documentId) => {
 
 // Delete a link for a document
 const deleteLink = async (linkId) => {
+  console.log("API DELETE LINK: ", linkId);
   return await fetch(`${SERVER_URL}/links/${linkId}`, {
     method: "DELETE",
   }).then(handleInvalidResponse);

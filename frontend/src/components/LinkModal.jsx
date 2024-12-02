@@ -31,9 +31,10 @@ const LinkModal = ({
         (link) => link.document.id === selectedDocumentToLink.id
       );
       const alreadyPresentLinks = selectedDocument
-        ? selectedDocument.links.map(
-            (linkDetail) => linkTypesMap[linkDetail.linkType]
-          )
+        ? selectedDocument.links.map((linkDetail) => ({
+            linkId: linkDetail.linkId,
+            linkType: linkTypesMap[linkDetail.linkType],
+          }))
         : [];
       setInitialSelectedLinks(alreadyPresentLinks);
       setSelectedLinks(alreadyPresentLinks);
@@ -42,51 +43,48 @@ const LinkModal = ({
 
   const handleChange = (e) => {
     const { value, checked } = e.target;
+    const linkType = value;
+    const linkId = selectedDocumentToLink.id;
+
     setSelectedLinks((prevSelectedLinks) =>
       checked
-        ? [...prevSelectedLinks, value]
-        : prevSelectedLinks.filter((link) => link !== value)
+        ? [...prevSelectedLinks, { linkId, linkType }]
+        : prevSelectedLinks.filter((link) => link.linkType !== linkType)
     );
   };
 
   const handleSave = async () => {
-    if (selectedLinks === initialSelectedLinks) {
-      setErrors({ type: "It's not possible to save if you didn't make any change" });
-    } else {
-      setErrors({});
-      const linksToCreate = selectedLinks.filter(
-        (link) => !initialSelectedLinks.includes(link)
-      );
-      const linksToDelete = initialSelectedLinks.filter(
-        (link) => !selectedLinks.includes(link)
-      );
+    const linksToCreate = selectedLinks.filter(
+      (link) =>
+        !initialSelectedLinks.some(
+          (initialLink) => initialLink.linkType === link.linkType
+        )
+    );
+    const linksToDelete = initialSelectedLinks.filter(
+      (initialLink) =>
+        !selectedLinks.some((link) => link.linkType === initialLink.linkType)
+    );
 
-      try {
-        await Promise.all([
-          ...linksToCreate.map((linkType) =>
-            API.createLink(document.id, {
-              type: linkType,
-              documentId: selectedDocumentToLink.id,
-            })
-          ),
-          ...linksToDelete.map((linkType) =>
-            API.deleteLink(document.id, {
-              type: linkType,
-              documentId: selectedDocumentToLink.id,
-            })
-          ),
-        ]);
+    try {
+      await Promise.all([
+        ...linksToCreate.map((link) =>
+          API.createLink(document.id, {
+            type: link.linkType,
+            documentId: link.linkId,
+          })
+        ),
+        ...linksToDelete.map((link) => API.deleteLink(link.linkId)),
+      ]);
 
-        setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
-          ...prevSelectedLinkDocuments,
-          ...selectedLinks.map((linkType) => ({ document, linkType })),
-        ]);
-        setSelectedLinks([]);
-        handleClose();
-      } catch (error) {
-        console.error("Error updating links:", error);
-        setErrors({ type: "Failed to update links. Please try again." });
-      }
+      setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
+        ...prevSelectedLinkDocuments,
+        ...selectedLinks.map((link) => ({ document, linkType: link.linkType })),
+      ]);
+      setSelectedLinks([]);
+      handleClose();
+    } catch (error) {
+      console.error("Error updating links:", error);
+      setErrors({ type: "Failed to update links. Please try again." });
     }
   };
 
@@ -109,9 +107,7 @@ const LinkModal = ({
               type="checkbox"
               label={linkType}
               value={linkType}
-              checked={
-                selectedLinks.includes(linkType)
-              }
+              checked={selectedLinks.some((link) => link.linkType === linkType)}
               onChange={handleChange}
               isInvalid={!!errors.type}
             />
