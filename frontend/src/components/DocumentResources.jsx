@@ -5,7 +5,7 @@ import { AiOutlineDownload, AiOutlineDelete } from "react-icons/ai";
 import "./DocumentResourcesGrid.css";
 import "./DocumentResourcesList.css";
 
-const DocumentResources = ({ resources, onDelete, onDownload, viewMode }) => {
+const DocumentResources = ({ resources, onDelete, onDownload, viewMode, isEditable}) => {
     const getFileIcon = (extension) => {
         switch (extension.toLowerCase()) {
             case "pdf":
@@ -44,9 +44,9 @@ const DocumentResources = ({ resources, onDelete, onDownload, viewMode }) => {
 
                         {/* Resource Actions */}
                         <div className="resource-actions">
-                            <Button variant="outline-danger" size="sm" onClick={() => onDelete(resource)}>
+                            {isEditable &&<Button variant="outline-danger" size="sm" onClick={() => onDelete(resource)}>
                                 <AiOutlineDelete />
-                            </Button>
+                            </Button>}
                             <Button variant="outline-primary" size="sm" onClick={() => onDownload(resource)}>
                                 <AiOutlineDownload />
                             </Button>
@@ -66,9 +66,9 @@ const DocumentResources = ({ resources, onDelete, onDownload, viewMode }) => {
                         <div className="text-truncate">{resource.name}</div>
                     </OverlayTrigger>
                     <div>
-                        <Button variant="outline-danger" size="sm" onClick={() => onDelete(resource)} className="me-2">
+                        {isEditable &&<Button variant="outline-danger" size="sm" onClick={() => onDelete(resource)} className="me-2">
                             <AiOutlineDelete />
-                        </Button>
+                        </Button>}
                         <Button variant="outline-primary" size="sm" onClick={() => onDownload(resource)}>
                             <AiOutlineDownload />
                         </Button>
@@ -86,9 +86,10 @@ DocumentResources.propTypes = {
             url: PropTypes.string.isRequired,
         })
     ).isRequired,
-    onDelete: PropTypes.func.isRequired,
-    onDownload: PropTypes.func.isRequired,
+    onDelete: PropTypes.func,
+    onDownload: PropTypes.func,
     viewMode: PropTypes.oneOf(["grid", "list"]).isRequired,
+    isEditable: PropTypes.bool.isRequired,
 };
 
 export default DocumentResources;

@@ -14,12 +14,11 @@ import { Document } from "../model/Document.mjs";
 import ListDocumentLinks from "./ListDocumentLinks.jsx";
 import dayjs from "dayjs";
 import "../App.css";
-
+import API from "../API";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
 import DocumentResources from "./DocumentResources.jsx";
 dayjs.extend(customParseFormat);
-// import { useMap } from "react-leaflet";
 
 export default function DocumentModal(props) {
   // Initialize Leaflet marker icon defaults
@@ -56,6 +55,18 @@ export default function DocumentModal(props) {
     description: "",
   });
   const [errors, setErrors] = useState({});
+  const [filesToUpload, setFilesToUpload] = useState([]);
+  const [existingFiles, setExistingFiles] = useState([]);
+  const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
+
+  // Load existing files when editing
+  useEffect(() => {
+    if (props.document && props.document.id) {
+      API.getDocumentFiles(props.document.id)
+          .then(setExistingFiles)
+          .catch((error) => console.error("Error loading files:", error));
+    }
+  }, [props.document]);
 
   // Update the state when the document prop changes
   useEffect(() => {
@@ -96,7 +107,7 @@ export default function DocumentModal(props) {
     setErrors({});
   }, [props.document]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {}; // Reset errors
 
@@ -244,39 +255,71 @@ export default function DocumentModal(props) {
     }
 
     if (props.document.id === undefined) {
-      props.handleAdd(
-        new Document(
-          null,
-          document.title,
-          document.stakeholders,
-          document.scale,
-          combinedIssuanceDate,
-          document.type,
-          document.nrConnections,
-          document.language,
-          document.nrPages,
-          sanitizedGeolocation,
-          document.description
-        )
+      const newDocId = await props.handleAdd(
+          new Document(
+              null,
+              document.title,
+              document.stakeholders,
+              document.scale,
+              combinedIssuanceDate,
+              document.type,
+              document.nrConnections,
+              document.language,
+              document.nrPages,
+              sanitizedGeolocation,
+              document.description
+          )
       );
+
+      // Upload new files after document is added
+      await Promise.all(filesToUpload.map((file) => API.uploadFile(newDocId, file)));
     } else {
-      props.handleSave(
-        new Document(
-          props.document.id,
-          document.title,
-          document.stakeholders,
-          document.scale,
-          combinedIssuanceDate,
-          document.type,
-          document.nrConnections,
-          document.language,
-          document.nrPages,
-          sanitizedGeolocation,
-          document.description
-        )
+      await props.handleSave(
+          new Document(
+              props.document.id,
+              document.title,
+              document.stakeholders,
+              document.scale,
+              combinedIssuanceDate,
+              document.type,
+              document.nrConnections,
+              document.language,
+              document.nrPages,
+              sanitizedGeolocation,
+              document.description
+          )
       );
+
+      console.log("Document ID:", props.document.id);
+      console.log("Files to Upload:", filesToUpload);
+
+      // Upload new files
+      for (const file of filesToUpload) {
+        console.log("Uploading file:", file);
+        await API.uploadFile(props.document.id, file);
+      }
+      // Delete removed files
+      await Promise.all(deletedExistingFiles.map((fileId) => API.deleteFile(fileId)));
     }
+    setFilesToUpload([]);
     props.onHide();
+  };
+
+  const updateFilesToUpload = (newFiles) => {
+    setFilesToUpload(newFiles);
+  };
+
+  const handleDeleteExistingFile = (fileId) => {
+    setDeletedExistingFiles((prev) => [...prev, fileId]);
+    setExistingFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
+  };
+
+  const handleDownload = async (file) => {
+    try {
+      await API.downloadFile(file.id, file.name, file.extension);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
   };
 
   const handleLinkToClick = () => {
@@ -290,10 +333,6 @@ export default function DocumentModal(props) {
     }));
   };
 
-  const handleLinksClick = () => {
-    setSliderOpen(!isSliderOpen);
-  };
-
   const handleCloseSlider = () => {
     setSliderOpen(false);
   };
@@ -304,74 +343,75 @@ export default function DocumentModal(props) {
   };
 
   return (
-    <Modal
-      show={props.show}
-      onHide={props.onHide}
-      centered
-      className="document-modal"
-      size="lg"
-    >
-      <Modal.Header closeButton className="modal-header">
-        <Modal.Title>
-          {isEditable
-            ? "Enter the values in the following fields"
-            : document.title}
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="modal-body">
-        {isEditable ? (
-          <DocumentFormComponent
-            document={document}
-            setDocument={setDocument}
-            errors={errors}
-            setErrors={setErrors}
-            handleSubmit={handleSubmit}
-            handleChange={handleChange}
-            kirunaBorderCoordinates={kirunaBorderCoordinates}
-          />
-        ) : (
-          <ModalBodyComponent document={document} />
-        )}
-      </Modal.Body>
-      <Modal.Footer className="mt-3">
-        {isEditable ? (
-          <Button title="Save" variant="success" onClick={handleSubmit}>
-            <i className="bi bi-check-square"></i>
-          </Button>
-        ) : (
-          <div className="d-flex align-items-center">
-            {/* <Button
-              variant="primary"
-              onClick={handleLinksClick}
-              className="me-2"
-            >
-              Links
-            </Button> */}
-            <Button
-              variant="primary"
-              onClick={handleLinkToClick}
-              className="me-2"
-            >
-              <i className="bi bi-box-arrow-up-right"></i>
-            </Button>
-            <Button
-              title="Edit"
-              variant="primary"
-              onClick={() => setIsEditable(true)}
-              className="me-2"
-            >
-              <i className="bi bi-pencil-square"></i>
-            </Button>
-          </div>
-        )}
-      </Modal.Footer>
-      <ListDocumentLinks
-        documentId={props.document.id}
-        isOpen={isSliderOpen}
-        onClose={handleCloseSlider}
-        onSnippetClick={handleSnippetClick}
-      />
-    </Modal>
+      <Modal
+          show={props.show}
+          onHide={props.onHide}
+          centered
+          className="document-modal"
+          size="lg"
+      >
+        <Modal.Header closeButton className="modal-header">
+          <Modal.Title>
+            {isEditable
+                ? "Enter the values in the following fields"
+                : document.title}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="modal-body">
+          {isEditable ? (
+              <DocumentFormComponent
+                  document={document}
+                  setDocument={setDocument}
+                  errors={errors}
+                  setErrors={setErrors}
+                  handleSubmit={handleSubmit}
+                  handleChange={handleChange}
+                  kirunaBorderCoordinates={kirunaBorderCoordinates}
+                  updateFilesToUpload={updateFilesToUpload}
+                  existingFiles={existingFiles}
+                  handleDeleteExistingFile={handleDeleteExistingFile}
+              />
+          ) : (
+              <ModalBodyComponent
+                  document={document}
+                  existingFiles={existingFiles}
+                  handleDownload={handleDownload}
+                  isEditable={isEditable}
+              />
+          )}
+        </Modal.Body>
+        <Modal.Footer className="mt-3">
+          {isEditable ? (
+              <Button title="Save" variant="success" onClick={handleSubmit}>
+                <i className="bi bi-check-square"></i>
+              </Button>
+          ) : (
+              <div className="d-flex align-items-center">
+                <Button
+                    variant="primary"
+                    onClick={handleLinkToClick}
+                    className="me-2"
+                >
+                  <i className="bi bi-box-arrow-up-right"></i>
+                </Button>
+                <Button
+                    title="Edit"
+                    variant="primary"
+                    onClick={() => setIsEditable(true)}
+                    className="me-2"
+                >
+                  <i className="bi bi-pencil-square"></i>
+                </Button>
+              </div>
+          )}
+        </Modal.Footer>
+        <ListDocumentLinks
+            documentId={props.document.id}
+            isOpen={isSliderOpen}
+            onClose={handleCloseSlider}
+            onSnippetClick={handleSnippetClick}
+        />
+      </Modal>
   );
 }
 
@@ -386,36 +426,9 @@ DocumentModal.propTypes = {
   onSnippetClick: PropTypes.func,
 };
 
-function ModalBodyComponent({ document }) {
-  const [resources, setResources] = useState([
-    {name: "RESOURCES1.pdf", url: "RESOURCES1"},
-    {name: "RESOURCES2.docx", url: "RESOURCES2"},
-    {name: "RESOURCES3.jpeg", url: "RESOURCES3"},
-    {name: "RESOURCES4.xlsx", url: "RESOURCES4"},
-    {name: "RESOURCES1.pdf", url: "RESOURCES1"},
-    {name: "RESOURCES2.docx", url: "RESOURCES2"},
-    {name: "RESOURCES3.jpeg", url: "RESOURCES3"},
-    {name: "RESOURCES4.xlsx", url: "RESOURCES4"},
-    {name: "RESOURCES1.pdf", url: "RESOURCES1"},
-    {name: "RESOURCES2.docx", url: "RESOURCES2"},
-    {name: "RESOURCES3.jpeg", url: "RESOURCES3"},
-    {name: "RESOURCES4.xlsx", url: "RESOURCES4"},
-  ]);
+function ModalBodyComponent({ document, existingFiles, handleDownload, isEditable }) {
   const [viewMode, setViewMode] = useState("list");
-  const handleDelete = (resource) => {
-    setResources((prevResources) => prevResources.filter((res) => res.name !== resource.name));
-  };
 
-  const handleDownload = (resource) => {
-
-    //TODO retrieve the selected resource with the API
-    /*const link = document.createElement("a");
-    link.href = resource.url;
-    link.download = resource.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);*/
-  };
   return (
       <div className="modal-body-component">
         <Row>
@@ -424,8 +437,8 @@ function ModalBodyComponent({ document }) {
               <div className="info-item">
                 <label>Stakeholders:</label>
                 <span>
-            {document.stakeholders ? document.stakeholders.join(", ") : ""}
-                </span>
+                {document.stakeholders ? document.stakeholders.join(", ") : ""}
+              </span>
               </div>
               <div className="divider"></div>
               <div className="info-item">
@@ -519,18 +532,31 @@ function ModalBodyComponent({ document }) {
             <div className="document-resources-section">
               <div className="info-item d-flex justify-content-between align-items-center mb-3">
                 <label>Resources: </label>
-                <Button
+                {existingFiles.length>0 ? (<Button
                     onClick={() => setViewMode((prev) => (prev === "list" ? "grid" : "list"))}
                     title={`Switch to ${viewMode === "list" ? "grid" : "list"} view`}
                 >
                   <i className={`bi ${viewMode === "list" ? "bi-grid" : "bi-list-task"}`}></i>
-                </Button>
+                </Button>) :
+                  (
+                  <OverlayTrigger
+                      placement="top"
+                      overlay={
+                      <Tooltip>
+                      This document has no resources yet. Modify the document to add them.
+                      </Tooltip>
+                    }
+                  >
+                    <i className="bi bi-exclamation-triangle"></i>
+                  </OverlayTrigger>
+                  )}
               </div>
               <DocumentResources
-                  resources={resources}
-                  onDelete={handleDelete}
+                  resources={existingFiles}
+                  onDelete={() => {}} // Deleting files is not allowed in view mode
                   onDownload={handleDownload}
                   viewMode={viewMode}
+                  isEditable={isEditable}
               />
             </div>
           </Col>
@@ -541,6 +567,9 @@ function ModalBodyComponent({ document }) {
 
 ModalBodyComponent.propTypes = {
   document: PropTypes.object.isRequired,
+  existingFiles: PropTypes.array.isRequired,
+  handleDownload: PropTypes.func.isRequired,
+  isEditable: PropTypes.bool.isRequired,
 };
 
 function DocumentFormComponent({
@@ -548,12 +577,10 @@ function DocumentFormComponent({
   errors,
   handleChange,
   kirunaBorderCoordinates,
-  updateFiles,
+  updateFilesToUpload,
   existingFiles,
+  handleDeleteExistingFile,
 }) {
-  const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
-  const [filePreviews, setFilePreviews] = useState({});
-  const fileInputRef = useRef(null);
   const [customScaleValue, setCustomScaleValue] = useState(
     document.scale !== "Text" && document.scale !== "Blueprint/Material effects"
       ? document.scale
@@ -577,11 +604,12 @@ function DocumentFormComponent({
   const dayRef = useRef(null);
   const monthRef = useRef(null);
   const yearRef = useRef(null);
+
   const [files, setFiles] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreviews, setFilePreviews] = useState({});
+  const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
-    setSelectedFile(event.target.files[0]);
     const newFiles = Array.from(e.target.files);
     const newFilePreviews = {};
 
@@ -591,29 +619,22 @@ function DocumentFormComponent({
     });
 
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    setFilePreviews((prevPreviews) => ({...prevPreviews, ...newFilePreviews}));
-    updateFiles([...files, ...newFiles]);
+    setFilePreviews((prevPreviews) => ({ ...prevPreviews, ...newFilePreviews }));
+    updateFilesToUpload([...files, ...newFiles]);
   };
 
   const handleRemoveFile = (indexToRemove) => {
-    const fileToRemove = files[indexToRemove];
+    const updatedFiles = files.filter((_, index) => index !== indexToRemove);
 
     // Revoke the object URL to avoid memory leaks
-    URL.revokeObjectURL(filePreviews[fileToRemove.name]);
+    URL.revokeObjectURL(filePreviews[files[indexToRemove].name]);
 
-    const updatedFiles = files.filter((_, index) => index !== indexToRemove);
-    const updatedPreviews = {...filePreviews};
-    delete updatedPreviews[fileToRemove.name];
+    const updatedPreviews = { ...filePreviews };
+    delete updatedPreviews[files[indexToRemove].name];
 
     setFiles(updatedFiles);
     setFilePreviews(updatedPreviews);
-    updateFiles(updatedFiles);
-  };
-
-  const handleDeleteExistingFile = (fileId) => {
-    setDeletedExistingFiles((prev) => [...prev, fileId]);
-    // Optionally, update the existingFiles list to remove the deleted file
-    // existingFiles = existingFiles.filter((file) => file.id !== fileId);
+    updateFilesToUpload(updatedFiles);
   };
 
   useEffect(() => {
@@ -1132,20 +1153,20 @@ function DocumentFormComponent({
           <Row className="mb-4">
             <Col md={12}>
               <Form.Group controlId="formDocumentFiles">
-                <Form.Label>Original Resources</Form.Label>
+                <Form.Label>Upload files</Form.Label>
                 <div className="form-divider" />
                 <div className="d-flex align-items-center">
                   <Form.Control
-                    type="file"
-                    multiple
-                    onChange={handleFileChange}
-                    className="d-none"
-                    ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="d-none"
+                      ref={fileInputRef}
                   />
                   <Button
-                    variant="primary"
-                    onClick={() => fileInputRef.current.click()}
-                    className="me-3"
+                      variant="primary"
+                      onClick={() => fileInputRef.current.click()}
+                      className="me-3"
                   >
                     <i className="bi bi-upload"></i>
                   </Button>
@@ -1155,81 +1176,40 @@ function DocumentFormComponent({
                 </div>
 
                 {/* Display Selected Files */}
-                {files.length > 0 ? (
-                  <div className="mt-3">
-                    <h6>Selected Files:</h6>
-                    <ListGroup variant="flush">
-                      {files.map((file, index) => (
-                        
-                        <ListGroup.Item
-                          key={index}
-                          className="d-flex justify-content-between align-items-center"
-                        >
-                          {file.name}
-                          <div>
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              href={filePreviews[file.name]}
-                              download={file.name}
-                              title="Download file"
-                              className="me-2"
+                {files.length > 0 && (
+                    <div className="mt-3">
+                      <h6>Selected files:</h6>
+                      <ListGroup variant="flush">
+                        {files.map((file, index) => (
+                            <ListGroup.Item
+                                key={index}
+                                className="d-flex justify-content-between align-items-center"
                             >
-                              <i className="bi bi-download"></i>
-                            </Button>
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() => handleRemoveFile(index)}
-                              title="Remove file"
-                            >
-                              <i className="bi bi-trash"></i>
-                            </Button>
-                          </div>
-                        </ListGroup.Item>
-                      ))}
-                    </ListGroup>
-                  </div>
-                ):(
-                  <Form.Text className="text-muted">
-                    No files selected. Click the upload button to add files.
-                  </Form.Text>
-                ) }
+                              {file.name}
+                              <Button
+                                  variant="outline-danger"
+                                  size="sm"
+                                  onClick={() => handleRemoveFile(index)}
+                                  title="Remove file"
+                              >
+                                <i className="bi bi-trash"></i>
+                              </Button>
+                            </ListGroup.Item>
+                        ))}
+                      </ListGroup>
+                    </div>
+                )}
+
                 {existingFiles && existingFiles.length > 0 && (
-                  <div className="mt-3">
-                    <h6>Existing Files:</h6>
-                    <ListGroup variant="flush">
-                      {existingFiles.map((file, index) => (
-                        <ListGroup.Item
-                          key={index}
-                          className="d-flex justify-content-between align-items-center"
-                        >
-                          {file.name}
-                          <div>
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              href={file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Download file"
-                              className="me-2"
-                            >
-                              <i className="bi bi-download"></i>
-                            </Button>
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() => handleDeleteExistingFile(file.id)}
-                              title="Delete file"
-                            >
-                              <i className="bi bi-trash"></i>
-                            </Button>
-                          </div>
-                        </ListGroup.Item>
-                      ))}
-                    </ListGroup>
-                  </div>
+                    <div className="mt-3">
+                      <h6>Existing files:</h6>
+                      <DocumentResources
+                      resources={existingFiles}
+                      onDelete={handleRemoveFile}
+                      viewMode={"list"}
+                      isEditable={true}
+                      />
+                    </div>
                 )}
               </Form.Group>
             </Col>
@@ -1243,4 +1223,7 @@ DocumentFormComponent.propTypes = {
   errors: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   kirunaBorderCoordinates: PropTypes.array.isRequired,
+  updateFilesToUpload: PropTypes.func.isRequired,
+  existingFiles: PropTypes.array.isRequired,
+  handleDeleteExistingFile: PropTypes.func.isRequired,
 };

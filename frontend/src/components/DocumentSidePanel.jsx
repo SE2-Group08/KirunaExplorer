@@ -3,32 +3,24 @@ import PropTypes from "prop-types";
 import "./DocumentSidePanel.css";
 import DocumentResources from "./DocumentResources.jsx";
 import {useEffect, useState} from "react";
+import API from "../API.mjs";
 
 const DocumentSidePanel = ({ document, onClose }) => {
-  const [resources, setResources] = useState([
-    {name: "RESOURCES1.pdf", url: "RESOURCES1"},
-    {name: "RESOURCES2.docx", url: "RESOURCES2"},
-    {name: "RESOURCES3.jpeg", url: "RESOURCES3"},
-    {name: "RESOURCES4.xlsx", url: "RESOURCES4"},
-  ]);
+  const [resources, setResources] = useState([]);
   const [viewMode, setViewMode] = useState("list"); // Default view mode
 
   useEffect(() => {
-    //TODO retrieve all the resources with the API
-  }, []);
-  const handleDelete = (resource) => {
-    setResources((prevResources) => prevResources.filter((res) => res.name !== resource.name));
-  };
+    API.getDocumentFiles(document.id)
+        .then(setResources)
+  }, [document]);
 
-  const handleDownload = (resource) => {
 
-    //TODO retrieve the selected resource with the API
-    /*const link = document.createElement("a");
-    link.href = resource.url;
-    link.download = resource.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);*/
+  const handleDownload = async (file) => {
+    try {
+      await API.downloadFile(file.id, file.name, file.extension);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
   };
 
   return (
@@ -84,7 +76,7 @@ const DocumentSidePanel = ({ document, onClose }) => {
             <div className="divider"/>
 
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <strong>Resources</strong>
+              <strong>Resources: </strong>
               <Button
                   onClick={() => setViewMode((prev) => (prev === "list" ? "grid" : "list"))}
                   title={`Switch to ${viewMode === "list" ? "grid" : "list"} view`}
@@ -96,9 +88,9 @@ const DocumentSidePanel = ({ document, onClose }) => {
             <div className="resources-section">
               <DocumentResources
                   resources={resources}
-                  onDelete={handleDelete}
                   onDownload={handleDownload}
                   viewMode={viewMode} // Pass the current view mode
+                  isEditable={false}
               />
             </div>
           </Card.Body>
