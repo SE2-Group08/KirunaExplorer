@@ -40,10 +40,8 @@ public class FileService {
         DocumentFile file = request.toDocumentFile(document)
             .orElseThrow(() -> new RuntimeException("Failed to process the file"));
 
-        // Add file to the document files
-        document.addFile(file);
-        documentRepository.save(document);
-        
+        // Save the file
+        fileRepository.save(file);
 
         return file.getId();
     }
