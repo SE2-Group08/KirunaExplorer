@@ -14,11 +14,9 @@ const createLink = async (document, linkedDocument) => {
     linkId: null,
     documentId: linkedDocument.document.id,
   };
-  console.log("REQUEST BODY: ", requestBody);
 
   // ("REQUEST BODY: ", requestBody);
   requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  console.log(document.id)
   try {
     const response = await fetch(`${SERVER_URL}/documents/${document.id}/links`, {
       method: "POST",

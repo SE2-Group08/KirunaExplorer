@@ -26,8 +26,9 @@ export default function ListDocuments({ shouldRefresh }) {
     useContext(FeedbackContext);
 
     useEffect(() => {
+      console.log("ListDocuments: useEffect");
       window.scrollTo(0, 0);
-      if (shouldRefresh) {
+      //if (shouldRefresh) {
         API.getDocumentsByPageNumber(currentPage)
           .then((response) => {
             setDocuments(response[0].documentSnippets);
@@ -35,7 +36,7 @@ export default function ListDocuments({ shouldRefresh }) {
           })
           .then(() => setShouldRefresh(false))
           .catch((error) => setFeedbackFromError(error));
-      }
+      //}
     }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
 
     const handlePageChange = (pageNumber) => {
@@ -404,7 +405,6 @@ const DocumentSnippetCardComponent = ({
           </Card.Text>
           <Card.Text className="document-card-text">
             <strong>Issuance Date:</strong>{" "}
-            {console.log(document)}
             {
             dayjs(document.issuanceDate).format(
               document.issuanceDate.length === 4
