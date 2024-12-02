@@ -17,6 +17,12 @@ spring:
   main:
     web-application-type: servlet
 
+  servlet:
+    multipart:
+      max-file-size: 25MB  # Maximum size for a single uploaded file
+      max-request-size: 25MB  # Maximum size for a multipart request
+
+
 springdoc:
   api-docs:
     path: /v3/api-docs
