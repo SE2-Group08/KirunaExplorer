@@ -9,6 +9,7 @@ import LinkModal from "./LinkModal";
 import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
 import Pagination from "./Pagination";
+import { getIconUrlForDocument } from "../utils/iconMapping";
 
 export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
@@ -307,10 +308,11 @@ function DocumentSnippetTableComponent({
     <Table hover responsive>
       <thead>
         <tr>
+          <th>Icon</th>
           <th>Title</th>
           <th>Scale</th>
           <th>Issuance Date</th>
-          <th>Type</th>
+          {/* <th>Type</th> */}
         </tr>
       </thead>
       <tbody>
@@ -338,6 +340,13 @@ function DocumentSnippetTableComponent({
             }}
           >
             <td>
+              <img
+                src={getIconUrlForDocument(document.type, document.stakeholders)}
+                alt={`${document.type} icon`}
+                style={{ width: "40px", height: "40px" }}
+              />
+            </td>
+            <td>
               <em>{document.title}</em>
             </td>
             <td>{document.scale}</td>
@@ -350,7 +359,7 @@ function DocumentSnippetTableComponent({
                   : "DD/MM/YYYY"
               )}
             </td>
-            <td>{document.type}</td>
+            {/* <td>{document.type}</td> */}
           </tr>
         ))}
       </tbody>
@@ -396,9 +405,16 @@ const DocumentSnippetCardComponent = ({
         }}
       >
         <Card.Body>
-          <Card.Title className="document-card-title">
-            {document.title}
-          </Card.Title>
+          <div className="d-flex align-items-center">            
+            <img
+              src={getIconUrlForDocument(document.type, document.stakeholders)}
+              alt={`${document.type} icon`}
+              style={{ width: "70px", height: "70px", marginRight: "10px" }}
+            />
+            <Card.Title className="document-card-title">
+              {document.title}
+            </Card.Title>
+          </div>
           <div className="divider" />
           <Card.Text className="document-card-text">
             <strong>Scale:</strong> {document.scale}
@@ -414,9 +430,9 @@ const DocumentSnippetCardComponent = ({
                 : "DD/MM/YYYY"
             )}
           </Card.Text>
-          <Card.Text className="document-card-text">
+          {/* <Card.Text className="document-card-text">
             <strong>Type:</strong> {document.type}
-          </Card.Text>
+          </Card.Text> */}
         </Card.Body>
       </Card>
     </Col>
