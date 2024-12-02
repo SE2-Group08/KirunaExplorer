@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import PropTypes from "prop-types";
+import API from "../API.mjs";
 
 const LinkModal = ({
   showModal,
@@ -8,9 +9,10 @@ const LinkModal = ({
   document,
   setSelectedLinkDocuments,
   links,
-  selectedDocumentToLink
+  selectedDocumentToLink,
 }) => {
   const [selectedLinks, setSelectedLinks] = useState([]);
+  const [initialSelectedLinks, setInitialSelectedLinks] = useState([]);
   const [errors, setErrors] = useState({});
 
   // Map dei tipi di link per coerenza
@@ -24,18 +26,17 @@ const LinkModal = ({
   const linkTypes = Object.values(linkTypesMap);
 
   useEffect(() => {
-    console.log("LinkModal useEffect");
-    console.log(showModal, links, document);
-  }, []);
-
-  useEffect(() => {
     if (showModal) {
-      const selectedDocument = links.find((link) => link.document.id === selectedDocumentToLink.id);
-      const initialSelectedLinks = selectedDocument
-        ? selectedDocument.links.map((linkDetail) => linkTypesMap[linkDetail.linkType])
+      const selectedDocument = links.find(
+        (link) => link.document.id === selectedDocumentToLink.id
+      );
+      const alreadyPresentLinks = selectedDocument
+        ? selectedDocument.links.map(
+            (linkDetail) => linkTypesMap[linkDetail.linkType]
+          )
         : [];
-
-      setSelectedLinks(initialSelectedLinks);
+      setInitialSelectedLinks(alreadyPresentLinks);
+      setSelectedLinks(alreadyPresentLinks);
     }
   }, [showModal, links, document.id, selectedDocumentToLink.id]);
 
@@ -48,17 +49,44 @@ const LinkModal = ({
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedLinks.length === 0) {
       setErrors({ type: "At least one link type must be selected." });
     } else {
       setErrors({});
-      setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
-        ...prevSelectedLinkDocuments,
-        ...selectedLinks.map((linkType) => ({ document, linkType })),
-      ]);
-      setSelectedLinks([]);
-      handleClose();
+      const linksToCreate = selectedLinks.filter(
+        (link) => !initialSelectedLinks.includes(link)
+      );
+      const linksToDelete = initialSelectedLinks.filter(
+        (link) => !selectedLinks.includes(link)
+      );
+
+      try {
+        await Promise.all([
+          ...linksToCreate.map((linkType) =>
+            API.createLink(document.id, {
+              type: linkType,
+              documentId: selectedDocumentToLink.id,
+            })
+          ),
+          ...linksToDelete.map((linkType) =>
+            API.deleteLink(document.id, {
+              type: linkType,
+              documentId: selectedDocumentToLink.id,
+            })
+          ),
+        ]);
+
+        setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
+          ...prevSelectedLinkDocuments,
+          ...selectedLinks.map((linkType) => ({ document, linkType })),
+        ]);
+        setSelectedLinks([]);
+        handleClose();
+      } catch (error) {
+        console.error("Error updating links:", error);
+        setErrors({ type: "Failed to update links. Please try again." });
+      }
     }
   };
 
@@ -74,14 +102,16 @@ const LinkModal = ({
       </Modal.Header>
       <Modal.Body>
         <Form.Group className="mb-3" controlId="formLinkTypes">
-          <Form.Label>Link Types *</Form.Label>
+          <Form.Label>Link Types</Form.Label>
           {linkTypes.map((linkType) => (
             <Form.Check
               key={linkType}
               type="checkbox"
               label={linkType}
               value={linkType}
-              checked={selectedLinks.includes(linkType)}
+              checked={
+                selectedLinks.includes(linkType)
+              }
               onChange={handleChange}
               isInvalid={!!errors.type}
             />
@@ -98,6 +128,9 @@ const LinkModal = ({
           onClick={handleSave}
         >
           Save
+        </Button>
+        <Button variant="secondary" onClick={handleClose}>
+          Cancel
         </Button>
       </Modal.Footer>
     </Modal>

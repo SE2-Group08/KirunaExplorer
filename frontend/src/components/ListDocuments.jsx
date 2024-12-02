@@ -79,19 +79,8 @@ export default function ListDocuments() {
   };
 
   const handleCompleteLink = async () => {
-    try {
-      await Promise.all(
-        selectedLinkDocuments.map((linkedDoc) =>
-          API.createLink(selectedDocumentToLink, linkedDoc)
-        )
-      );
-      alert("Links created successfully!");
       setLinking(false);
       setSelectedLinkDocuments([]);
-    } catch (error) {
-      console.error("Error linking documents:", error);
-      alert("Failed to create links. Please try again.");
-    }
   };
 
   const isLinkedDocument = (document) => {
@@ -130,15 +119,15 @@ export default function ListDocuments() {
           {linking ? (
             <>
               <Button
-                title="Confirm links"
+                title="Done"
                 variant="success"
                 onClick={handleCompleteLink}
+                disabled={selectedLinkDocuments.length === 0}
               >
                 <i className="bi bi-check-square"></i>
               </Button>
               <Button
                 variant="secondary"
-                style={{ width: "70px" }}
                 title="Exit link mode"
                 onClick={() => {
                   handleExitLinkMode();
