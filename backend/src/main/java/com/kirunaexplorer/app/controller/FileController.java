@@ -45,4 +45,16 @@ public class FileController {
     public ResponseEntity<byte[]> downloadFile(@PathVariable Long fileId) {
         return ResponseEntity.ok().body(fileService.getFile(fileId));
     }
+
+    /**
+     * Delete a file
+     *
+     * @param fileId File id
+     * @return ResponseEntity<Void>
+     */
+    @DeleteMapping("/files/{fileId}")
+    public ResponseEntity<Void> deleteFile(@PathVariable Long fileId) {
+        fileService.deleteFile(fileId);
+        return ResponseEntity.noContent().build();
+    }
 }

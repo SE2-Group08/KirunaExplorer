@@ -56,4 +56,23 @@ public class FileService {
             .map(DocumentFile::getContent)
             .orElseThrow(() -> new ResourceNotFoundException("File not found with ID " + fileId));
     }
+
+    /**
+     * Delete a file
+     *
+     * @param fileId File id
+     */
+    public void deleteFile(Long fileId) {
+        // Get the file
+        DocumentFile file = fileRepository.findById(fileId)
+            .orElseThrow(() -> new ResourceNotFoundException("File not found with ID " + fileId));
+
+        // Remove the file from the document
+        Document document = file.getDocument();
+        document.removeFile(file);
+        documentRepository.save(document);
+
+        // Delete the file
+        fileRepository.delete(file);
+    }
 }

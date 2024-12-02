@@ -113,6 +113,10 @@ public class Document {
         this.documentFiles.add(file);
     }
 
+    public void removeFile(DocumentFile file) {
+        this.documentFiles.remove(file);
+    }
+
     /**
      * Parse the date to a string given the precision
      *
