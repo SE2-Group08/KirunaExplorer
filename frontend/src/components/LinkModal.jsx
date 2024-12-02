@@ -50,8 +50,8 @@ const LinkModal = ({
   };
 
   const handleSave = async () => {
-    if (selectedLinks.length === 0) {
-      setErrors({ type: "At least one link type must be selected." });
+    if (selectedLinks === initialSelectedLinks) {
+      setErrors({ type: "It's not possible to save if you didn't make any change" });
     } else {
       setErrors({});
       const linksToCreate = selectedLinks.filter(
@@ -124,7 +124,7 @@ const LinkModal = ({
       <Modal.Footer>
         <Button
           variant="primary"
-          disabled={!selectedLinks.length}
+          disabled={selectedLinks === initialSelectedLinks}
           onClick={handleSave}
         >
           Save

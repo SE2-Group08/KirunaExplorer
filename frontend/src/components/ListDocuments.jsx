@@ -120,21 +120,10 @@ export default function ListDocuments() {
             <>
               <Button
                 title="Done"
-                variant="success"
+                variant="primary"
                 onClick={handleCompleteLink}
-                disabled={selectedLinkDocuments.length === 0}
               >
                 <i className="bi bi-check-square"></i>
-              </Button>
-              <Button
-                variant="secondary"
-                title="Exit link mode"
-                onClick={() => {
-                  handleExitLinkMode();
-                }}
-                className="ms-2"
-              >
-                <i className="bi bi-box-arrow-left"></i>
               </Button>
             </>
           ) : (

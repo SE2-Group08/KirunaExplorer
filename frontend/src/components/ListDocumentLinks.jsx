@@ -36,12 +36,12 @@ const ListDocumentLinks = ({
     }
   }, [isOpen]);
 
-  const handleSnippetClick = async (snippet) => {
-    setShowLinkModal(true);
-    const dLinks = await API.getAllLinksOfDocument(snippet.document.id);
-    setLinks(dLinks);
-    setSelectedSnippet(snippet);
-  };
+  // const handleSnippetClick = async (snippet) => {
+  //   setShowLinkModal(true);
+  //   const dLinks = await API.getAllLinksOfDocument(snippet.document.id);
+  //   setLinks(dLinks);
+  //   setSelectedSnippet(snippet);
+  // };
 
   return (
     <div className={`slider ${isOpen ? "open" : ""}`}>
@@ -53,7 +53,6 @@ const ListDocumentLinks = ({
               <Col key={index}>
                 <Card
                   className="document-card slider-card"
-                  onClick={() => handleSnippetClick(snippet)}
                 >
                   <Card.Body>
                     <Card.Title className="document-card-title">
