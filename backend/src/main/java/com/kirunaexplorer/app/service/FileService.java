@@ -41,7 +41,7 @@ public class FileService {
             .orElseThrow(() -> new RuntimeException("Failed to process the file"));
 
         // Save the file
-        fileRepository.save(file);
+        file = fileRepository.save(file);
 
         return file.getId();
     }
