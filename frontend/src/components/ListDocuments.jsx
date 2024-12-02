@@ -17,6 +17,15 @@ export default function ListDocuments() {
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
   const [links, setLinks] = useState([]);
+  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState([]);
+
+  useEffect(() => {
+    if (linking) {
+      API.getAllLinksOfDocument(selectedDocumentToLink.id)
+        .then(setAllLinksOfSelectedDocument)
+        .catch((error) => console.error("Error fetching links:", error));
+    }
+  }, [linking, showLinkModal]);
 
   useEffect(() => {
     API.getAllDocumentSnippets()
@@ -170,6 +179,8 @@ export default function ListDocuments() {
                 document={document}
                 isLinkedDocument={isLinkedDocument}
                 onSelect={handleSelection}
+                allLinksOfSelectedDocument={allLinksOfSelectedDocument}
+                linking={linking}
               />
             ))}
           </Row>
@@ -284,7 +295,28 @@ const DocumentSnippetCardComponent = ({
   document,
   isLinkedDocument,
   onSelect,
+  allLinksOfSelectedDocument,
+  linking,
 }) => {
+  const documentLinks = allLinksOfSelectedDocument.find(
+    (doc) => doc.document.id === document.id
+  )?.links || [];
+
+  const linkInitials = documentLinks.map((link) => {
+    switch (link.linkType) {
+      case "PREVISION":
+        return "P";
+      case "DIRECT_CONSEQUENCE":
+        return "DC";
+      case "COLLATERAL_CONSEQUENCE":
+        return "CC";
+      case "UPDATE":
+        return "U";
+      default:
+        return "";
+    }
+  });
+
   return (
     <Col key={document.id}>
       <Card
@@ -312,6 +344,22 @@ const DocumentSnippetCardComponent = ({
         }}
       >
         <Card.Body>
+          {linking && linkInitials.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "8px",
+                right: "8px",
+                backgroundColor: "#e9ecef",
+                borderRadius: "4px",
+                padding: "2px 6px",
+                fontSize: "12px",
+                fontWeight: "bold",
+              }}
+            >
+              {linkInitials.join(", ")}
+            </div>
+          )}
           <Card.Title className="document-card-title">
             {document.title}
           </Card.Title>
