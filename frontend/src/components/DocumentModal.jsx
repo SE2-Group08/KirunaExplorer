@@ -59,14 +59,18 @@ export default function DocumentModal(props) {
   const [existingFiles, setExistingFiles] = useState([]);
   const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
 
-  // Load existing files when editing
   useEffect(() => {
     if (props.document && props.document.id) {
       API.getDocumentFiles(props.document.id)
-          .then(setExistingFiles)
-          .catch((error) => console.error("Error loading files:", error));
+          .then((files) => {
+            console.log('Fetched existing files:', files);
+            setExistingFiles(files);
+            setDeletedExistingFiles([])
+          })
+          .catch((error) => console.error('Error loading files:', error));
     }
   }, [props.document]);
+
 
   // Update the state when the document prop changes
   useEffect(() => {
@@ -310,13 +314,23 @@ export default function DocumentModal(props) {
   };
 
   const handleDeleteExistingFile = (fileId) => {
-    setDeletedExistingFiles((prev) => [...prev, fileId]);
-    setExistingFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
+    console.log('handleDeleteExistingFile called with fileId:', fileId);
+    setDeletedExistingFiles((prev) => {
+      const updatedList = [...prev, fileId];
+      console.log('Updated deletedExistingFiles:', updatedList);
+      return updatedList;
+    });
+    setExistingFiles((prevFiles) => {
+      const updatedFiles = prevFiles.filter((file) => file.id !== fileId);
+      console.log('Updated existingFiles:', updatedFiles);
+      return updatedFiles;
+    });
   };
 
-  const handleDownload = async (file) => {
+
+  const handleDownload = async (id, name, extension) => {
     try {
-      await API.downloadFile(file.id, file.name, file.extension);
+      await API.downloadFile(id, name, extension);
     } catch (error) {
       console.error("Error downloading file:", error);
     }
@@ -623,20 +637,6 @@ function DocumentFormComponent({
     updateFilesToUpload([...files, ...newFiles]);
   };
 
-  const handleRemoveFile = (indexToRemove) => {
-    const updatedFiles = files.filter((_, index) => index !== indexToRemove);
-
-    // Revoke the object URL to avoid memory leaks
-    URL.revokeObjectURL(filePreviews[files[indexToRemove].name]);
-
-    const updatedPreviews = { ...filePreviews };
-    delete updatedPreviews[files[indexToRemove].name];
-
-    setFiles(updatedFiles);
-    setFilePreviews(updatedPreviews);
-    updateFilesToUpload(updatedFiles);
-  };
-
   useEffect(() => {
     return () => {
       Object.values(filePreviews).forEach((url) => URL.revokeObjectURL(url));
@@ -668,6 +668,25 @@ function DocumentFormComponent({
     if (value.length <= 4) {
       handleChange("year", value);
     }
+  };
+  const handleDeleteNewFile = (index) => {
+    setFiles((prevFiles) => {
+      const newFiles = [...prevFiles];
+      const [removedFile] = newFiles.splice(index, 1);
+      // Revoke object URL to avoid memory leaks
+      URL.revokeObjectURL(filePreviews[removedFile.name]);
+      return newFiles;
+    });
+    setFilePreviews((prevPreviews) => {
+      const newPreviews = { ...prevPreviews };
+      delete newPreviews[files[index].name];
+      return newPreviews;
+    });
+    updateFilesToUpload((prevFilesToUpload) => {
+      const newFilesToUpload = [...prevFilesToUpload];
+      newFilesToUpload.splice(index, 1);
+      return newFilesToUpload;
+    });
   };
 
   useEffect(() => {
@@ -1189,7 +1208,7 @@ function DocumentFormComponent({
                               <Button
                                   variant="outline-danger"
                                   size="sm"
-                                  onClick={() => handleRemoveFile(index)}
+                                  onClick={() => handleDeleteNewFile(index)}
                                   title="Remove file"
                               >
                                 <i className="bi bi-trash"></i>
@@ -1204,10 +1223,10 @@ function DocumentFormComponent({
                     <div className="mt-3">
                       <h6>Existing files:</h6>
                       <DocumentResources
-                      resources={existingFiles}
-                      onDelete={handleRemoveFile}
-                      viewMode={"list"}
-                      isEditable={true}
+                          resources={existingFiles}
+                          onDelete={handleDeleteExistingFile}
+                          viewMode={"list"}
+                          isEditable={true}
                       />
                     </div>
                 )}

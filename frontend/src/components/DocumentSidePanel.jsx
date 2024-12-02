@@ -15,9 +15,9 @@ const DocumentSidePanel = ({ document, onClose }) => {
   }, [document]);
 
 
-  const handleDownload = async (file) => {
+  const handleDownload = async (id, name, extension) => {
     try {
-      await API.downloadFile(file.id, file.name, file.extension);
+      await API.downloadFile(id, name, extension);
     } catch (error) {
       console.error("Error downloading file:", error);
     }

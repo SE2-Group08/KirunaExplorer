@@ -44,10 +44,10 @@ const DocumentResources = ({ resources, onDelete, onDownload, viewMode, isEditab
 
                         {/* Resource Actions */}
                         <div className="resource-actions">
-                            {isEditable &&<Button variant="outline-danger" size="sm" onClick={() => onDelete(resource)}>
+                            {isEditable &&<Button variant="outline-danger" size="sm" onClick={() => onDelete(resource.id)}>
                                 <AiOutlineDelete />
                             </Button>}
-                            <Button variant="outline-primary" size="sm" onClick={() => onDownload(resource)}>
+                            <Button variant="outline-primary" size="sm" onClick={() => onDownload(resource.id,resource.name,resource.extension)}>
                                 <AiOutlineDownload />
                             </Button>
                         </div>
@@ -66,12 +66,14 @@ const DocumentResources = ({ resources, onDelete, onDownload, viewMode, isEditab
                         <div className="text-truncate">{resource.name}</div>
                     </OverlayTrigger>
                     <div>
-                        {isEditable &&<Button variant="outline-danger" size="sm" onClick={() => onDelete(resource)} className="me-2">
+                        {isEditable ?(<Button variant="outline-danger" size="sm" onClick={() => onDelete(resource.id)} className="me-2">
                             <AiOutlineDelete />
-                        </Button>}
-                        <Button variant="outline-primary" size="sm" onClick={() => onDownload(resource)}>
-                            <AiOutlineDownload />
-                        </Button>
+                        </Button>) : (
+                            <Button variant="outline-primary" size="sm" onClick={() => onDownload(resource.id,resource.name,resource.extension)}>
+                                <AiOutlineDownload />
+                            </Button>
+                            )}
+
                     </div>
                 </ListGroup.Item>
             ))}
