@@ -6,8 +6,12 @@ import "../App.css";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
 import LinkModal from "./LinkModal";
+import { useContext } from "react";
+import FeedbackContext from "../contexts/FeedbackContext";
+import Pagination from "./Pagination";
+import { getIconUrlForDocument } from "../utils/iconMapping";
 
-export default function ListDocuments() {
+export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
   const [show, setShow] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -16,65 +20,106 @@ export default function ListDocuments() {
   const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
-  const [links, setLinks] = useState([]);
-  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-  useEffect(() => {
-    if (linking) {
-      API.getAllLinksOfDocument(selectedDocumentToLink.id)
-        .then(setAllLinksOfSelectedDocument)
-        .catch((error) => console.error("Error fetching links:", error));
-    }
-  }, [linking, showLinkModal]);
+  const { setFeedbackFromError, setShouldRefresh, setFeedback } =
+    useContext(FeedbackContext);
 
-  useEffect(() => {
-    API.getAllDocumentSnippets()
-      .then(setDocuments)
-      .catch((error) => console.error("Error fetching documents:", error));
-  }, []);
+    useEffect(() => {
+      console.log("ListDocuments: useEffect");
+      window.scrollTo(0, 0);
+      //if (shouldRefresh) {
+        API.getDocumentsByPageNumber(currentPage)
+          .then((response) => {
+            setDocuments(response[0].documentSnippets);
+            setTotalPages(response[0].totalPages);
+          })
+          .then(() => setShouldRefresh(false))
+          .catch((error) => setFeedbackFromError(error));
+      //}
+    }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
+
+    const handlePageChange = (pageNumber) => {
+      setCurrentPage(pageNumber);
+      setShouldRefresh(true);
+    };
 
   const handleSelection = async (document) => {
-    try {
-      const newDoc = await API.getDocumentById(document.id);
-      setSelectedDocument(newDoc);
-
-      if (linking) {
-        const dLinks = await API.getAllLinksOfDocument(newDoc.id);
-        setLinks(dLinks);
-        if (
-          selectedDocumentToLink &&
-          document.id === selectedDocumentToLink.id
-        ) {
-          return;
-        }
-        setShowLinkModal(true);
-      } else {
-        setShow(true);
+    const newDoc = await API.getDocumentById(document.id).catch((error) =>
+      setFeedbackFromError(error)
+    );
+    setSelectedDocument(newDoc);
+    if (linking) {
+      if (
+        selectedDocumentToLink &&
+        document.id === selectedDocumentToLink?.id
+      ) {
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching document details:", error);
+      const alreadySelected = selectedLinkDocuments.some(
+        (doc) => doc.document.id === document.id
+      );
+      if (alreadySelected) {
+        setSelectedLinkDocuments((prevDocuments) =>
+          prevDocuments.filter((doc) => doc.document.id !== document.id)
+        );
+      } else {
+        setShowLinkModal(true);
+        setSelectedDocument(newDoc);
+      }
+    } else {
+      setSelectedDocument(newDoc);
+      setShow(true);
     }
   };
 
   const handleSave = (document) => {
     API.updateDocument(document.id, document)
       .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error saving document:", error));
+      .then(() => setShouldRefresh(false))
+      .then(() =>
+        setFeedback({
+          type: "success",
+          message: "Document updated successfully",
+        })
+      )
+      .catch((error) =>
+        setFeedbackFromError(error)
+      );
     setShow(false);
+    setShouldRefresh(true);
   };
 
   const handleAdd = (document) => {
     API.addDocument(document)
       .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error adding document:", error));
+      .then(() => setShouldRefresh(false))
+      .then(() =>
+        setFeedback({ type: "success", message: "Document added successfully" })
+      )
+      .catch((error) =>
+        setFeedbackFromError(error)
+      );
     setShow(false);
+    setShouldRefresh(true);
   };
 
   const handleDelete = (documentId) => {
     API.deleteDocument(documentId)
       .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error deleting document:", error));
+      .then(() => setShouldRefresh(false))
+      .then(() =>
+        setFeedback({
+          type: "success",
+          message: "Document deleted successfully",
+        })
+      )
+      .catch((error) =>
+        setFeedbackFromError(error)
+      );
     setShow(false);
+    setShouldRefresh(true);
   };
 
   const handleLinkToClick = () => {
@@ -88,8 +133,19 @@ export default function ListDocuments() {
   };
 
   const handleCompleteLink = async () => {
+    try {
+      await Promise.all(
+        selectedLinkDocuments.map((linkedDoc) =>
+          API.createLink(selectedDocumentToLink, linkedDoc)
+        )
+      );
+      setFeedback({ type: "success", message: "Document linked successfully" });
+      setShouldRefresh(true);
       setLinking(false);
       setSelectedLinkDocuments([]);
+    } catch (error) {
+      setFeedbackFromError(error);
+    }
   };
 
   const isLinkedDocument = (document) => {
@@ -128,11 +184,21 @@ export default function ListDocuments() {
           {linking ? (
             <>
               <Button
-                title="Done"
-                variant="primary"
+                title="Confirm links"
+                variant="success"
                 onClick={handleCompleteLink}
               >
                 <i className="bi bi-check-square"></i>
+              </Button>
+              <Button
+                title="Exit link mode"
+                variant="secondary"
+                onClick={() => {
+                  handleExitLinkMode();
+                }}
+                className="ms-2"
+              >
+                <i className="bi bi-box-arrow-left"></i>
               </Button>
             </>
           ) : (
@@ -183,12 +249,17 @@ export default function ListDocuments() {
                 document={document}
                 isLinkedDocument={isLinkedDocument}
                 onSelect={handleSelection}
-                allLinksOfSelectedDocument={allLinksOfSelectedDocument}
-                linking={linking}
               />
             ))}
           </Row>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+
         {/* Modals for viewing, adding, or linking documents */}
         {selectedDocument && (
           <DocumentModal
@@ -216,8 +287,6 @@ export default function ListDocuments() {
             selectedLinkDocuments={selectedLinkDocuments}
             document={selectedDocument}
             onLinkConfirm={handleLinkConfirm}
-            links={links}
-            selectedDocumentToLink={selectedDocumentToLink}
           />
         )}
       </Row>
@@ -227,6 +296,7 @@ export default function ListDocuments() {
 
 ListDocuments.propTypes = {
   thinCardLayout: PropTypes.bool,
+  shouldRefresh: PropTypes.bool.isRequired,
 };
 
 function DocumentSnippetTableComponent({
@@ -238,10 +308,11 @@ function DocumentSnippetTableComponent({
     <Table hover responsive>
       <thead>
         <tr>
+          <th>Icon</th>
           <th>Title</th>
           <th>Scale</th>
           <th>Issuance Date</th>
-          <th>Type</th>
+          {/* <th>Type</th> */}
         </tr>
       </thead>
       <tbody>
@@ -269,6 +340,13 @@ function DocumentSnippetTableComponent({
             }}
           >
             <td>
+              <img
+                src={getIconUrlForDocument(document.type, document.stakeholders)}
+                alt={`${document.type} icon`}
+                style={{ width: "40px", height: "40px" }}
+              />
+            </td>
+            <td>
               <em>{document.title}</em>
             </td>
             <td>{document.scale}</td>
@@ -281,7 +359,7 @@ function DocumentSnippetTableComponent({
                   : "DD/MM/YYYY"
               )}
             </td>
-            <td>{document.type}</td>
+            {/* <td>{document.type}</td> */}
           </tr>
         ))}
       </tbody>
@@ -299,28 +377,7 @@ const DocumentSnippetCardComponent = ({
   document,
   isLinkedDocument,
   onSelect,
-  allLinksOfSelectedDocument,
-  linking,
 }) => {
-  const documentLinks = allLinksOfSelectedDocument.find(
-    (doc) => doc.document.id === document.id
-  )?.links || [];
-
-  const linkInitials = documentLinks.map((link) => {
-    switch (link.linkType) {
-      case "PREVISION":
-        return "P";
-      case "DIRECT_CONSEQUENCE":
-        return "DC";
-      case "COLLATERAL_CONSEQUENCE":
-        return "CC";
-      case "UPDATE":
-        return "U";
-      default:
-        return "";
-    }
-  });
-
   return (
     <Col key={document.id}>
       <Card
@@ -348,32 +405,25 @@ const DocumentSnippetCardComponent = ({
         }}
       >
         <Card.Body>
-          {linking && linkInitials.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "8px",
-                right: "8px",
-                backgroundColor: "#e9ecef",
-                borderRadius: "4px",
-                padding: "2px 6px",
-                fontSize: "12px",
-                fontWeight: "bold",
-              }}
-            >
-              {linkInitials.join(", ")}
-            </div>
-          )}
-          <Card.Title className="document-card-title">
-            {document.title}
-          </Card.Title>
+          <div className="d-flex align-items-center">            
+            <img
+              src={getIconUrlForDocument(document.type, document.stakeholders)}
+              alt={`${document.type} icon`}
+              style={{ width: "70px", height: "70px", marginRight: "10px" }}
+            />
+            <Card.Title className="document-card-title"
+              style={{fontSize: "17px"}}>
+              {document.title}
+            </Card.Title>
+          </div>
           <div className="divider" />
           <Card.Text className="document-card-text">
             <strong>Scale:</strong> {document.scale}
           </Card.Text>
           <Card.Text className="document-card-text">
             <strong>Issuance Date:</strong>{" "}
-            {dayjs(document.issuanceDate).format(
+            {
+            dayjs(document.issuanceDate).format(
               document.issuanceDate.length === 4
                 ? "YYYY"
                 : document.issuanceDate.length === 7
@@ -381,9 +431,9 @@ const DocumentSnippetCardComponent = ({
                 : "DD/MM/YYYY"
             )}
           </Card.Text>
-          <Card.Text className="document-card-text">
+          {/* <Card.Text className="document-card-text">
             <strong>Type:</strong> {document.type}
-          </Card.Text>
+          </Card.Text> */}
         </Card.Body>
       </Card>
     </Col>
