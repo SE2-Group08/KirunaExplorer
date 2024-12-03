@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Button, Card, Row, Col, ListGroup } from "react-bootstrap";
 import API from "../API.mjs";
 import "../App.css";
-import LinkModal from "./LinkModal.jsx";
+// import LinkModal from "./LinkModal.jsx";
 
 const ListDocumentLinks = ({
   documentId,
   isOpen,
   onClose,
-  onSnippetClick,
-  document,
+  // onSnippetClick,
+  // document,
 }) => {
   const [snippets, setSnippets] = useState([]);
-  const [showLinkModal, setShowLinkModal] = useState(false);
-  const [selectedSnippet, setSelectedSnippet] = useState({});
-  const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
+  // const [showLinkModal, setShowLinkModal] = useState(false);
+  // const [selectedSnippet, setSelectedSnippet] = useState({});
+  // const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
   const [links, setLinks] = useState([]);
 
   useEffect(() => {
@@ -30,11 +30,11 @@ const ListDocumentLinks = ({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) {
-      setSnippets([]);
-    }
-  }, [isOpen]);
+  // useEffect(() => {
+  //   if (!isOpen) {
+  //     setSnippets([]);
+  //   }
+  // }, [isOpen]);
 
   // const handleSnippetClick = async (snippet) => {
   //   setShowLinkModal(true);
@@ -48,11 +48,12 @@ const ListDocumentLinks = ({
       <div className="snippet-list">
         <Row xs={1} className="g-4" style={{ width: "100%" }}>
           <Card.Title>Linked documents</Card.Title>
-          {!links.length ? (
+          {snippets.length ? (
             snippets.map((snippet, index) => (
               <Col key={index}>
                 <Card
                   className="document-card slider-card"
+                  // onClick={() => handleSnippetClick(snippet)}
                 >
                   <Card.Body>
                     <Card.Title className="document-card-title">
@@ -110,7 +111,7 @@ const ListDocumentLinks = ({
         Close
       </Button>
 
-      {showLinkModal && (
+      {/* {showLinkModal && (
         <LinkModal
           showModal={showLinkModal}
           handleClose={() => setShowLinkModal(false)}
@@ -119,7 +120,7 @@ const ListDocumentLinks = ({
           selectedDocumentToLink={document}
           setSelectedLinkDocuments={setSelectedLinkDocuments}
         />
-      )}
+      )} */}
     </div>
   );
 };
