@@ -3,6 +3,60 @@ import Stakeholder from "./model/Stakeholder.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
 
+/* **************************** *
+ *      Authentication APIs     *
+ * **************************** */
+
+// Given a credentials object containing username and passowrd it executes login
+const logIn = async (credentials) => {
+  console.log("API.logIn", credentials);
+  return await fetch(SERVER_URL + "/sessions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(credentials),
+  })
+    .then(handleInvalidResponse)
+    .then((response) => response.json());
+};
+
+// Verifies if user is still logged-in. It returns a JSON with the user info
+const getUserInfo = async () => {
+  return await fetch(SERVER_URL + "/sessions/current", {
+    credentials: "include",
+  })
+    .then(handleInvalidResponse)
+    .then((response) => response.json);
+};
+
+// Destroys the current user's session (executing log-out)
+const logOut = async () => {
+  return await fetch(SERVER_URL + "/sessions/current", {
+    method: "DELETE",
+    credentials: "include",
+  }).then(handleInvalidResponse);
+};
+
+/* ********************* *
+ *       User APIs       *
+ * ********************* */
+
+const getUsers = async () => {
+  return await fetch(SERVER_URL + "/users")
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((jsonArray) => jsonArray.map(User.fromJson));
+};
+
+const getUserById = async (userId) => {
+  return await fetch(`${SERVER_URL}/users/${userId}`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then(User.fromJson);
+};
+
 /* ************************** *
  *       Link APIs      *
  * ************************** */
@@ -242,5 +296,10 @@ const API = {
   getAllLinksOfDocument,
   updateLink,
   deleteLink,
+  logIn,
+  getUserInfo,
+  logOut,
+  getUsers,
+  getUserById,
 };
 export default API;
