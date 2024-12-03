@@ -6,24 +6,30 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public record FileUploadRequestDTO(
     @NotNull
-    MultipartFile file
+    List<MultipartFile> files
 ) {
-    public Optional<DocumentFile> toDocumentFile(Document document) {
-        try {
-            MultipartFile multipartFile = file();
-            String originalFilename = multipartFile.getOriginalFilename();
-            String name = originalFilename != null ? originalFilename.substring(0, originalFilename.lastIndexOf('.')) : "";
-            String extension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf('.') + 1) : "";
-            Long size = multipartFile.getSize();
-            byte[] content = multipartFile.getBytes();
+    public List<DocumentFile> toDocumentFiles(Document document) {
+        return files.stream()
+            .map(file -> {
+                String originalFilename = file.getOriginalFilename();
+                String name = originalFilename != null ? originalFilename.substring(0, originalFilename.lastIndexOf('.')) : "";
+                String extension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf('.') + 1) : "";
+                Long size = file.getSize();
+                byte[] content = new byte[0];
+                try {
+                    content = file.getBytes();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-            return Optional.of(new DocumentFile(null, document, name, extension, size, content));
-        } catch (IOException e) {
-            return Optional.empty();
-        }
+                return new DocumentFile(null, document, name, extension, size, content);
+            })
+            .collect(Collectors.toList());
     }
 }

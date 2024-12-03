@@ -31,7 +31,7 @@ public class FileController {
         @PathVariable Long id,
         @ModelAttribute @Valid FileUploadRequestDTO fileUploadRequest
     ) {
-        Long fileId = fileService.storeFile(id, fileUploadRequest);
+        Long fileId = fileService.storeFiles(id, fileUploadRequest);
         URI location = URI.create("/api/v1/files/" + fileId);
         return ResponseEntity.created(location).build();
     }

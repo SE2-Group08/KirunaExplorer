@@ -765,7 +765,7 @@
         }
       },
       "post": {
-        "summary": "Upload a file for the {id} document",
+        "summary": "Upload one or more files for the {id} document",
         "tags": [
           "file"
         ],
@@ -774,7 +774,15 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/File"
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/File"
+                    }
+                  }
+                }
               }
             }
           }
