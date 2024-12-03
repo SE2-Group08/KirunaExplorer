@@ -275,8 +275,9 @@ export default function DocumentModal(props) {
           )
       );
 
-      // Upload new files after document is added
-      await Promise.all(filesToUpload.map((file) => API.uploadFile(newDocId, file)));
+      if(filesToUpload.length > 0)
+      await API.uploadFiles(newDocId, filesToUpload)
+
     } else {
       await props.handleSave(
           new Document(
@@ -297,12 +298,10 @@ export default function DocumentModal(props) {
       console.log("Document ID:", props.document.id);
       console.log("Files to Upload:", filesToUpload);
 
-      // Upload new files
-      for (const file of filesToUpload) {
-        console.log("Uploading file:", file);
-        await API.uploadFile(props.document.id, file);
-      }
-      // Delete removed files
+      if(filesToUpload.length> 0)
+        await API.uploadFiles(props.document.id, filesToUpload);
+
+      if(deletedExistingFiles.length>0)
       await Promise.all(deletedExistingFiles.map((fileId) => API.deleteFile(fileId)));
     }
     setFilesToUpload([]);
