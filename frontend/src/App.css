@@ -210,30 +210,6 @@ button:hover {
   margin-bottom: 0.5rem; 
 }
 
-<<<<<<< HEAD
-.splash-background {
-  background-image: url('./public/KX_BckG.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.splash-title {
-  color: white;
-  font-size: 8rem;
-  text-align: center;
-}
-
-
-=======
->>>>>>> d24a478 (Homepage and Bootstrap colors (primary, secondary ecc...))
 .bg-linked-document {
   background-color: black;
   color: #333;
