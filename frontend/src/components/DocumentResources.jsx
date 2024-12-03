@@ -87,7 +87,7 @@ DocumentResources.propTypes = {
             name: PropTypes.string.isRequired,
             url: PropTypes.string.isRequired,
         })
-    ).isRequired,
+    ),
     onDelete: PropTypes.func,
     onDownload: PropTypes.func,
     viewMode: PropTypes.oneOf(["grid", "list"]).isRequired,

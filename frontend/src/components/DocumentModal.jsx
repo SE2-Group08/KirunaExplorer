@@ -257,7 +257,7 @@ export default function DocumentModal(props) {
       setErrors(newErrors);
       return;
     }
-
+try {
     if (props.document.id === undefined) {
       const newDocId = await props.handleAdd(
           new Document(
@@ -275,8 +275,14 @@ export default function DocumentModal(props) {
           )
       );
 
-      if(filesToUpload.length > 0)
-      await API.uploadFiles(newDocId, filesToUpload)
+      if (filesToUpload.length > 0) {
+        try {
+          await API.uploadFiles(newDocId, filesToUpload);
+        } catch (error) {
+          console.error("Error uploading files:", error);
+          alert("An error occurred while uploading files. Please try again.");
+        }
+      }
 
     } else {
       await props.handleSave(
@@ -295,17 +301,35 @@ export default function DocumentModal(props) {
           )
       );
 
-      console.log("Document ID:", props.document.id);
-      console.log("Files to Upload:", filesToUpload);
+      if (filesToUpload.length > 0) {
+        try {
+          await API.uploadFiles(props.document.id, filesToUpload);
+        } catch (error) {
+          console.error("Error uploading files:", error);
+          alert("An error occurred while uploading files. Please try again.");
+        }
+      }
 
-      if(filesToUpload.length> 0)
-        await API.uploadFiles(props.document.id, filesToUpload);
-
-      if(deletedExistingFiles.length>0)
-      await Promise.all(deletedExistingFiles.map((fileId) => API.deleteFile(fileId)));
+        if (deletedExistingFiles.length > 0) {
+          try {
+            await Promise.all(
+                deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+            );
+          } catch (error) {
+            console.error("Error deleting files:", error);
+            alert(
+                "An error occurred while deleting files. Some files may not have been removed."
+            );
+          }
+        }
+      }
+      setFilesToUpload([]);
+      props.onHide();
+    } catch (error) {
+      alert(
+          "An error occurred while saving the document. Please check your input and try again."
+      );
     }
-    setFilesToUpload([]);
-    props.onHide();
   };
 
   const updateFilesToUpload = (newFiles) => {
@@ -624,17 +648,34 @@ function DocumentFormComponent({
 
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files);
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
     const newFilePreviews = {};
+    const oversizedFiles = [];
 
     newFiles.forEach((file) => {
-      const url = URL.createObjectURL(file);
-      newFilePreviews[file.name] = url;
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(file.name);
+      } else {
+        const url = URL.createObjectURL(file);
+        newFilePreviews[file.name] = url;
+      }
     });
 
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    if (oversizedFiles.length > 0) {
+      alert(
+          `The following files exceed the maximum size of 25 MB and will not be uploaded:\n${oversizedFiles.join(
+              ", "
+          )}`
+      );
+    }
+
+    const validFiles = newFiles.filter((file) => file.size <= MAX_FILE_SIZE);
+
+    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
     setFilePreviews((prevPreviews) => ({ ...prevPreviews, ...newFilePreviews }));
-    updateFilesToUpload([...files, ...newFiles]);
+    updateFilesToUpload([...files, ...validFiles]);
   };
+
 
   useEffect(() => {
     return () => {
