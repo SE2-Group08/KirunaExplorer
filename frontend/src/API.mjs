@@ -4,6 +4,72 @@ import Stakeholder from "./model/Stakeholder.mjs";
 const SERVER_URL = "http://localhost:8080/api/v1";
 
 /* ************************** *
+ *       Resources APIs       *
+ * ************************** */
+
+const uploadFiles = async (id, files) => {
+    const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+
+  const url = `${SERVER_URL}/documents/${id}/files`;
+    console.log("Uploading file to URL:", url);
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    })
+  .then(handleInvalidResponse)
+};
+
+const deleteFile = async (fileId) => {
+
+  const response = await fetch(`${SERVER_URL}/files/${fileId}`, {
+    method: "DELETE",
+  })
+      .then(handleInvalidResponse)
+}
+
+const downloadFile = async (fileId, fileName, fileExtension) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/files/${fileId}`);
+
+    // Use the provided fileName and fileExtension
+    const fullFileName = `${fileName}.${fileExtension}`;
+
+    // Convert the response to a Blob
+    const blob = await response.blob();
+
+    // Create a Blob URL
+    const url = window.URL.createObjectURL(blob);
+
+    // Programmatically trigger the download with the correct name
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fullFileName;
+    document.body.appendChild(link);
+    link.click();
+
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+  } catch (error) {
+    handleInvalidResponse(error);
+  }
+};
+
+const getDocumentFiles = async (documentId) => {
+  const response = await fetch(`${SERVER_URL}/documents/${documentId}/files`);
+  if (!response.ok) {
+    throw new Error(`Failed to get document resources: ${response.statusText}`);
+  }
+  return await response.json();
+}
+
+/* ************************** *
  *       Link APIs      *
  * ************************** */
 
@@ -242,5 +308,9 @@ const API = {
   getAllLinksOfDocument,
   updateLink,
   deleteLink,
+  uploadFiles,
+  deleteFile,
+  getDocumentFiles,
+  downloadFile,
 };
 export default API;

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useEffect, useState, useRef } from "react";
-import { Button, Modal, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Button, Modal, Form, OverlayTrigger, Tooltip, Row, Col, ListGroup } from "react-bootstrap";
 import {
   MapContainer,
   TileLayer,
@@ -14,11 +14,11 @@ import { Document } from "../model/Document.mjs";
 import ListDocumentLinks from "./ListDocumentLinks.jsx";
 import dayjs from "dayjs";
 import "../App.css";
-
+import API from "../API";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
+import DocumentResources from "./DocumentResources.jsx";
 dayjs.extend(customParseFormat);
-// import { useMap } from "react-leaflet";
 
 export default function DocumentModal(props) {
   // Initialize Leaflet marker icon defaults
@@ -35,7 +35,6 @@ export default function DocumentModal(props) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [isEditable, setIsEditable] = useState(false);
   const [isSliderOpen, setSliderOpen] = useState(false);
-
   const [document, setDocument] = useState({
     title: "",
     stakeholders: [],
@@ -56,6 +55,22 @@ export default function DocumentModal(props) {
     description: "",
   });
   const [errors, setErrors] = useState({});
+  const [filesToUpload, setFilesToUpload] = useState([]);
+  const [existingFiles, setExistingFiles] = useState([]);
+  const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
+
+  useEffect(() => {
+    if (props.document && props.document.id) {
+      API.getDocumentFiles(props.document.id)
+          .then((files) => {
+            console.log('Fetched existing files:', files);
+            setExistingFiles(files);
+            setDeletedExistingFiles([])
+          })
+          .catch((error) => console.error('Error loading files:', error));
+    }
+  }, [props.document]);
+
 
   // Update the state when the document prop changes
   useEffect(() => {
@@ -96,7 +111,7 @@ export default function DocumentModal(props) {
     setErrors({});
   }, [props.document]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {}; // Reset errors
 
@@ -242,41 +257,106 @@ export default function DocumentModal(props) {
       setErrors(newErrors);
       return;
     }
-
+try {
     if (props.document.id === undefined) {
-      props.handleAdd(
-        new Document(
-          null,
-          document.title,
-          document.stakeholders,
-          document.scale,
-          combinedIssuanceDate,
-          document.type,
-          document.nrConnections,
-          document.language,
-          document.nrPages,
-          sanitizedGeolocation,
-          document.description
-        )
+      const newDocId = await props.handleAdd(
+          new Document(
+              null,
+              document.title,
+              document.stakeholders,
+              document.scale,
+              combinedIssuanceDate,
+              document.type,
+              document.nrConnections,
+              document.language,
+              document.nrPages,
+              sanitizedGeolocation,
+              document.description
+          )
       );
+
+      if (filesToUpload.length > 0) {
+        try {
+          await API.uploadFiles(newDocId, filesToUpload);
+        } catch (error) {
+          console.error("Error uploading files:", error);
+          alert("An error occurred while uploading files. Please try again.");
+        }
+      }
+
     } else {
-      props.handleSave(
-        new Document(
-          props.document.id,
-          document.title,
-          document.stakeholders,
-          document.scale,
-          combinedIssuanceDate,
-          document.type,
-          document.nrConnections,
-          document.language,
-          document.nrPages,
-          sanitizedGeolocation,
-          document.description
-        )
+      await props.handleSave(
+          new Document(
+              props.document.id,
+              document.title,
+              document.stakeholders,
+              document.scale,
+              combinedIssuanceDate,
+              document.type,
+              document.nrConnections,
+              document.language,
+              document.nrPages,
+              sanitizedGeolocation,
+              document.description
+          )
+      );
+
+      if (filesToUpload.length > 0) {
+        try {
+          await API.uploadFiles(props.document.id, filesToUpload);
+        } catch (error) {
+          console.error("Error uploading files:", error);
+          alert("An error occurred while uploading files. Please try again.");
+        }
+      }
+
+        if (deletedExistingFiles.length > 0) {
+          try {
+            await Promise.all(
+                deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+            );
+          } catch (error) {
+            console.error("Error deleting files:", error);
+            alert(
+                "An error occurred while deleting files. Some files may not have been removed."
+            );
+          }
+        }
+      }
+      setFilesToUpload([]);
+      props.onHide();
+    } catch (error) {
+      alert(
+          "An error occurred while saving the document. Please check your input and try again."
       );
     }
-    props.onHide();
+  };
+
+  const updateFilesToUpload = (newFiles) => {
+    setFilesToUpload(newFiles);
+  };
+
+  const handleDeleteExistingFile = (fileId) => {
+    console.log('handleDeleteExistingFile called with fileId:', fileId);
+    setDeletedExistingFiles((prev) => {
+      const updatedList = [...prev, fileId];
+      console.log('Updated deletedExistingFiles:', updatedList);
+      return updatedList;
+    });
+    setExistingFiles((prevFiles) => {
+      const updatedFiles = prevFiles.filter((file) => file.id !== fileId);
+      console.log('Updated existingFiles:', updatedFiles);
+      return updatedFiles;
+    });
+  };
+
+
+  const handleDownload = async (id, name, extension) => {
+    try {
+      await API.downloadFile(id, name, extension);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
   };
 
   const handleLinkToClick = () => {
@@ -290,10 +370,6 @@ export default function DocumentModal(props) {
     }));
   };
 
-  const handleLinksClick = () => {
-    setSliderOpen(!isSliderOpen);
-  };
-
   const handleCloseSlider = () => {
     setSliderOpen(false);
   };
@@ -304,74 +380,75 @@ export default function DocumentModal(props) {
   };
 
   return (
-    <Modal
-      show={props.show}
-      onHide={props.onHide}
-      centered
-      className="document-modal"
-      size="lg"
-    >
-      <Modal.Header closeButton className="modal-header">
-        <Modal.Title>
-          {isEditable
-            ? "Enter the values in the following fields"
-            : document.title}
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="modal-body">
-        {isEditable ? (
-          <DocumentFormComponent
-            document={document}
-            setDocument={setDocument}
-            errors={errors}
-            setErrors={setErrors}
-            handleSubmit={handleSubmit}
-            handleChange={handleChange}
-            kirunaBorderCoordinates={kirunaBorderCoordinates}
-          />
-        ) : (
-          <ModalBodyComponent document={document} />
-        )}
-      </Modal.Body>
-      <Modal.Footer className="mt-3">
-        {isEditable ? (
-          <Button title="Save" variant="success" onClick={handleSubmit}>
-            <i className="bi bi-check-square"></i>
-          </Button>
-        ) : (
-          <div className="d-flex align-items-center">
-            {/* <Button
-              variant="primary"
-              onClick={handleLinksClick}
-              className="me-2"
-            >
-              Links
-            </Button> */}
-            <Button
-              variant="primary"
-              onClick={handleLinkToClick}
-              className="me-2"
-            >
-              <i className="bi bi-box-arrow-up-right"></i>
-            </Button>
-            <Button
-              title="Edit"
-              variant="primary"
-              onClick={() => setIsEditable(true)}
-              className="me-2"
-            >
-              <i className="bi bi-pencil-square"></i>
-            </Button>
-          </div>
-        )}
-      </Modal.Footer>
-      <ListDocumentLinks
-        documentId={props.document.id}
-        isOpen={isSliderOpen}
-        onClose={handleCloseSlider}
-        onSnippetClick={handleSnippetClick}
-      />
-    </Modal>
+      <Modal
+          show={props.show}
+          onHide={props.onHide}
+          centered
+          className="document-modal"
+          size="lg"
+      >
+        <Modal.Header closeButton className="modal-header">
+          <Modal.Title>
+            {isEditable
+                ? "Enter the values in the following fields"
+                : document.title}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="modal-body">
+          {isEditable ? (
+              <DocumentFormComponent
+                  document={document}
+                  setDocument={setDocument}
+                  errors={errors}
+                  setErrors={setErrors}
+                  handleSubmit={handleSubmit}
+                  handleChange={handleChange}
+                  kirunaBorderCoordinates={kirunaBorderCoordinates}
+                  updateFilesToUpload={updateFilesToUpload}
+                  existingFiles={existingFiles}
+                  handleDeleteExistingFile={handleDeleteExistingFile}
+              />
+          ) : (
+              <ModalBodyComponent
+                  document={document}
+                  existingFiles={existingFiles}
+                  handleDownload={handleDownload}
+                  isEditable={isEditable}
+              />
+          )}
+        </Modal.Body>
+        <Modal.Footer className="mt-3">
+          {isEditable ? (
+              <Button title="Save" variant="success" onClick={handleSubmit}>
+                <i className="bi bi-check-square"></i>
+              </Button>
+          ) : (
+              <div className="d-flex align-items-center">
+                <Button
+                    variant="primary"
+                    onClick={handleLinkToClick}
+                    className="me-2"
+                >
+                  <i className="bi bi-box-arrow-up-right"></i>
+                </Button>
+                <Button
+                    title="Edit"
+                    variant="primary"
+                    onClick={() => setIsEditable(true)}
+                    className="me-2"
+                >
+                  <i className="bi bi-pencil-square"></i>
+                </Button>
+              </div>
+          )}
+        </Modal.Footer>
+        <ListDocumentLinks
+            documentId={props.document.id}
+            isOpen={isSliderOpen}
+            onClose={handleCloseSlider}
+            onSnippetClick={handleSnippetClick}
+        />
+      </Modal>
   );
 }
 
@@ -386,104 +463,150 @@ DocumentModal.propTypes = {
   onSnippetClick: PropTypes.func,
 };
 
-function ModalBodyComponent({ document }) {
+function ModalBodyComponent({ document, existingFiles, handleDownload, isEditable }) {
+  const [viewMode, setViewMode] = useState("list");
+
   return (
-    <div className="document-info">
-      <div className="info-section">
-        <div className="info-item">
-          <label>Stakeholders:</label>
-          <span>
-            {document.stakeholders ? document.stakeholders.join(", ") : ""}
-          </span>
-        </div>
+      <div className="modal-body-component">
+        <Row>
+          <Col md={6}>
+            <div className="info-section">
+              <div className="info-item">
+                <label>Stakeholders:</label>
+                <span>
+                {document.stakeholders ? document.stakeholders.join(", ") : ""}
+              </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Scale:</label>
+                <span>{document.scale}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Issuance Date:</label>
+                <span>
+                {dayjs(document.issuanceDate).format(
+                    document.issuanceDate.length === 4
+                        ? "YYYY"
+                        : document.issuanceDate.length === 7
+                            ? "MM/YYYY"
+                            : "DD/MM/YYYY"
+                )}
+              </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Type:</label>
+                <span>{document.type}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Connections:</label>
+                <span>
+                {document.nrConnections === 0 ? (
+                    <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            This document has no links yet. Remember to add them.
+                          </Tooltip>
+                        }
+                    >
+                      <i className="bi bi-exclamation-triangle"></i>
+                    </OverlayTrigger>
+                ) : (
+                    document.nrConnections
+                )}
+              </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Language:</label>
+                <span>{document.language ? `${document.language}` : "-"}</span>
+              </div>
+              <div className="divider"></div>
+
+              <div className="info-item">
+                <label>Pages:</label>
+                <span>{document.nrPages > 0 ? `${document.nrPages}` : "-"}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Location:</label>
+                <span>
+                {document.geolocation.latitude && document.geolocation.longitude ? (
+                    `${document.geolocation.latitude}, ${document.geolocation.longitude}`
+                ) : document.geolocation.municipality ? (
+                    `${document.geolocation.municipality}`
+                ) : (
+                    <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            This document hasn&apos;t been geolocated yet. Remember to
+                            add it.
+                          </Tooltip>
+                        }
+                    >
+                      <i className="bi bi-exclamation-triangle"></i>
+                    </OverlayTrigger>
+                )}
+              </span>
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="description-area">
+              <label>Description:</label>
+              <p>{document.description}</p>
+            </div>
+          </Col>
+        </Row>
         <div className="divider"></div>
-        <div className="info-item">
-          <label>Scale:</label>
-          <span>{document.scale}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Issuance Date:</label>
-          <span>
-            {dayjs(document.issuanceDate).format(
-              document.issuanceDate.length === 4
-                ? "YYYY"
-                : document.issuanceDate.length === 7
-                ? "MM/YYYY"
-                : "DD/MM/YYYY"
-            )}
-          </span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Type:</label>
-          <span>{document.type}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Connections:</label>
-          <span>
-            {document.nrConnections === 0 ? (
-              <OverlayTrigger
-                placement="top"
-                overlay={
-                  <Tooltip>
-                    This document has no links yet. Remember to add them.
-                  </Tooltip>
-                }
-              >
-                <i className="bi bi-exclamation-triangle"></i>
-              </OverlayTrigger>
-            ) : (
-              document.nrConnections
-            )}
-          </span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Language:</label>
-          <span>{document.language ? `${document.language}` : "-"}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Pages:</label>
-          <span>{document.nrPages > 0 ? `${document.nrPages}` : "-"}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Location:</label>
-          <span>
-            {document.geolocation.latitude && document.geolocation.longitude ? (
-              `${document.geolocation.latitude}, ${document.geolocation.longitude}`
-            ) : document.geolocation.municipality ? (
-              `${document.geolocation.municipality}`
-            ) : (
-              <OverlayTrigger
-                placement="top"
-                overlay={
-                  <Tooltip>
-                    This document hasn&apos;t been geolocated yet. Remember to
-                    add it.
-                  </Tooltip>
-                }
-              >
-                <i className="bi bi-exclamation-triangle"></i>
-              </OverlayTrigger>
-            )}
-          </span>
-        </div>
+        <Row className="mt-4">
+          <Col>
+            <div className="document-resources-section">
+              <div className="info-item d-flex justify-content-between align-items-center mb-3">
+                <label>Resources: </label>
+                {existingFiles.length>0 ? (<Button
+                    onClick={() => setViewMode((prev) => (prev === "list" ? "grid" : "list"))}
+                    title={`Switch to ${viewMode === "list" ? "grid" : "list"} view`}
+                >
+                  <i className={`bi ${viewMode === "list" ? "bi-grid" : "bi-list-task"}`}></i>
+                </Button>) :
+                  (
+                  <OverlayTrigger
+                      placement="top"
+                      overlay={
+                      <Tooltip>
+                      This document has no resources yet. Modify the document to add them.
+                      </Tooltip>
+                    }
+                  >
+                    <i className="bi bi-exclamation-triangle"></i>
+                  </OverlayTrigger>
+                  )}
+              </div>
+              <DocumentResources
+                  resources={existingFiles}
+                  onDelete={() => {}} // Deleting files is not allowed in view mode
+                  onDownload={handleDownload}
+                  viewMode={viewMode}
+                  isEditable={isEditable}
+              />
+            </div>
+          </Col>
+        </Row>
       </div>
-      <div className="divider-vertical"></div>
-      <div className="description-area">
-        <label>Description:</label>
-        <p>{document.description}</p>
-      </div>
-    </div>
   );
 }
 
 ModalBodyComponent.propTypes = {
   document: PropTypes.object.isRequired,
+  existingFiles: PropTypes.array.isRequired,
+  handleDownload: PropTypes.func.isRequired,
+  isEditable: PropTypes.bool.isRequired,
 };
 
 function DocumentFormComponent({
@@ -491,6 +614,9 @@ function DocumentFormComponent({
   errors,
   handleChange,
   kirunaBorderCoordinates,
+  updateFilesToUpload,
+  existingFiles,
+  handleDeleteExistingFile,
 }) {
   const [customScaleValue, setCustomScaleValue] = useState(
     document.scale !== "Text" && document.scale !== "Blueprint/Material effects"
@@ -515,6 +641,47 @@ function DocumentFormComponent({
   const dayRef = useRef(null);
   const monthRef = useRef(null);
   const yearRef = useRef(null);
+
+  const [files, setFiles] = useState([]);
+  const [filePreviews, setFilePreviews] = useState({});
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const newFiles = Array.from(e.target.files);
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+    const newFilePreviews = {};
+    const oversizedFiles = [];
+
+    newFiles.forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(file.name);
+      } else {
+        const url = URL.createObjectURL(file);
+        newFilePreviews[file.name] = url;
+      }
+    });
+
+    if (oversizedFiles.length > 0) {
+      alert(
+          `The following files exceed the maximum size of 25 MB and will not be uploaded:\n${oversizedFiles.join(
+              ", "
+          )}`
+      );
+    }
+
+    const validFiles = newFiles.filter((file) => file.size <= MAX_FILE_SIZE);
+
+    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+    setFilePreviews((prevPreviews) => ({ ...prevPreviews, ...newFilePreviews }));
+    updateFilesToUpload([...files, ...validFiles]);
+  };
+
+
+  useEffect(() => {
+    return () => {
+      Object.values(filePreviews).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [filePreviews]);
 
   const handleDayChange = (e) => {
     const value = e.target.value;
@@ -541,6 +708,25 @@ function DocumentFormComponent({
     if (value.length <= 4) {
       handleChange("year", value);
     }
+  };
+  const handleDeleteNewFile = (index) => {
+    setFiles((prevFiles) => {
+      const newFiles = [...prevFiles];
+      const [removedFile] = newFiles.splice(index, 1);
+      // Revoke object URL to avoid memory leaks
+      URL.revokeObjectURL(filePreviews[removedFile.name]);
+      return newFiles;
+    });
+    setFilePreviews((prevPreviews) => {
+      const newPreviews = { ...prevPreviews };
+      delete newPreviews[files[index].name];
+      return newPreviews;
+    });
+    updateFilesToUpload((prevFilesToUpload) => {
+      const newFilesToUpload = [...prevFilesToUpload];
+      newFilesToUpload.splice(index, 1);
+      return newFilesToUpload;
+    });
   };
 
   useEffect(() => {
@@ -596,408 +782,497 @@ function DocumentFormComponent({
   };
 
   return (
-    <Form style={{ width: "100%" }} className="mx-auto">
-      {/* TITLE */}
-      <Form.Group className="mb-3" controlId="formDocumentTitle">
-        <Form.Label>Title *</Form.Label>
-        <Form.Control
-          type="text"
-          value={document.title}
-          onChange={(e) => handleChange("title", e.target.value)}
-          placeholder="Example title"
-          isInvalid={!!errors.title}
-          required
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.title}
-        </Form.Control.Feedback>
-      </Form.Group>
+    <Form  style={{ width: "100%" }} className="mx-auto">
+           {/* TITLE AND TYPE */}
+          <Row className="mb-4">
+            <Col md={6}>
+              <Form.Group controlId="formDocumentTitle">
+                <Form.Label>Title *</Form.Label>
+                <div className="form-divider" />
+                <Form.Control
+                  type="text"
+                  value={document.title}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  placeholder="Example title"
+                  isInvalid={!!errors.title}
+                  required
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.title}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group controlId="formDocumentType">
+                <Form.Label>Type *</Form.Label>
+                <div className="form-divider" />
+                <Form.Control
+                  as="select"
+                  value={document.type}
+                  onChange={(e) => handleChange("type", e.target.value)}
+                  isInvalid={!!errors.type}
+                  required
+                >
+                  <option value="">Select type</option>
+                  <option value="Design document">Design document</option>
+                  <option value="Material effect">Material effect</option>
+                  <option value="Technical document">Technical document</option>
+                  <option value="Prescriptive document">Prescriptive document</option>
+                  <option value="Informative document">Informative document</option>
+                </Form.Control>
+                <Form.Control.Feedback type="invalid">
+                  {errors.type}
+                </Form.Control.Feedback>
+            </Form.Group>
+            </Col>
+          </Row>
 
-      <div className="divider" />
-
-      {/* STAKEHOLDERS */}
-      <Form.Group className="mb-3" controlId="formDocumentStakeholders">
-        <Form.Label>Stakeholders *</Form.Label>
-        {[
-          "LKAB",
-          "Municipality",
-          "Regional authority",
-          "Architecture firms",
-          "Citizen",
-        ].map((stakeholderOption) => (
-          <Form.Check
-            key={stakeholderOption}
-            type="checkbox"
-            label={stakeholderOption}
-            checked={document.stakeholders.includes(stakeholderOption)}
-            onChange={(e) => {
-              const newStakeholders = e.target.checked
-                ? [...document.stakeholders, stakeholderOption]
-                : document.stakeholders.filter((s) => s !== stakeholderOption);
-              handleChange("stakeholders", newStakeholders);
-            }}
-            isInvalid={!!errors.stakeholders}
-          />
-        ))}
-        {document.stakeholders
-          .filter(
-            (stakeholder) =>
-              ![
-                "LKAB",
-                "Municipality",
-                "Regional authority",
-                "Architecture firms",
-                "Citizen",
-              ].includes(stakeholder)
-          )
-          .map((stakeholder, index) => (
-            <div key={index} className="d-flex mb-2">
-              <Form.Control
-                type="text"
-                value={stakeholder}
-                onChange={(e) => {
-                  const newStakeholders = [...document.stakeholders];
-                  newStakeholders[
-                    document.stakeholders.findIndex((s) => s === stakeholder)
-                  ] = e.target.value;
-                  handleChange("stakeholders", newStakeholders);
-                }}
-                placeholder="Example stakeholder"
-                isInvalid={!!errors.stakeholders}
-                className="me-2"
-              />
-              <Button
-                variant="danger"
-                onClick={() => {
-                  const newStakeholders = document.stakeholders.filter(
-                    (s) => s !== stakeholder
-                  );
-                  handleChange("stakeholders", newStakeholders);
-                }}
-                title="Delete stakeholder"
-              >
-                <i className="bi bi-trash"></i>
-              </Button>
-            </div>
-          ))}
-        <div>
-          <Button
-            className="mt-2"
-            title="Add new stakeholder"
-            variant="primary"
-            onClick={() =>
-              handleChange("stakeholders", [...document.stakeholders, ""])
-            }
-          >
-            <i className="bi bi-plus-square"></i>
-          </Button>
-        </div>
-        <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-          {errors.stakeholders}
-        </div>
-      </Form.Group>
-
-      <div className="divider" />
-
-      {/* SCALE */}
-      <Form.Group className="mb-3" controlId="formDocumentScale">
-        <Form.Label>Scale *</Form.Label>
-        {/* Predefined Scale Options */}
-        <Form.Check
-          type="radio"
-          label="Text"
-          name="scaleOptions"
-          id="scaleText"
-          value="Text"
-          checked={document.scale === "Text"}
-          onChange={(e) => {
-            handleChange("scale", e.target.value);
-            setCustomScaleValue(""); // Clear custom scale when switching to predefined scale
-            setEnableCustomScale(false); // Disable custom scale inputs
-          }}
-          isInvalid={!!errors.scale}
-        />
-        <Form.Check
-          type="radio"
-          label="Blueprint/Material effects"
-          name="scaleOptions"
-          id="scaleBlueprint"
-          value="Blueprint/Material effects"
-          checked={document.scale === "Blueprint/Material effects"}
-          onChange={(e) => {
-            handleChange("scale", e.target.value);
-            setCustomScaleValue(""); // Clear custom scale when switching to predefined scale
-            setEnableCustomScale(false); // Disable custom scale inputs
-          }}
-          isInvalid={!!errors.scale}
-        />
-        {/* Custom Scale Option */}
-        <Form.Check
-          type="radio"
-          name="scaleOptions"
-          id="scaleCustom"
-          value="Custom"
-          checked={
-            enableCustomScale ||
-            (document.scale &&
-              !["Text", "Blueprint/Material effects"].includes(document.scale))
-          }
-          onChange={() => {
-            setEnableCustomScale(true); // Enable custom scale inputs
-            handleChange("scale", customScaleValue); // Set scale to the current custom value
-          }}
-          isInvalid={!!errors.scale}
-          label={
-            <div className="d-flex align-items-center">
-              <Form.Control
-                type="number"
-                min={1}
-                value={customScaleValue.split(":")[0] || ""}
-                disabled={!enableCustomScale}
-                onChange={(e) =>
-                  setCustomScaleValue(
-                    `${e.target.value}:${customScaleValue.split(":")[1] || ""}`
+          {/* STAKEHOLDERS AND SCALE */}
+          <Row className="mb-4">
+            <Col md={6}>
+              <Form.Group controlId="formDocumentStakeholders">
+                <Form.Label>Stakeholders *</Form.Label>
+                <div className="form-divider" />          
+                {[
+                  "LKAB",
+                  "Municipality",
+                  "Regional authority",
+                  "Architecture firms",
+                  "Citizen",
+                ].map((stakeholderOption) => (
+                    <Form.Check
+                      key={stakeholderOption}
+                      type="checkbox"
+                      label={stakeholderOption}
+                      checked={document.stakeholders.includes(stakeholderOption)}
+                      onChange={(e) => {
+                        const newStakeholders = e.target.checked
+                        ? [...document.stakeholders, stakeholderOption]
+                        : document.stakeholders.filter((s) => s !== stakeholderOption);
+                        handleChange("stakeholders", newStakeholders);
+                      }}
+                      isInvalid={!!errors.stakeholders}
+                    />
+                  ))}
+                  {document.stakeholders
+                  .filter(
+                    (stakeholder) => 
+                      ![
+                        "LKAB",
+                        "Municipality",
+                        "Regional authority",
+                        "Architecture firms",
+                        "Citizen",
+                      ].includes(stakeholder)
                   )
-                }
-                onBlur={() => handleChange("scale", customScaleValue)}
-                isInvalid={!!errors.scale}
-                className="me-1"
-                style={{ width: "80px" }}
-              />
-              <span>:</span>
-              <Form.Control
-                type="number"
-                min={1}
-                value={customScaleValue.split(":")[1] || ""}
-                disabled={!enableCustomScale}
-                onChange={(e) =>
-                  setCustomScaleValue(
-                    `${customScaleValue.split(":")[0] || ""}:${e.target.value}`
-                  )
-                }
-                onBlur={() => handleChange("scale", customScaleValue)}
-                isInvalid={!!errors.scale}
-                className="ms-1"
-                style={{ width: "100px" }}
-              />
-            </div>
-          }
-        />
-        <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-          {errors.scale}
-        </div>
-      </Form.Group>
+                  .map((stakeholder, index) => (
+                    <div key={index} className="d-flex mb-2">
+                      <Form.Control
+                        type="text"
+                        value={stakeholder}
+                        onChange={(e) => {
+                          const newStakeholders = [...document.stakeholders];
+                          newStakeholders[
+                            document.stakeholders.findIndex((s) => s === stakeholder)
+                          ] = e.target.value;
+                          handleChange("stakeholders", newStakeholders);
+                        }}
+                        placeholder="Example stakeholder"
+                        isInvalid={!!errors.stakeholders}
+                        className="me-2"
+                      />
+                      <Button
+                        variant="danger"
+                        onClick={() => {
+                          const newStakeholders = document.stakeholders.filter(
+                            (s) => s !== stakeholder
+                          );
+                          handleChange("stakeholders", newStakeholders);
+                        }}
+                        title="Delete stakeholder"
+                      >
+                        <i className="bi bi-trash"></i>
+                      </Button>
+                    </div>
+                  ))}
+                  <div>
+                    <Button
+                      className="mt-2"
+                      title="Add new stakeholder"
+                      variant="primary"
+                      onClick={() =>
+                        handleChange("stakeholders", [...document.stakeholders, ""])
+                      }
+                    >
+                      <i className="bi bi-plus-square"></i>
+                    </Button>
+                  </div>
+                  <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+                    {errors.stakeholders}
+                  </div>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group controlId="formDocumentScale">
+                <Form.Label>Scale *</Form.Label>
+                <div className="form-divider" />
+                  {/* Predefined Scale Options */}
+                  <Form.Check
+                    type="radio"
+                    label="Text"
+                    name="scaleOptions"
+                    id="scaleText"
+                    value="Text"
+                    checked={document.scale === "Text"}
+                    onChange={(e) => {
+                      handleChange("scale", e.target.value);
+                      setCustomScaleValue(""); // Clear custom scale when switching to predefined scale
+                      setEnableCustomScale(false); // Disable custom scale inputs
+                    }}
+                    isInvalid={!!errors.scale}
+                  />
+                  <Form.Check
+                    type="radio"
+                    label="Blueprint/Material effects"
+                    name="scaleOptions"
+                    id="scaleBlueprint"
+                    value="Blueprint/Material effects"
+                    checked={document.scale === "Blueprint/Material effects"}
+                    onChange={(e) => {
+                      handleChange("scale", e.target.value);
+                      setCustomScaleValue(""); // Clear custom scale when switching to predefined scale
+                      setEnableCustomScale(false); // Disable custom scale inputs
+                    }}
+                    isInvalid={!!errors.scale}
+                  />
+                  {/* Custom Scale Option */}
+                  <Form.Check
+                    type="radio"
+                    name="scaleOptions"
+                    id="scaleCustom"
+                    value="Custom"
+                    checked={
+                      enableCustomScale ||
+                      (document.scale &&
+                        !["Text", "Blueprint/Material effects"].includes(document.scale))
+                    }
+                    onChange={() => {
+                      setEnableCustomScale(true); // Enable custom scale inputs
+                      handleChange("scale", customScaleValue); // Set scale to the current custom value
+                    }}
+                    isInvalid={!!errors.scale}
+                    label={
+                      <div className="d-flex align-items-center">
+                        <Form.Control
+                          type="number"
+                          min={1}
+                          value={customScaleValue.split(":")[0] || ""}
+                          disabled={!enableCustomScale}
+                          onChange={(e) =>
+                            setCustomScaleValue(
+                              `${e.target.value}:${customScaleValue.split(":")[1] || ""}`
+                            )
+                          }
+                          onBlur={() => handleChange("scale", customScaleValue)}
+                          isInvalid={!!errors.scale}
+                          className="me-1"
+                          style={{ width: "80px" }}
+                        />
+                        <span>:</span>
+                        <Form.Control
+                          type="number"
+                          min={1}
+                          value={customScaleValue.split(":")[1] || ""}
+                          disabled={!enableCustomScale}
+                          onChange={(e) =>
+                            setCustomScaleValue(
+                              `${customScaleValue.split(":")[0] || ""}:${e.target.value}`
+                            )
+                          }
+                          onBlur={() => handleChange("scale", customScaleValue)}
+                          isInvalid={!!errors.scale}
+                          className="ms-1"
+                          style={{ width: "100px" }}
+                        />
+                      </div>
+                    }
+                  />
+                  <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+                    {errors.scale}
+                  </div>
+              </Form.Group>
+            </Col>
+          </Row>
 
-      <div className="divider" />
+          {/* ISSUANCE DATE */}
+          <Row className="mb-4">
+            <Col md={6}>
+              <Form.Group controlId="formDocumentIssuanceDate">
+                    <Form.Label>Issuance Date *</Form.Label>
+                    <div className="form-divider" />
+                    <div className="d-flex">
+                      <Form.Control
+                        type="text"
+                        value={document.day}
+                        onChange={(e) => handleDayChange(e)}
+                        isInvalid={!!errors.issuanceDate}
+                        placeholder="DD"
+                        className="me-1"
+                        ref={dayRef}
+                        style={{ width: "80px" }}
+                      />
+                      <span>/</span>
+                      <Form.Control
+                        type="text"
+                        value={document.month}
+                        onChange={(e) => handleMonthChange(e)}
+                        isInvalid={!!errors.issuanceDate}
+                        placeholder="MM"
+                        className="mx-1"
+                        ref={monthRef}
+                        style={{ width: "80px" }}
+                      />
+                      <span>/</span>
+                      <Form.Control
+                        type="text"
+                        value={document.year}
+                        onChange={(e) => handleYearChange(e)}
+                        isInvalid={!!errors.issuanceDate}
+                        placeholder="YYYY"
+                        className="ms-1"
+                        ref={yearRef}
+                        style={{ width: "100px" }}
+                      />
+                    </div>
+                    <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+                      {errors.issuanceDate}
+                    </div>
+              </Form.Group>
+            </Col>
+          </Row>
 
-      {/* ISSUANCE DATE */}
-      <Form.Group className="mb-3" controlId="formDocumentIssuanceDate">
-        <Form.Label>Issuance Date *</Form.Label>
-        <div className="d-flex">
-          <Form.Control
-            type="text"
-            value={document.day}
-            onChange={(e) => handleDayChange(e)}
-            isInvalid={!!errors.issuanceDate}
-            placeholder="DD"
-            className="me-1"
-            ref={dayRef}
-            style={{ width: "80px" }}
-          />
-          <span>/</span>
-          <Form.Control
-            type="text"
-            value={document.month}
-            onChange={(e) => handleMonthChange(e)}
-            isInvalid={!!errors.issuanceDate}
-            placeholder="MM"
-            className="mx-1"
-            ref={monthRef}
-            style={{ width: "80px" }}
-          />
-          <span>/</span>
-          <Form.Control
-            type="text"
-            value={document.year}
-            onChange={(e) => handleYearChange(e)}
-            isInvalid={!!errors.issuanceDate}
-            placeholder="YYYY"
-            className="ms-1"
-            ref={yearRef}
-            style={{ width: "100px" }}
-          />
-        </div>
-        <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-          {errors.issuanceDate}
-        </div>
-      </Form.Group>
+          {/* LANGUAGE AND PAGES */}
+          <Row className="mb-4">
+            <Col md={6}>
+              <Form.Group controlId="formDocumentLanguage">
+                <Form.Label>Language</Form.Label>
+                <div className="form-divider" />
+                <Form.Control
+                  type="text"
+                  value={document.language}
+                  onChange={(e) => handleChange("language", e.target.value)}
+                  placeholder="English"
+                  isInvalid={!!errors.language}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.language}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group controlId="formDocumentNrPages">
+                <Form.Label>Pages</Form.Label>
+                <div className="form-divider" />
+                <Form.Control
+                  type="number"
+                  value={document.nrPages}
+                  min={0}
+                  onChange={(e) => handleChange("nrPages", Number(e.target.value))}
+                  isInvalid={!!errors.nrPages}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.nrPages}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
 
-      <div className="divider" />
+          {/* GEOLOCATION */}
+          <Row className="mb-4">
+            <Col md={12}>
+              <Form.Group controlId="formDocumentGeolocation">
+                <Row>
+                  <Col md={6}>
+                    <Form.Label>Latitude</Form.Label>
+                    <div className="form-divider" />
+                    <Form.Control
+                      type="number"
+                      min={67.3564329180828}
+                      max={69.05958911620179}
+                      step={0.00001}
+                      value={document.geolocation.latitude}
+                      onChange={handleLatitudeChange}
+                      id="formDocumentGeolocationLatitude"
+                      disabled={document.geolocation.municipality === "Entire municipality"}
+                      isInvalid={!!errors.latitude}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.latitude}
+                    </Form.Control.Feedback>
 
-      {/* TYPE */}
+                    <Form.Range
+                      min={67.3564329180828}
+                      max={69.05958911620179}
+                      step={0.00001}
+                      value={document.geolocation.latitude}
+                      onChange={handleLatitudeChange}
+                      disabled={document.geolocation.municipality === "Entire municipality"}
+                    />
+                  </Col>
+                  <Col md={6}>
+                    <Form.Label>Longitude</Form.Label>
+                    <div className="form-divider" />
+                    <Form.Control
+                      type="number"
+                      value={document.geolocation.longitude || ""}
+                      min={17.89900836116174}
+                      max={23.28669305841499}
+                      step={0.00001}
+                      isInvalid={!!errors.longitude}
+                      onChange={handleLongitudeChange}
+                      id="formDocumentGeolocationLongitude"
+                      disabled={document.geolocation.municipality === "Entire municipality"}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.longitude}
+                    </Form.Control.Feedback>
+                    <Form.Range
+                      min={17.89900836116174}
+                      max={23.28669305841499}
+                      step={0.00001}
+                      value={document.geolocation.longitude}
+                      onChange={handleLongitudeChange}
+                      disabled={document.geolocation.municipality === "Entire municipality"}
+                    />
+                  </Col>
+                </Row>
+                <Row>
+                <div style={{ height: "300px", marginBottom: "15px" }}>
+                  <MapContainer
+                    center={markerPosition}
+                    zoom={13}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <Marker position={markerPosition} />
+                    {document.geolocation.municipality === "Entire municipality" ? (
+                      <Polygon positions={kirunaBorderCoordinates} />
+                    ) : null}
+                    <MapClickHandler />
+                  </MapContainer>
+                </div>
+                <Form.Text className="text-muted">
+                  Click on the map to set the location. Latitude and Longitude fields
+                  will update automatically.
+                  <Form.Check
+                    type="checkbox"
+                    label="Entire municipality"
+                    checked={document.geolocation.municipality === "Entire municipality"}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      setMarkerPosition(defaultPosition);
+                      handleChange("geolocation", {
+                        latitude: isChecked ? "" : document.geolocation.latitude,
+                        longitude: isChecked ? "" : document.geolocation.longitude,
+                        municipality: isChecked ? "Entire municipality" : "",
+                      });
+                    }}
+                    className="mt-2"
+                    feedback={errors.municipality}
+                    feedbackType="invalid"
+                  />
+                </Form.Text>
+                </Row>
+              </Form.Group>
+            </Col>
+          </Row>
 
-      <Form.Group className="mb-3" controlId="formDocumentType">
-        <Form.Label>Type *</Form.Label>
-        <Form.Control
-          as="select"
-          value={document.type}
-          onChange={(e) => handleChange("type", e.target.value)}
-          isInvalid={!!errors.type}
-          required
-        >
-          <option value="">Select type</option>
-          <option value="Design document">Design document</option>
-          <option value="Material effect">Material effect</option>
-          <option value="Technical document">Technical document</option>
-          <option value="Prescriptive document">Prescriptive document</option>
-          <option value="Informative document">Informative document</option>
-        </Form.Control>
-        <Form.Control.Feedback type="invalid">
-          {errors.type}
-        </Form.Control.Feedback>
-      </Form.Group>
+          {/* DESCRIPTION */}
+          <Row className="mb-4">
+            <Col md={12}>
+              <Form.Group controlId="formDocumentDescription">
+                <Form.Label>Description</Form.Label>
+                <div className="form-divider" />
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={document.description}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  placeholder="Description of the document"
+                  isInvalid={!!errors.description}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.description}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>  
+          </Row>
 
-      <div className="divider" />
+          {/* UPLOAD */}
+          <Row className="mb-4">
+            <Col md={12}>
+              <Form.Group controlId="formDocumentFiles">
+                <Form.Label>Upload files</Form.Label>
+                <div className="form-divider" />
+                <div className="d-flex align-items-center">
+                  <Form.Control
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="d-none"
+                      ref={fileInputRef}
+                  />
+                  <Button
+                      variant="primary"
+                      onClick={() => fileInputRef.current.click()}
+                      className="me-3"
+                  >
+                    <i className="bi bi-upload"></i>
+                  </Button>
+                  <Form.Text className="text-muted">
+                    {files.length} new file{files.length !== 1 && "s"} uploaded
+                  </Form.Text>
+                </div>
 
-      {/* LANGUAGE */}
-      <Form.Group className="mb-3" controlId="formDocumentLanguage">
-        <Form.Label>Language</Form.Label>
-        <Form.Control
-          type="text"
-          value={document.language}
-          onChange={(e) => handleChange("language", e.target.value)}
-          placeholder="English"
-          isInvalid={!!errors.language}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.language}
-        </Form.Control.Feedback>
-      </Form.Group>
+                {/* Display Selected Files */}
+                {files.length > 0 && (
+                    <div className="mt-3">
+                      <h6>Selected files:</h6>
+                      <ListGroup variant="flush">
+                        {files.map((file, index) => (
+                            <ListGroup.Item
+                                key={index}
+                                className="d-flex justify-content-between align-items-center"
+                            >
+                              {file.name}
+                              <Button
+                                  variant="outline-danger"
+                                  size="sm"
+                                  onClick={() => handleDeleteNewFile(index)}
+                                  title="Remove file"
+                              >
+                                <i className="bi bi-trash"></i>
+                              </Button>
+                            </ListGroup.Item>
+                        ))}
+                      </ListGroup>
+                    </div>
+                )}
 
-      <div className="divider" />
-
-      {/* PAGES */}
-      <Form.Group className="mb-3" controlId="formDocumentNrPages">
-        <Form.Label>Pages</Form.Label>
-        <Form.Control
-          type="number"
-          value={document.nrPages}
-          min={0}
-          onChange={(e) => handleChange("nrPages", Number(e.target.value))}
-          isInvalid={!!errors.nrPages}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.nrPages}
-        </Form.Control.Feedback>
-      </Form.Group>
-
-      <div className="divider" />
-
-      {/* GEOLOCATION */}
-      <Form.Group className="mb-3">
-        <Form.Label>Latitude</Form.Label>
-        <Form.Control
-          type="number"
-          min={67.3564329180828}
-          max={69.05958911620179}
-          step={0.00001}
-          value={document.geolocation.latitude}
-          onChange={handleLatitudeChange}
-          id="formDocumentGeolocationLatitude"
-          disabled={document.geolocation.municipality === "Entire municipality"}
-          isInvalid={!!errors.latitude}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.latitude}
-        </Form.Control.Feedback>
-
-        <Form.Range
-          min={67.3564329180828}
-          max={69.05958911620179}
-          step={0.00001}
-          value={document.geolocation.latitude}
-          onChange={handleLatitudeChange}
-          disabled={document.geolocation.municipality === "Entire municipality"}
-        />
-
-        <Form.Label>Longitude</Form.Label>
-        <Form.Control
-          type="number"
-          value={document.geolocation.longitude || ""}
-          min={17.89900836116174}
-          max={23.28669305841499}
-          step={0.00001}
-          isInvalid={!!errors.longitude}
-          onChange={handleLongitudeChange}
-          id="formDocumentGeolocationLongitude"
-          disabled={document.geolocation.municipality === "Entire municipality"}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.longitude}
-        </Form.Control.Feedback>
-        <Form.Range
-          min={17.89900836116174}
-          max={23.28669305841499}
-          step={0.00001}
-          value={document.geolocation.longitude}
-          onChange={handleLongitudeChange}
-          disabled={document.geolocation.municipality === "Entire municipality"}
-        />
-
-        <div style={{ height: "300px", marginBottom: "15px" }}>
-          <MapContainer
-            center={markerPosition}
-            zoom={13}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <Marker position={markerPosition} />
-            {document.geolocation.municipality === "Entire municipality" ? (
-              <Polygon positions={kirunaBorderCoordinates} />
-            ) : null}
-            <MapClickHandler />
-          </MapContainer>
-        </div>
-        <Form.Text className="text-muted">
-          Click on the map to set the location. Latitude and Longitude fields
-          will update automatically.
-        </Form.Text>
-        <Form.Check
-          type="checkbox"
-          label="Entire municipality"
-          checked={document.geolocation.municipality === "Entire municipality"}
-          onChange={(e) => {
-            const isChecked = e.target.checked;
-            setMarkerPosition(defaultPosition);
-            handleChange("geolocation", {
-              latitude: isChecked ? "" : document.geolocation.latitude,
-              longitude: isChecked ? "" : document.geolocation.longitude,
-              municipality: isChecked ? "Entire municipality" : "",
-            });
-          }}
-          className="mt-2"
-          feedback={errors.municipality}
-          feedbackType="invalid"
-        />
-      </Form.Group>
-
-      <div className="divider" />
-
-      {/* DESCRIPTION */}
-      <Form.Group className="mb-3" controlId="formDocumentDescription">
-        <Form.Label>Description</Form.Label>
-        <Form.Control
-          as="textarea"
-          rows={3}
-          value={document.description}
-          onChange={(e) => handleChange("description", e.target.value)}
-          placeholder="Description of the document"
-          isInvalid={!!errors.description}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.description}
-        </Form.Control.Feedback>
-      </Form.Group>
+                {existingFiles && existingFiles.length > 0 && (
+                    <div className="mt-3">
+                      <h6>Existing files:</h6>
+                      <DocumentResources
+                          resources={existingFiles}
+                          onDelete={handleDeleteExistingFile}
+                          viewMode={"list"}
+                          isEditable={true}
+                      />
+                    </div>
+                )}
+              </Form.Group>
+            </Col>
+          </Row>
     </Form>
   );
 }
@@ -1007,4 +1282,7 @@ DocumentFormComponent.propTypes = {
   errors: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   kirunaBorderCoordinates: PropTypes.array.isRequired,
+  updateFilesToUpload: PropTypes.func.isRequired,
+  existingFiles: PropTypes.array.isRequired,
+  handleDeleteExistingFile: PropTypes.func.isRequired,
 };
