@@ -157,7 +157,7 @@ const MapKiruna = () => {
   const kirunaBorderCoordinates = getKirunaArea();
 
   return (
-    <div style={{ display: "flex", height: "100vh", position: "relative" }}>
+    <div style={{ display: "flex", height: "90vh", position: "relative" }}>
       <MapStyleToggle setTileLayer={setTileLayer} />
       <div style={{ flex: 2, position: "relative" }}>
         <MapContainer
