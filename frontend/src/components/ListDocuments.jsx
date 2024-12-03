@@ -8,6 +8,8 @@ import API from "../API";
 import LinkModal from "./LinkModal";
 import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
+import searchBar from "./SearchBar.jsx";
+import SearchBar from "./SearchBar.jsx";
 
 export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
@@ -147,10 +149,39 @@ export default function ListDocuments({ shouldRefresh }) {
     setSelectedLinkDocuments([]);
   };
 
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const handleSearch = (query, typeFilter, stakeholderFilter) => {
+    setSearchTerm(query);
+
+    const lowerCaseQuery = query.toLowerCase();
+
+    const filtered = documents.filter((doc) => {
+      const matchesQuery =
+          doc.title.toLowerCase().includes(lowerCaseQuery) ||
+          (doc.description && doc.description.toLowerCase().includes(lowerCaseQuery));
+
+      const matchesType = typeFilter ? doc.type === typeFilter : true;
+
+      const matchesStakeholder = stakeholderFilter
+          ? doc.stakeholders.includes(stakeholderFilter)
+          : true;
+
+      return matchesQuery && matchesType && matchesStakeholder;
+    });
+
+    setFilteredDocuments(filtered);
+  };
   return (
     <Container fluid className="scrollable-list-documents">
       <Row>
-        <h1>{linking ? "Link a Document" : "Documents"}</h1>
+        <Col xs={6}>
+          <h1>{linking ? "Link a Document" : "Documents"}</h1>
+        </Col>
+        <Col xs={6}>
+          <SearchBar onSearch={handleSearch}/>
+        </Col>
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (

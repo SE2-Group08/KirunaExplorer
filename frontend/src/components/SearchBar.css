@@ -1,0 +1,35 @@
+.search-bar-form {
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+    margin: 2px auto;
+}
+
+.d-flex {
+    gap: 5px;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    gap: 5px;
+}
+
+.filter-dropdown .dropdown-toggle {
+    height: 45px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0;
+}
+
+.search-button {
+    height: 45px;
+    border-radius: 4px;
+    width: auto;
+    padding: 0 20px;
+}
