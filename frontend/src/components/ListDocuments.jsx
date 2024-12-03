@@ -411,7 +411,8 @@ const DocumentSnippetCardComponent = ({
               alt={`${document.type} icon`}
               style={{ width: "70px", height: "70px", marginRight: "10px" }}
             />
-            <Card.Title className="document-card-title">
+            <Card.Title className="document-card-title"
+              style={{fontSize: "17px"}}>
               {document.title}
             </Card.Title>
           </div>
