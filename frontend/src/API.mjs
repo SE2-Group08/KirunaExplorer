@@ -7,37 +7,74 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  *      Authentication APIs     *
  * **************************** */
 
-// Given a credentials object containing username and passowrd it executes login
+// Given a credentials object containing username and password it executes login
 const logIn = async (credentials) => {
-  console.log("API.logIn", credentials);
-  return await fetch(SERVER_URL + "/sessions", {
+  const response = await fetch(SERVER_URL + "/auth/authenticate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
+    credentials: "include", // Include cookies if the server uses them
     body: JSON.stringify(credentials),
-  })
-    .then(handleInvalidResponse)
-    .then((response) => response.json());
+  }).then(handleInvalidResponse);
+
+  const data = await response.json(); // Parse the response body
+  const token = data.token; // Assuming the token is provided as `token`
+
+  if (token) {
+    // Store token securely (for demo purposes, storing in localStorage)
+    localStorage.setItem("authToken", token);
+  }
+
+  return response;
 };
 
 // Verifies if user is still logged-in. It returns a JSON with the user info
 const getUserInfo = async () => {
-  return await fetch(SERVER_URL + "/sessions/current", {
-    credentials: "include",
-  })
-    .then(handleInvalidResponse)
-    .then((response) => response.json);
+  const token = localStorage.getItem("authToken"); // Retrieve the token
+
+  if (!token) {
+    throw new Error("User is not logged in or token is missing");
+  }
+
+  const response = await fetch(SERVER_URL + "/sessions/current", {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`, // Include the token in Authorization header
+    },
+    credentials: "include", // Include cookies if necessary
+  }).then(handleInvalidResponse);
+  return response.json(); // Return user info as JSON
 };
 
-// Destroys the current user's session (executing log-out)
+
 const logOut = async () => {
-  return await fetch(SERVER_URL + "/sessions/current", {
-    method: "DELETE",
-    credentials: "include",
-  }).then(handleInvalidResponse);
+  const token = localStorage.getItem("authToken"); // Retrieve the token
+
+  if (!token) {
+    console.warn("No token found. User may already be logged out.");
+    return; // Exit early if no token is available
+  }
+
+  try {
+    const response = await fetch(SERVER_URL + "/sessions/current", {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`, // Include the token in Authorization header
+      },
+      credentials: "include", // Include cookies if necessary
+    });
+
+    await handleInvalidResponse(response); // Handle non-200 responses
+
+    // Remove token from storage after successful logout
+    localStorage.removeItem("authToken");
+    console.log("User successfully logged out.");
+  } catch (error) {
+    console.error("Error during logout:", error);
+  }
 };
+
 
 /* ********************* *
  *       User APIs       *

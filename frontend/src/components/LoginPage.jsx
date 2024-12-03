@@ -5,22 +5,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Button, Alert } from "react-bootstrap";
 
 const LoginComponent = (props) => {
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
 
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
+   const [username, setUsername] = useState("");
+   const [password, setPassword] = useState("");
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -61,9 +51,9 @@ const LoginComponent = (props) => {
               className="form-control"
               id="username"
               name="username"
-              value={formData.username} 
+              value={username}
               placeholder="Example: johnDoe"
-              onChange={handleChange}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
@@ -76,9 +66,9 @@ const LoginComponent = (props) => {
               className="form-control"
               id="password"
               name="password"
-              value={formData.password}
+              value={password}
               placeholder="Enter your password"
-              onChange={handleChange}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
