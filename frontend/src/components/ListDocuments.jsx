@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
-import { Container, Row, Col, Card, Button, Table, Spinner } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Table,
+  Spinner,
+} from "react-bootstrap";
 import "../App.css";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
@@ -60,53 +68,72 @@ export default function ListDocuments({ shouldRefresh }) {
     }
   };
 
-  const handleSave = (document) => {
-    API.updateDocument(document.id, document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({
-          type: "success",
-          message: "Document updated successfully",
-        })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
-    setShow(false);
-    setShouldRefresh(true);
+  // const handleStakeholders = async (document) => {
+  //   const allStakeholders = await API.getAllStakeholders();
+  //   const uniqueStakeholders = [
+  //     ...new Map(
+  //       document.stakeholders.map((stakeholder) => [
+  //         stakeholder.name,
+  //         stakeholder,
+  //       ])
+  //     ).values(),
+  //   ];
+  //   const newStakeholders = uniqueStakeholders.filter(
+  //     (stakeholder) =>
+  //       !allStakeholders.some(
+  //         (existingStakeholder) => existingStakeholder.name === stakeholder.name
+  //       )
+  //   );
+
+  //   await Promise.all(
+  //     newStakeholders.map((stakeholder) => API.addStakeholder(stakeholder))
+  //   );
+  // };
+
+  const handleSave = async (document) => {
+    try {
+      await API.updateDocument(document.id, document);
+      setFeedback({
+        type: "success",
+        message: "Document updated successfully",
+      });
+      setShouldRefresh(true);
+    } catch (error) {
+      setFeedbackFromError(error);
+    } finally {
+      setShow(false);
+    }
   };
 
-  const handleAdd = (document) => {
-    API.addDocument(document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({ type: "success", message: "Document added successfully" })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
-    setShow(false);
-    setShouldRefresh(true);
+  const handleAdd = async (document) => {
+    try {
+      await API.addDocument(document);
+      setFeedback({
+        type: "success",
+        message: "Document added successfully",
+      });
+      setShouldRefresh(true);
+    } catch (error) {
+      setFeedbackFromError(error);
+    } finally {
+      setShow(false);
+    }
   };
 
-  const handleDelete = (documentId) => {
-    API.deleteDocument(documentId)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({
-          type: "success",
-          message: "Document deleted successfully",
-        })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
-    setShow(false);
-    setShouldRefresh(true);
-  };
+  // const handleDelete = (documentId) => {
+  //   API.deleteDocument(documentId)
+  //     .then(() => API.getAllDocumentSnippets().then(setDocuments))
+  //     .then(() => setShouldRefresh(false))
+  //     .then(() =>
+  //       setFeedback({
+  //         type: "success",
+  //         message: "Document deleted successfully",
+  //       })
+  //     )
+  //     .catch((error) => setFeedbackFromError(error));
+  //   setShow(false);
+  //   setShouldRefresh(true);
+  // };
 
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
@@ -125,7 +152,10 @@ export default function ListDocuments({ shouldRefresh }) {
           API.createLink(selectedDocumentToLink, linkedDoc)
         )
       );
-      setFeedback({ type: "success", message: "Document linked successfully" });
+      setFeedback({
+        type: "success",
+        message: "Document linked successfully",
+      });
       setShouldRefresh(true);
       setLinking(false);
       setSelectedLinkDocuments([]);
@@ -250,7 +280,7 @@ export default function ListDocuments({ shouldRefresh }) {
             }}
             document={selectedDocument}
             handleSave={handleSave}
-            handleDelete={handleDelete}
+            // handleDelete={handleDelete}
             handleAdd={handleAdd}
             onSnippetClick={handleSelection}
           />
