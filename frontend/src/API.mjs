@@ -7,11 +7,14 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  *       Resources APIs       *
  * ************************** */
 
-const uploadFile = async (id, file) => {
+const uploadFiles = async (id, files) => {
     const formData = new FormData();
-    formData.append("file", file);
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
 
-    const url = `${SERVER_URL}/documents/${id}/files`;
+
+  const url = `${SERVER_URL}/documents/${id}/files`;
     console.log("Uploading file to URL:", url);
 
     const response = await fetch(url, {
@@ -305,7 +308,7 @@ const API = {
   getAllLinksOfDocument,
   updateLink,
   deleteLink,
-  uploadFile,
+  uploadFiles,
   deleteFile,
   getDocumentFiles,
   downloadFile,
