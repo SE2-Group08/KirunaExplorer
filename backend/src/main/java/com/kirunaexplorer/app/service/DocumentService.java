@@ -142,6 +142,15 @@ public class DocumentService {
             documentTypeRepository.save(newDocumentType);
         }
 
+        // Get existing scales
+        List<DocumentScale> existingScales = documentScaleRepository.findAll();
+        // Get new scale to add to the db
+        DocumentScale newScale =  DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
+        // Add new scale to the db
+        if(newScale != null) {
+            documentScaleRepository.save(newScale);
+        }
+
         // Update document
         document.updateFromDTO(documentRequest);
         documentRepository.save(document);

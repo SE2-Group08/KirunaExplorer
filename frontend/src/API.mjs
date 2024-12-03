@@ -95,6 +95,7 @@ const getAllDocumentSnippets = async (filter) => {
 
 // Create a new document
 const addDocument = async (document) => {
+  console.log("ADD DOCUMENT: ", document);
   return await fetch(`${SERVER_URL}/documents`, {
     method: "POST",
     headers: {
@@ -115,6 +116,7 @@ const getDocumentById = async (documentId) => {
 
 // Update a document given its id
 const updateDocument = async (documentId, nextDocument) => {
+  console.log("UPDATE DOCUMENT: ", documentId, nextDocument);
   return await fetch(`${SERVER_URL}/documents`, {
     method: "PUT",
     headers: {
@@ -202,6 +204,7 @@ const getAllScales = async () => {
       return [...textScales, ...numericScales];
     })
     .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));
+    console.log(scales);
   return scales;
 };
 

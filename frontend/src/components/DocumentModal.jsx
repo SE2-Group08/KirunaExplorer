@@ -141,8 +141,21 @@ export default function DocumentModal(props) {
     }
 
     // Scale validation
-    if (typeof document.scale !== "string" || !document.scale.trim()) {
-      newErrors.scale = "Scale must be present.";
+    // if (typeof document.scale !== "string" || !document.scale.trim()) {
+    //   newErrors.scale = "Scale must be present.";
+    // } else if (document.scale.includes(":")) {
+    //   const [first, second] = document.scale.split(":").map(Number);
+    //   if (first > second) {
+    //     newErrors.scale =
+    //       "The first number of the scale must be smaller than the second one.";
+    //   }
+    // }
+    if (!document.scale || (document.scale === "Other" && !document.customScale)) {
+      newErrors.scale = "Scale is required.";
+    } else if (document.scale === "Other") {
+      newErrors.scale = "Scale cannot be 'Other'.";
+    } else if (document.scale.length > 64 && document.scale.length < 2) {
+      newErrors.scale = "Scale must be between 2 and 64 characters.";
     } else if (document.scale.includes(":")) {
       const [first, second] = document.scale.split(":").map(Number);
       if (first > second) {
@@ -164,6 +177,7 @@ export default function DocumentModal(props) {
         "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
     }
 
+    // Type validation
     if (!document.type || (document.type === "Other" && !document.customType)) {
       newErrors.type = "Type is required.";
     } else if (document.type === "Other") {
@@ -172,6 +186,7 @@ export default function DocumentModal(props) {
       newErrors.type = "Type must be between 2 and 64 characters.";
     }
 
+    // Language validation
     if (
       document.language &&
       (document.language.length < 2 || document.language.length > 64)
@@ -717,9 +732,9 @@ function DocumentFormComponent({
               {scaleOption.name}
             </option>
           ))}
-          <option value="Custom">Custom</option>
+          <option value="Other">Other</option>
         </Form.Control>
-        {document.scale === "Custom" && (
+        {document.scale === "Other" && (
           <div className="d-flex mt-2">
             <Form.Control
               type="text"
