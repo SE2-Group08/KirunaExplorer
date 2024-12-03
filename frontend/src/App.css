@@ -3,6 +3,46 @@ html, body, #root {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  /* background-color: #E6E8EA; */
+}
+
+.header-navbar {
+  color: white;
+}
+
+.header-navbar a {
+  color: white;
+}
+
+.header-navbar a:hover {
+  color: #ddd; /* Cambia colore al passaggio del mouse */
+}
+
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  border: none;
+}
+
+.card:hover {
+  transform: scale(1.05); 
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); 
+}
+
+
+.splash-background {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  width: 100vw;
+  height: 80vh;
+}
+
+.splash-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #343a40;
 }
 
 .scrollable-list-documents{
@@ -170,6 +210,7 @@ button:hover {
   margin-bottom: 0.5rem; 
 }
 
+<<<<<<< HEAD
 .splash-background {
   background-image: url('./public/KX_BckG.webp');
   background-size: cover;
@@ -191,6 +232,8 @@ button:hover {
 }
 
 
+=======
+>>>>>>> d24a478 (Homepage and Bootstrap colors (primary, secondary ecc...))
 .bg-linked-document {
   background-color: black;
   color: #333;

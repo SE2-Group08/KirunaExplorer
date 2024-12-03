@@ -184,14 +184,27 @@ export default function ListDocuments({ shouldRefresh }) {
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (
-          <p>Choose the document you want to link</p>
+          <p style={{
+            fontSize: "1.2rem",
+            marginBottom: "0.5rem",
+            marginTop: "0.5rem",
+            fontWeight: "500",
+          }}>Choose the document you want to link</p>
         ) : (
           <>
-            <p>
+            <p style={{
+              fontSize: "1.2rem",
+              marginBottom: "0.5rem",
+              marginTop: "0.5rem",
+              fontWeight: "500",
+            }}>
               Here you can find all the documents about Kiruna&apos;s relocation
               process.
             </p>
-            <p>Click on a document to see more details.</p>
+            <p style={{
+              fontSize: "1.2rem",
+              fontWeight: "500",
+            }}>Click on a document to see more details.</p>
           </>
         )}
       </Row>
@@ -314,7 +327,7 @@ function DocumentSnippetTableComponent({
   isLinkedDocument,
 }) {
   return (
-    <Table hover responsive>
+    <Table hover responsive style={{backgroundColor:"#E6E8EA"}}>
       <thead>
         <tr>
           <th>Title</th>
