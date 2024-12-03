@@ -31,19 +31,18 @@ public class FileService {
      * @return Long
      */
     @Transactional
-    public Long storeFile(Long documentId, FileUploadRequestDTO request) {
+    public Long storeFiles(Long documentId, FileUploadRequestDTO request) {
         // Get the document
         Document document = documentRepository.findById(documentId)
             .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + documentId));
 
-        // Transform the request to a DocumentFile
-        DocumentFile file = request.toDocumentFile(document)
-            .orElseThrow(() -> new RuntimeException("Failed to process the file"));
+        // Transform the request to DocumentFile
+        List<DocumentFile> files = request.toDocumentFiles(document);
 
-        // Save the file
-        file = fileRepository.save(file);
+        // Save the files
+        files = fileRepository.saveAll(files);
 
-        return file.getId();
+        return files.get(0).getId();
     }
 
 

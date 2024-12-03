@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
     // Handle MaxUploadSizeExceededException (400)
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex, WebRequest request) {
-        String message = "Maximum upload size of " + fileUploadProperties.getMaxFileSize() + " exceeded";
+        String message = "Maximum upload size of " + fileUploadProperties.getMaxFileSize() + " exceeded and/or maximum request size of " + fileUploadProperties.getMaxRequestSize() + " exceeded";
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.BAD_REQUEST.value(),
             message,

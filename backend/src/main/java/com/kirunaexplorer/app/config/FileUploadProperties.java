@@ -11,4 +11,7 @@ public class FileUploadProperties {
     @Value("${spring.servlet.multipart.max-file-size}")
     private String maxFileSize;
 
+    @Value("${spring.servlet.multipart.max-request-size}")
+    private String maxRequestSize;
+
 }
