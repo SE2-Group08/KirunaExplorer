@@ -89,6 +89,19 @@ const MapKiruna = () => {
       >
         <i className="bi bi-question-circle"></i>
       </Button>
+      <Button
+        title={"center-map"}
+        variant="white"
+        onClick={() => setShowDocumentSidePanel(!showDocumentSidePanel)}
+        style={{
+          position: "absolute",
+          top: "50px",
+          right: "10px",
+          zIndex: 1000,
+        }}
+      >
+        <i className="bi bi-geo-alt"></i>
+      </Button>
       <div style={{ flex: 2, position: "relative" }}>
         <MapContainer
           center={kirunaPosition}
