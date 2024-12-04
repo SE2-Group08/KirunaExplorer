@@ -9,7 +9,7 @@ import LinkModal from "./LinkModal";
 import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
 
-export default function ListDocuments({ shouldRefresh }) {
+export default function ListDocuments({loggedIn, user}) {
   const [documents, setDocuments] = useState([]);
   const [show, setShow] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -187,7 +187,7 @@ export default function ListDocuments({ shouldRefresh }) {
                 <i className="bi bi-box-arrow-left"></i>
               </Button>
             </>
-          ) : (
+          ) :  loggedIn && user.role === "Urban Planner" && (
             <Button
               title="Add new document"
               variant="primary"
@@ -275,7 +275,8 @@ export default function ListDocuments({ shouldRefresh }) {
 
 ListDocuments.propTypes = {
   thinCardLayout: PropTypes.bool,
-  shouldRefresh: PropTypes.bool,
+  loggedIn: PropTypes.bool,
+  user: PropTypes.object
 };
 
 function DocumentSnippetTableComponent({

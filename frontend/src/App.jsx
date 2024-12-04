@@ -11,6 +11,7 @@ import {LoginComponent} from "./components/LoginPage";
 import "./App.css";
 import {useState} from "react";
 import API from "./API";
+import error from "eslint-plugin-react/lib/util/error.js";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -47,10 +48,12 @@ function App() {
               </>
             }
           >
-            <Route path="/documents" element={<ListDocuments />}/>
-            <Route path="/map" element={<Map/>}/>
-            <Route path="/login" element={<LoginComponent login={handleLogin}/>}/>
-            <Route path="/" element={<SplashPage/>}/>
+          { loggedIn &&
+            user.role === "Urban Planner" &&
+            <Route path="/documents" element={<ListDocuments loggedIn={loggedIn} user={user}/>} /> }
+            <Route path="/map" element={<Map />} />
+            <Route path="/login" element={<LoginComponent login={handleLogin}/>} />
+            <Route path="/" element={<SplashPage />} />
             <Route
               path="*"
               element={

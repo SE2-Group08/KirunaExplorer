@@ -12,7 +12,7 @@ function Header({loggedIn, logout}) {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link className='align-middle' href="/documents">Documents</Nav.Link>
+            {loggedIn && user.role === "Urban Planner" && <Nav.Link className='align-middle' href="/documents">Documents</Nav.Link> }
             <Nav.Link className='align-middle' href="/map">Map</Nav.Link>
           </Nav>
           <Nav className="ms-auto">
@@ -31,6 +31,7 @@ function Header({loggedIn, logout}) {
 Header.propTypes = {
   loggedIn: PropTypes.bool.isRequired,
   logout: PropTypes.func.isRequired,
+  user: PropTypes.object
 }
 
 export default Header;
