@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import "../App.scss";
 import API from "../API.mjs";
 import FeedbackContext from "../contexts/FeedbackContext.js";
+import { getIconUrlForDocument } from "../utils/iconMapping";
 
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
@@ -318,6 +319,11 @@ export default function DocumentModal(props) {
     >
       <Modal.Header closeButton className="modal-header">
         <Modal.Title>
+        <img
+          src={getIconUrlForDocument(document.type, document.stakeholders)}
+          alt={`${document.type} icon`}
+          style={{ width: "40px", height: "40px", marginRight: "10px" }}
+        />
           {isEditable
             ? "Enter the values in the following fields"
             : document.title}
