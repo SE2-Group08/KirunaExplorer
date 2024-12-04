@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
 import {
@@ -14,10 +14,10 @@ import "../App.scss";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
 import LinkModal from "./LinkModal";
-import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
 import Pagination from "./Pagination";
 import { getIconUrlForDocument } from "../utils/iconMapping";
+import LegendModal from "./Legend";
 
 export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
@@ -31,6 +31,7 @@ export default function ListDocuments({ shouldRefresh }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [links, setLinks] = useState([]);
+  const [showLegend, setShowLegend] = useState(false);
   const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
     []
   );
@@ -48,7 +49,6 @@ export default function ListDocuments({ shouldRefresh }) {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    //if (shouldRefresh) {
     API.getDocumentsByPageNumber(currentPage)
       .then((response) => {
         setDocuments(response[0].documentSnippets);
@@ -56,7 +56,6 @@ export default function ListDocuments({ shouldRefresh }) {
       })
       .then(() => setShouldRefresh(false))
       .catch((error) => setFeedbackFromError(error));
-    //}
   }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
 
   const handlePageChange = (pageNumber) => {
@@ -85,14 +84,6 @@ export default function ListDocuments({ shouldRefresh }) {
     } catch (error) {
       console.error("Error fetching document details:", error);
     }
-  };
-
-  DocumentSnippetCardComponent.propTypes = {
-    document: PropTypes.object.isRequired,
-    isLinkedDocument: PropTypes.func.isRequired,
-    onSelect: PropTypes.func.isRequired,
-    allLinksOfSelectedDocument: PropTypes.array.isRequired,
-    linking: PropTypes.bool.isRequired,
   };
 
   const handleSave = async (document) => {
@@ -152,6 +143,7 @@ export default function ListDocuments({ shouldRefresh }) {
     <Container fluid className="scrollable-list-documents">
       <Row>
         <h1>{linking ? "Link a Document" : "Documents"}</h1>
+        <LegendModal show={showLegend} onHide={() => setShowLegend(false)} />
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         <Col xs="auto">
@@ -189,6 +181,16 @@ export default function ListDocuments({ shouldRefresh }) {
             ) : (
               <i className="bi bi-list"></i>
             )}
+          </Button>
+          <Button
+            title={"legend"}
+            className="ms-2"
+            variant="secondary"
+            onClick={() => {
+              setShowLegend(!showLegend);
+            }}
+          >
+            <i className="bi bi-question-circle"></i>
           </Button>
         </Col>
       </Row>
@@ -293,11 +295,13 @@ function DocumentSnippetTableComponent({
               }
             }}
             style={{
-              cursor: !isLinkedDocument(document)? "pointer" : "default",
-              transition: !isLinkedDocument(document)? "transform 0.2s" : "none",
+              cursor: !isLinkedDocument(document) ? "pointer" : "default",
+              transition: !isLinkedDocument(document)
+                ? "transform 0.2s"
+                : "none",
               backgroundColor: isLinkedDocument(document)
-              ? "#AAA598"
-              : "transparent",
+                ? "#AAA598"
+                : "transparent",
             }}
             onMouseEnter={(e) => {
               if (!isLinkedDocument(document)) {
@@ -451,4 +455,6 @@ DocumentSnippetCardComponent.propTypes = {
   document: PropTypes.object.isRequired,
   isLinkedDocument: PropTypes.func.isRequired,
   onSelect: PropTypes.func.isRequired,
+  allLinksOfSelectedDocument: PropTypes.array.isRequired,
+  linking: PropTypes.bool.isRequired,
 };

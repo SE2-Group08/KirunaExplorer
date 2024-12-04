@@ -1,7 +1,7 @@
 import { Container, Row, Col, Card } from "react-bootstrap";
 import "../App.scss";
 import BackgroundImage from "../public/KX_BckG.webp";
-import { FaFileAlt, FaMapMarkedAlt, FaUsers } from "react-icons/fa";
+import { FaFileAlt, FaMapMarkedAlt/*, FaUsers*/ } from "react-icons/fa";
 
 export default function HomePage() {
   return (

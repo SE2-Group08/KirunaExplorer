@@ -3,7 +3,6 @@ import {
   MapContainer,
   TileLayer,
   Marker,
-  Polygon,
   useMap,
 } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
@@ -43,7 +42,7 @@ const MapKiruna = () => {
   const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
   const [tileLayer, setTileLayer] = useState("satellite");
-  const { setFeedbackFromError } = useContext(FeedbackContext);
+  const { setFeedbackFromError, setShouldRefresh } = useContext(FeedbackContext);
 
   // Per gestire il Polygon dinamico
   const kirunaPolygonRef = useRef(null);
