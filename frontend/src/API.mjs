@@ -1,4 +1,4 @@
-import { Document, DocumentSnippet } from "./model/Document.mjs";
+import {Document, DocumentSnippet} from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
@@ -154,25 +154,39 @@ const getAllDocumentSnippets = async (filter) => {
 
 // Create a new document
 const addDocument = async (document) => {
-  console.log("ADD DOCUMENT: ", document);
-  return await fetch(`${SERVER_URL}/documents`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(document),
-  })
-    .then(handleInvalidResponse)
-    .then((response) => {
-      // Log the URI of the newly created resource
-      const location = response.headers.get("Location");
-      if (location) {
-        console.log("Newly created resource URI: ", location);
-      } else {
-        console.log("Location header not found in the response.");
-      }
+  try {
+    console.log("ADD DOCUMENT: ", document);
+
+    const response = await fetch(`${SERVER_URL}/documents`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(document),
     });
+
+    if (!response.ok) {
+      console.error("Failed to add document:", response.status, response.statusText);
+      return null;
+    }
+
+    const location = response.headers.get("location");
+    if (!location) {
+      console.error("Location header not found in response.");
+      return null;
+    }
+
+    console.log("Location header:", location);
+    const newDocId = location.split("/").pop(); // Estrarre l'ID dal percorso
+    console.log("Extracted ID:", newDocId);
+
+    return newDocId;
+  } catch (error) {
+    console.error("Error while adding document:", error);
+    return null;
+  }
 };
+
 
 // Retrieve a document by id
 const getDocumentById = async (documentId) => {
@@ -192,6 +206,18 @@ const updateDocument = async (documentId, nextDocument) => {
     },
     body: JSON.stringify(nextDocument),
   }).then(handleInvalidResponse);
+
+  console.log("Response Status:", response.status);
+  console.log("Response Headers:", [...response.headers.entries()]);
+
+  const location = response.headers.get("location");
+  if (location) {
+    console.log("Location header:", location);
+  } else {
+    console.error("Location header is missing.");
+  }
+
+  return await response.json();
 };
 
 // Delete a document given its id

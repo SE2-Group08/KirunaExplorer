@@ -275,6 +275,8 @@ try {
           )
       );
 
+      console.log(newDocId);
+
       if (filesToUpload.length > 0) {
         try {
           await API.uploadFiles(newDocId, filesToUpload);

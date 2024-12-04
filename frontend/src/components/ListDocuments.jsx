@@ -77,19 +77,32 @@ export default function ListDocuments({ shouldRefresh }) {
     setShouldRefresh(true);
   };
 
-  const handleAdd = (document) => {
-    API.addDocument(document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({ type: "success", message: "Document added successfully" })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
-    setShow(false);
-    setShouldRefresh(true);
+  const handleAdd = async (document) => {
+    try {
+      // Aggiungi il documento e ottieni la risposta
+      const newDocResponse = await API.addDocument(document);
+
+      /* Estrai l'ID dal documento creato
+      const newDocId = newDocResponse.id || newDocResponse.data?.id;*/
+
+      // Aggiorna la lista dei documenti
+      const updatedDocuments = await API.getAllDocumentSnippets();
+      setDocuments(updatedDocuments);
+
+      // Aggiorna lo stato e fornisci feedback
+      setShouldRefresh(false);
+      setFeedback({ type: "success", message: "Document added successfully" });
+      setShow(false);
+
+
+      return newDocResponse;
+    } catch (error) {
+      // Gestione errori
+      setFeedbackFromError(error);
+      throw error; // Propaga l'errore se necessario
+    }
   };
+
 
   const handleDelete = (documentId) => {
     API.deleteDocument(documentId)
