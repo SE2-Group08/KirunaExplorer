@@ -4,7 +4,6 @@ import PropTypes from "prop-types";
 import { Button, Card, Row, Col, ListGroup } from "react-bootstrap";
 import API from "../API.mjs";
 import "../App.css";
-// import LinkModal from "./LinkModal.jsx";
 import FeedbackContext  from "../contexts/FeedbackContext.js";
 
 const ListDocumentLinks = ({

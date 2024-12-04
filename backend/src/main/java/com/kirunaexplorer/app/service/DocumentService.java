@@ -1,6 +1,7 @@
 package com.kirunaexplorer.app.service;
 
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
@@ -11,6 +12,11 @@ import com.kirunaexplorer.app.model.GeoReference;
 import com.kirunaexplorer.app.model.Stakeholder;
 import com.kirunaexplorer.app.repository.*;
 import com.kirunaexplorer.app.util.DocumentFieldsChecker;
+import com.kirunaexplorer.app.repository.DocumentLinkRepository;
+import com.kirunaexplorer.app.repository.DocumentRepository;
+import com.kirunaexplorer.app.repository.GeoReferenceRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +30,8 @@ public class DocumentService {
     private final DocumentScaleRepository documentScaleRepository;
     private final StakeholderRepository stakeholderRepository;
     private final DocumentTypeRepository documentTypeRepository;
+
+    private static final int PAGE_SIZE = 16;
 
     public DocumentService(
         DocumentRepository documentRepository,
@@ -42,14 +50,15 @@ public class DocumentService {
     }
 
     /**
-     * Get all documents in brief format
+     * Get all documents in brief format of a given page
      *
-     * @return List of DocumentBriefResponseDTO
+     * @param pageNo Page number
+     * @return List of DocumentBriefPageResponseDTO
      */
-    public List<DocumentBriefResponseDTO> getAllDocuments() {
-        return documentRepository.findAll().stream()
-            .map(Document::toDocumentBriefResponseDTO)
-            .toList();
+    public List<DocumentBriefPageResponseDTO> getDocumentsByPageNumber(int pageNo) {
+        Page<Document> pagedResult = documentRepository.findAll(PageRequest.of(pageNo, PAGE_SIZE));
+
+        return List.of(DocumentBriefPageResponseDTO.from(pagedResult));
     }
 
     /**
@@ -162,6 +171,15 @@ public class DocumentService {
         geoReferenceRepository.save(geoReference);
     }
 
-
+    /**
+     * Get all documents in brief format
+     *
+     * @return List of DocumentBriefResponseDTO
+     */
+    public List<DocumentBriefResponseDTO> getAllDocuments() {
+        return documentRepository.findAll().stream()
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
+    }
 }
 

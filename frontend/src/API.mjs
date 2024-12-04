@@ -30,7 +30,6 @@ const getAllLinksOfDocument = async (documentId) => {
   const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
     .then(handleInvalidResponse)
     .then((response) => response.json());
-    console.log("API GET ALL LINKS: ", links);
   return links;
 };
 
@@ -54,6 +53,21 @@ const getAllDocumentSnippets = async (filter) => {
     .then((response) => response.json())
     .then(mapAPISnippetsToSnippet);
   return documents;
+};
+
+// Retrieve documents by page number
+const getDocumentsByPageNumber = async (pageNo = 0) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/documents?pageNo=${pageNo}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch documents for page ${pageNo}: ${response.statusText}`);
+    }
+    const documents = await response.json();
+    return documents;
+  } catch (error) {
+    console.error("Errore durante il recupero dei documenti per pagina:", error);
+    throw error;
+  }
 };
 
 // Create a new document
@@ -167,7 +181,6 @@ const getAllScales = async () => {
       return [...textScales, ...numericScales];
     })
     .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));
-    console.log(scales);
   return scales;
 };
 
@@ -263,5 +276,6 @@ const API = {
   /* Scale */
   getAllScales,
   addScale,
+  getDocumentsByPageNumber,
 };
 export default API;

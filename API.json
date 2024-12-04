@@ -246,6 +246,41 @@
           "type"
         ]
       },
+      "documentSnippets": {
+        "title": "documentSnippets",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "description": "path to the JSON schema to use for the validation of the JSON file describing a document"
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The total number of pages"
+          },
+          "currentPage": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The total number of items in the current page"
+          },
+          "documentSnippets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/documentSnippet"
+            }
+          }
+        },
+        "required": [
+          "totalPages"
+        ]
+      },
       "link": {
         "title": "Link",
         "description": "JSON schema for a link data structure",
@@ -348,7 +383,17 @@
         "tags": [
           "document"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pageNo",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The page number"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -357,7 +402,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/documentSnippet"
+                    "$ref": "#/components/schemas/documentSnippets"
                   }
                 }
               }

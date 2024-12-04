@@ -16,6 +16,8 @@ import API from "../API";
 import LinkModal from "./LinkModal";
 import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
+import Pagination from "./Pagination";
+import { getIconUrlForDocument } from "../utils/iconMapping";
 
 export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
@@ -26,10 +28,10 @@ export default function ListDocuments({ shouldRefresh }) {
   const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [links, setLinks] = useState([]);
-  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
-    []
-  );
+  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState([]);
 
   useEffect(() => {
     if (linking) {
@@ -43,13 +45,22 @@ export default function ListDocuments({ shouldRefresh }) {
     useContext(FeedbackContext);
 
   useEffect(() => {
-    if (shouldRefresh) {
-      API.getAllDocumentSnippets()
-        .then(setDocuments)
-        .then(() => setShouldRefresh(false))
-        .catch((error) => setFeedbackFromError(error));
-    }
+    window.scrollTo(0, 0);
+    //if (shouldRefresh) {
+    API.getDocumentsByPageNumber(currentPage)
+      .then((response) => {
+        setDocuments(response[0].documentSnippets);
+        setTotalPages(response[0].totalPages);
+      })
+      .then(() => setShouldRefresh(false))
+      .catch((error) => setFeedbackFromError(error));
+    //}
   }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    setShouldRefresh(true);
+  };
 
   const handleSelection = async (document) => {
     try {
@@ -111,21 +122,6 @@ export default function ListDocuments({ shouldRefresh }) {
       setShow(false);
     }
   };
-
-  // const handleDelete = (documentId) => {
-  //   API.deleteDocument(documentId)
-  //     .then(() => API.getAllDocumentSnippets().then(setDocuments))
-  //     .then(() => setShouldRefresh(false))
-  //     .then(() =>
-  //       setFeedback({
-  //         type: "success",
-  //         message: "Document deleted successfully",
-  //       })
-  //     )
-  //     .catch((error) => setFeedbackFromError(error));
-  //   setShow(false);
-  //   setShouldRefresh(true);
-  // };
 
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
@@ -257,6 +253,13 @@ export default function ListDocuments({ shouldRefresh }) {
             ))}
           </Row>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+
         {/* Modals for viewing, adding, or linking documents */}
         {selectedDocument && (
           <DocumentModal
@@ -307,10 +310,11 @@ function DocumentSnippetTableComponent({
     <Table hover responsive style={{ backgroundColor: "#E6E8EA" }}>
       <thead>
         <tr>
+          <th>Icon</th>
           <th>Title</th>
           <th>Scale</th>
           <th>Issuance Date</th>
-          <th>Type</th>
+          {/* <th>Type</th> */}
         </tr>
       </thead>
       <tbody>
@@ -338,6 +342,13 @@ function DocumentSnippetTableComponent({
             }}
           >
             <td>
+              <img
+                src={getIconUrlForDocument(document.type, document.stakeholders)}
+                alt={`${document.type} icon`}
+                style={{ width: "40px", height: "40px" }}
+              />
+            </td>
+            <td>
               <em>{document.title}</em>
             </td>
             <td>{document.scale}</td>
@@ -346,11 +357,11 @@ function DocumentSnippetTableComponent({
                 document.issuanceDate.length === 4
                   ? "YYYY"
                   : document.issuanceDate.length === 7
-                  ? "MM/YYYY"
-                  : "DD/MM/YYYY"
+                    ? "MM/YYYY"
+                    : "DD/MM/YYYY"
               )}
             </td>
-            <td>{document.type}</td>
+            {/* <td>{document.type}</td> */}
           </tr>
         ))}
       </tbody>
@@ -442,17 +453,18 @@ const DocumentSnippetCardComponent = ({
           </Card.Text>
           <Card.Text className="document-card-text">
             <strong>Issuance Date:</strong>{" "}
-            {dayjs(document.issuanceDate).format(
-              document.issuanceDate.length === 4
-                ? "YYYY"
-                : document.issuanceDate.length === 7
-                ? "MM/YYYY"
-                : "DD/MM/YYYY"
-            )}
+            {
+              dayjs(document.issuanceDate).format(
+                document.issuanceDate.length === 4
+                  ? "YYYY"
+                  : document.issuanceDate.length === 7
+                    ? "MM/YYYY"
+                    : "DD/MM/YYYY"
+              )}
           </Card.Text>
-          <Card.Text className="document-card-text">
+          {/* <Card.Text className="document-card-text">
             <strong>Type:</strong> {document.type}
-          </Card.Text>
+          </Card.Text> */}
         </Card.Body>
       </Card>
     </Col>

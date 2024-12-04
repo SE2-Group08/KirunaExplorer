@@ -37,6 +37,7 @@ export default function DocumentModal(props) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [isEditable, setIsEditable] = useState(false);
   const [isSliderOpen, setSliderOpen] = useState(false);
+  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
 
   const [document, setDocument] = useState({
     title: "",
@@ -140,15 +141,6 @@ export default function DocumentModal(props) {
     }
 
     // Scale validation
-    // if (typeof document.scale !== "string" || !document.scale.trim()) {
-    //   newErrors.scale = "Scale must be present.";
-    // } else if (document.scale.includes(":")) {
-    //   const [first, second] = document.scale.split(":").map(Number);
-    //   if (first > second) {
-    //     newErrors.scale =
-    //       "The first number of the scale must be smaller than the second one.";
-    //   }
-    // }
     if (
       !document.scale ||
       (document.scale === "Other" && !document.customScale)
@@ -297,9 +289,9 @@ export default function DocumentModal(props) {
     }));
   };
 
-  const handleLinksClick = () => {
-    setSliderOpen(!isSliderOpen);
-  };
+  // const handleLinksClick = () => {
+  //   setSliderOpen(!isSliderOpen);
+  // };
 
   const handleCloseSlider = () => {
     setSliderOpen(false);
