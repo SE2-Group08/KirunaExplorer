@@ -1,6 +1,8 @@
 import { Document, DocumentSnippet } from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
 import Link from "./model/Link.mjs";
+import { DocumentType } from "./model/DocumentType.mjs";
+import { Scale } from "./model/Scale.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
 
@@ -13,7 +15,7 @@ const createLink = async (documentId, link) => {
     type: link.type.toUpperCase().replace(/ /g, "_"),
     documentId: link.documentId,
   };
-  console.log("API CREATE LINK: ", requestBody);
+
   return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
     method: "POST",
     headers: {
@@ -32,16 +34,6 @@ const getAllLinksOfDocument = async (documentId) => {
   return links;
 };
 
-// Update a link for a document
-// const updateLink = async (documentId, linkId, updatedLink) => {
-//   return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
-//     method: "PUT",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify(updatedLink),
-//   }).then(handleInvalidResponse);
-// };
 
 // Delete a link for a document
 const deleteLink = async (linkId) => {
@@ -87,6 +79,7 @@ const getDocumentById = async (documentId) => {
 
 // Update a document given its id
 const updateDocument = async (documentId, nextDocument) => {
+  console.log("UPDATE DOCUMENT: ", documentId, nextDocument);
   return await fetch(`${SERVER_URL}/documents`, {
     method: "PUT",
     headers: {
@@ -103,69 +96,113 @@ const deleteDocument = async (documentId) => {
   }).then(handleInvalidResponse);
 };
 
-// /* ************************** *
-//  *      Stakeholders APIs     *
-//  * ************************** */
+/* ************************** *
+ *      Stakeholders APIs     *
+ * ************************** */
 
 // // Retrieve all stakeholders
-// const getAllStakeholders = async () => {
-//   const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
-//     .then(handleInvalidResponse)
-//     .then((response) => response.json())
-//     .then(mapAPIStakeholdersToStakeholders);
-//   return stakeholders;
-// };
+const getAllStakeholders = async () => {
+  const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((stakeholders) =>
+      stakeholders.map((stakeholder) => Stakeholder.fromJSON(stakeholder))
+    );
+  return stakeholders;
+};
 
-// // Create a new stakeholder
-// const addStakeholder = async (stakeholder) => {
-//   return await fetch(`${SERVER_URL}/stakeholders`, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify(stakeholder),
-//   }).then(handleInvalidResponse);
-// };
+// Create a new stakeholder
+const addStakeholder = async (stakeholder) => {
+  return await fetch(`${SERVER_URL}/stakeholders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(stakeholder),
+  }).then(handleInvalidResponse);
+};
 
-// // Retrieve a stakeholder by id
-// const getStakeholderById = async (stakeholderId) => {
-//   const stakeholder = await fetch(`${SERVER_URL}/stakeholders/${stakeholderId}`)
-//     .then(handleInvalidResponse)
-//     .then((response) => response.json());
-//   return stakeholder;
-// };
+/* ************************** *
+ *     Document Type APIs     *
+ * ************************** */
 
-// // Update a stakeholder given its id
-// const updateStakeholder = async (stakeholderId, nextStakeholder) => {
-//   return await fetch(`${SERVER_URL}/stakeholders/`, {
-//     method: "PUT",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify(nextStakeholder),
-//   }).then(handleInvalidResponse);
-// };
+// Retrieve all document types
+const getAllDocumentTypes = async () => {
+  const documentTypes = await fetch(`${SERVER_URL}/document-types`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((documentTypes) =>
+      documentTypes.map((documentType) => DocumentType.fromJSON(documentType))
+    );
+  return documentTypes;
+};
 
-// // Delete a stakeholder given its id
-// const deleteStakeholder = async (stakeholderId) => {
-//   return await fetch(`${SERVER_URL}/stakeholders/${stakeholderId}`, {
-//     method: "DELETE",
-//   }).then(handleInvalidResponse);
-// };
+// Create a new document type
+const addDocumentType = async (documentType) => {
+  return await fetch(`${SERVER_URL}/document-types`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(documentType),
+  }).then(handleInvalidResponse);
+};
+
+/* ************************** *
+ *       Scale APIs      *
+ * ************************** */
+
+// Retrieve all scales
+const getAllScales = async () => {
+  const scales = await fetch(`${SERVER_URL}/scales`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((scales) => {
+      const textScales = scales.filter(scale => !scale.scale.includes(':')).sort();
+      const numericScales = scales.filter(scale => scale.scale.includes(':')).sort((a, b) => {
+        const numA = parseInt(a.scale.split(':')[1], 10);
+        const numB = parseInt(b.scale.split(':')[1], 10);
+        return numA - numB;
+      });
+      return [...textScales, ...numericScales];
+    })
+    .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));
+    console.log(scales);
+  return scales;
+};
+
+// Create a new scale
+const addScale = async (scale) => {
+  return await fetch(`${SERVER_URL}/scales`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(scale),
+  }).then(handleInvalidResponse);
+};
 
 /* ************************** *
  *       Helper functions      *
  * ************************** */
 
 function handleInvalidResponse(response) {
-  if (!response.ok) {
-    throw Error(response.statusText);
+  try {
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+    let type = response.headers.get("content-type");
+    if (type != null && type.indexOf("application/json") === -1) {
+      throw new TypeError(`Expected JSON, got ${type}`);
+    }
+    return response;
+  } catch (error) {
+    // Handle error silently
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-  let type = response.headers.get("content-type");
-  if (type != null && type.indexOf("application/json") === -1) {
-    throw new TypeError(`Expected JSON, got ${type}`);
-  }
-  return response;
 }
 
 function mapAPIStakeholdersToStakeholders(apiStakeholders) {
@@ -206,19 +243,25 @@ async function mapAPISnippetsToSnippet(apiSnippets) {
 }
 
 const API = {
+  /* Document */
   getAllDocumentSnippets,
   addDocument,
   getDocumentById,
   updateDocument,
   deleteDocument,
-  // getAllStakeholders,
-  // addStakeholder,
-  // getStakeholderById,
-  // updateStakeholder,
-  // deleteStakeholder,
+  /* Stakeholder */
+  getAllStakeholders,
+  addStakeholder,
+  /* Link */
   createLink,
   getAllLinksOfDocument,
   // updateLink,
   deleteLink,
+  /* Document Type */
+  getAllDocumentTypes,
+  addDocumentType,
+  /* Scale */
+  getAllScales,
+  addScale,
 };
 export default API;

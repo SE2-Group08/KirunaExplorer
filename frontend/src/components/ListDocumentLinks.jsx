@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Button, Card, Row, Col, ListGroup } from "react-bootstrap";
@@ -17,6 +18,7 @@ const ListDocumentLinks = ({
   // const [selectedSnippet, setSelectedSnippet] = useState({});
   // const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
   const [links, setLinks] = useState([]);
+  const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {
     if (isOpen) {
@@ -25,7 +27,7 @@ const ListDocumentLinks = ({
           setSnippets(response);
         })
         .catch((error) => {
-          console.error(error);
+          setFeedbackFromError(error)
         });
     }
   }, [isOpen]);

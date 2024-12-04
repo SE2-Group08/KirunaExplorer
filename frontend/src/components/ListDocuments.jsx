@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
-import { Container, Row, Col, Card, Button, Table } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Table,
+  Spinner,
+} from "react-bootstrap";
 import "../App.css";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
 import LinkModal from "./LinkModal";
+import { useContext } from "react";
+import FeedbackContext from "../contexts/FeedbackContext";
 
-export default function ListDocuments() {
+export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
   const [show, setShow] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -27,11 +37,17 @@ export default function ListDocuments() {
     }
   }, [linking, showLinkModal]);
 
+  const { setFeedbackFromError, setShouldRefresh, setFeedback } =
+    useContext(FeedbackContext);
+
   useEffect(() => {
-    API.getAllDocumentSnippets()
-      .then(setDocuments)
-      .catch((error) => console.error("Error fetching documents:", error));
-  }, []);
+    if (shouldRefresh) {
+      API.getAllDocumentSnippets()
+        .then(setDocuments)
+        .then(() => setShouldRefresh(false))
+        .catch((error) => setFeedbackFromError(error));
+    }
+  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
 
   const handleSelection = async (document) => {
     try {
@@ -56,26 +72,50 @@ export default function ListDocuments() {
     }
   };
 
-  const handleSave = (document) => {
-    API.updateDocument(document.id, document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error saving document:", error));
-    setShow(false);
+  const handleSave = async (document) => {
+    try {
+      await API.updateDocument(document.id, document);
+      setFeedback({
+        type: "success",
+        message: "Document updated successfully",
+      });
+      setShouldRefresh(true);
+    } catch (error) {
+      setFeedbackFromError(error);
+    } finally {
+      setShow(false);
+    }
   };
 
-  const handleAdd = (document) => {
-    API.addDocument(document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error adding document:", error));
-    setShow(false);
+  const handleAdd = async (document) => {
+    try {
+      await API.addDocument(document);
+      setFeedback({
+        type: "success",
+        message: "Document added successfully",
+      });
+      setShouldRefresh(true);
+    } catch (error) {
+      setFeedbackFromError(error);
+    } finally {
+      setShow(false);
+    }
   };
 
-  const handleDelete = (documentId) => {
-    API.deleteDocument(documentId)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .catch((error) => console.error("Error deleting document:", error));
-    setShow(false);
-  };
+  // const handleDelete = (documentId) => {
+  //   API.deleteDocument(documentId)
+  //     .then(() => API.getAllDocumentSnippets().then(setDocuments))
+  //     .then(() => setShouldRefresh(false))
+  //     .then(() =>
+  //       setFeedback({
+  //         type: "success",
+  //         message: "Document deleted successfully",
+  //       })
+  //     )
+  //     .catch((error) => setFeedbackFromError(error));
+  //   setShow(false);
+  //   setShouldRefresh(true);
+  // };
 
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
@@ -112,14 +152,27 @@ export default function ListDocuments() {
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (
-          <p>Choose the document you want to link</p>
+          <p style={{
+            fontSize: "1.2rem",
+            marginBottom: "0.5rem",
+            marginTop: "0.5rem",
+            fontWeight: "500",
+          }}>Choose the document you want to link</p>
         ) : (
           <>
-            <p>
+            <p style={{
+              fontSize: "1.2rem",
+              marginBottom: "0.5rem",
+              marginTop: "0.5rem",
+              fontWeight: "500",
+            }}>
               Here you can find all the documents about Kiruna&apos;s relocation
               process.
             </p>
-            <p>Click on a document to see more details.</p>
+            <p style={{
+              fontSize: "1.2rem",
+              fontWeight: "500",
+            }}>Click on a document to see more details.</p>
           </>
         )}
       </Row>
@@ -163,7 +216,11 @@ export default function ListDocuments() {
         </Col>
       </Row>
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
-        {compactView ? (
+        {documents.length === 0 ? (
+          <Spinner animation="border" role="status" className="mx-auto">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        ) : compactView ? (
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
               documents={documents}
@@ -196,7 +253,7 @@ export default function ListDocuments() {
             }}
             document={selectedDocument}
             handleSave={handleSave}
-            handleDelete={handleDelete}
+            // handleDelete={handleDelete}
             handleAdd={handleAdd}
             onSnippetClick={handleSelection}
           />
@@ -223,6 +280,7 @@ export default function ListDocuments() {
 
 ListDocuments.propTypes = {
   thinCardLayout: PropTypes.bool,
+  shouldRefresh: PropTypes.bool.isRequired,
 };
 
 function DocumentSnippetTableComponent({
@@ -231,7 +289,7 @@ function DocumentSnippetTableComponent({
   isLinkedDocument,
 }) {
   return (
-    <Table hover responsive>
+    <Table hover responsive style={{backgroundColor:"#E6E8EA"}}>
       <thead>
         <tr>
           <th>Title</th>

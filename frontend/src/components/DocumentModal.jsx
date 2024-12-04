@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { Button, Modal, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import {
   MapContainer,
@@ -14,6 +14,8 @@ import { Document } from "../model/Document.mjs";
 import ListDocumentLinks from "./ListDocumentLinks.jsx";
 import dayjs from "dayjs";
 import "../App.css";
+import API from "../API.mjs";
+import FeedbackContext from "../contexts/FeedbackContext.js";
 
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
@@ -35,6 +37,7 @@ export default function DocumentModal(props) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [isEditable, setIsEditable] = useState(false);
   const [isSliderOpen, setSliderOpen] = useState(false);
+  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
 
   const [document, setDocument] = useState({
     title: "",
@@ -131,24 +134,28 @@ export default function DocumentModal(props) {
       document.stakeholders.length
     ) {
       newErrors.stakeholders = "Stakeholders must not contain duplicates.";
+    } else if (
+      document.stakeholders.some((s) => s.trim().toLowerCase() === "other")
+    ) {
+      newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
     }
 
-    const scalePatterns = [
-      "Text",
-      "Blueprint/Material effects",
-      /^[1-9]:[1-9][0-9]*$/,
-    ];
-    if (
-      typeof document.scale !== "string" ||
-      !document.scale.trim() ||
-      !scalePatterns.some((pattern) =>
-        typeof pattern === "string"
-          ? pattern === document.scale
-          : pattern.test(document.scale)
-      )
-    ) {
-      newErrors.scale =
-        "Scale is required and must match one of the defined patterns.";
+    // Scale validation
+    // if (typeof document.scale !== "string" || !document.scale.trim()) {
+    //   newErrors.scale = "Scale must be present.";
+    // } else if (document.scale.includes(":")) {
+    //   const [first, second] = document.scale.split(":").map(Number);
+    //   if (first > second) {
+    //     newErrors.scale =
+    //       "The first number of the scale must be smaller than the second one.";
+    //   }
+    // }
+    if (!document.scale || (document.scale === "Other" && !document.customScale)) {
+      newErrors.scale = "Scale is required.";
+    } else if (document.scale === "Other") {
+      newErrors.scale = "Scale cannot be 'Other'.";
+    } else if (document.scale.length > 64 && document.scale.length < 2) {
+      newErrors.scale = "Scale must be between 2 and 64 characters.";
     } else if (document.scale.includes(":")) {
       const [first, second] = document.scale.split(":").map(Number);
       if (first > second) {
@@ -170,18 +177,16 @@ export default function DocumentModal(props) {
         "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
     }
 
-    const validTypes = [
-      "Design document",
-      "Material effect",
-      "Technical document",
-      "Prescriptive document",
-      "Informative document",
-    ];
-    if (!validTypes.includes(document.type)) {
-      newErrors.type =
-        "Type is required and must be one of the predefined values.";
+    // Type validation
+    if (!document.type || (document.type === "Other" && !document.customType)) {
+      newErrors.type = "Type is required.";
+    } else if (document.type === "Other") {
+      newErrors.type = "Type cannot be 'Other'.";
+    } else if (document.type.length > 64 && document.type.length < 2) {
+      newErrors.type = "Type must be between 2 and 64 characters.";
     }
 
+    // Language validation
     if (
       document.language &&
       (document.language.length < 2 || document.language.length > 64)
@@ -290,9 +295,9 @@ export default function DocumentModal(props) {
     }));
   };
 
-  const handleLinksClick = () => {
-    setSliderOpen(!isSliderOpen);
-  };
+  // const handleLinksClick = () => {
+  //   setSliderOpen(!isSliderOpen);
+  // };
 
   const handleCloseSlider = () => {
     setSliderOpen(false);
@@ -382,8 +387,9 @@ DocumentModal.propTypes = {
   document: PropTypes.object.isRequired,
   handleSave: PropTypes.func.isRequired,
   handleAdd: PropTypes.func.isRequired,
-  onLinkToClick: PropTypes.func.isRequired,
-  onLinksClick: PropTypes.func.isRequired,
+  onLinkToClick: PropTypes.func,
+  onLinksClick: PropTypes.func,
+  onSnippetClick: PropTypes.func,
 };
 
 function ModalBodyComponent({ document }) {
@@ -492,16 +498,16 @@ function DocumentFormComponent({
   handleChange,
   kirunaBorderCoordinates,
 }) {
-  const [customScaleValue, setCustomScaleValue] = useState(
-    document.scale !== "Text" && document.scale !== "Blueprint/Material effects"
-      ? document.scale
-      : ""
-  );
-  const [enableCustomScale, setEnableCustomScale] = useState(
-    document.scale !== "Text" &&
-      document.scale !== "Blueprint/Material effects" &&
-      document.scale !== ""
-  );
+  // const [customScaleValue, setCustomScaleValue] = useState(
+  //   document.scale !== "Text" && document.scale !== "Blueprint/Material effects"
+  //     ? document.scale
+  //     : ""
+  // );
+  // const [enableCustomScale, setEnableCustomScale] = useState(
+  //   document.scale !== "Text" &&
+  //     document.scale !== "Blueprint/Material effects" &&
+  //     document.scale !== ""
+  // );
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const [markerPosition, setMarkerPosition] = useState([
     document.geolocation.latitude
@@ -511,10 +517,32 @@ function DocumentFormComponent({
       ? document.geolocation.longitude
       : defaultPosition[1],
   ]);
+  const [allStakeholders, setAllStakeholders] = useState([]);
+  const [allDocumentTypes, setAllDocumentTypes] = useState([]);
+  const [allScales, setAllScales] = useState([]);
+  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
 
   const dayRef = useRef(null);
   const monthRef = useRef(null);
   const yearRef = useRef(null);
+
+  useEffect(() => {
+    API.getAllStakeholders()
+      .catch((e) => setFeedbackFromError(e))
+      .then((stakeholders) => {
+        setAllStakeholders(stakeholders);
+      });
+    API.getAllDocumentTypes()
+      .catch((e) => setFeedbackFromError(e))
+      .then((documentTypes) => {
+        setAllDocumentTypes(documentTypes);
+      });
+    API.getAllScales()
+      .catch((e) => setFeedbackFromError(e))
+      .then((scales) => {
+        setAllScales(scales);
+      });
+  }, []);
 
   const handleDayChange = (e) => {
     const value = e.target.value;
@@ -618,22 +646,18 @@ function DocumentFormComponent({
       {/* STAKEHOLDERS */}
       <Form.Group className="mb-3" controlId="formDocumentStakeholders">
         <Form.Label>Stakeholders *</Form.Label>
-        {[
-          "LKAB",
-          "Municipality",
-          "Regional authority",
-          "Architecture firms",
-          "Citizen",
-        ].map((stakeholderOption) => (
+        {allStakeholders.map((stakeholderOption) => (
           <Form.Check
-            key={stakeholderOption}
+            key={stakeholderOption.id}
             type="checkbox"
-            label={stakeholderOption}
-            checked={document.stakeholders.includes(stakeholderOption)}
+            label={stakeholderOption.name}
+            checked={document.stakeholders.includes(stakeholderOption.name)}
             onChange={(e) => {
               const newStakeholders = e.target.checked
-                ? [...document.stakeholders, stakeholderOption]
-                : document.stakeholders.filter((s) => s !== stakeholderOption);
+                ? [...document.stakeholders, stakeholderOption.name]
+                : document.stakeholders.filter(
+                    (s) => s !== stakeholderOption.name
+                  );
               handleChange("stakeholders", newStakeholders);
             }}
             isInvalid={!!errors.stakeholders}
@@ -642,13 +666,7 @@ function DocumentFormComponent({
         {document.stakeholders
           .filter(
             (stakeholder) =>
-              ![
-                "LKAB",
-                "Municipality",
-                "Regional authority",
-                "Architecture firms",
-                "Citizen",
-              ].includes(stakeholder)
+              !allStakeholders.map((s) => s.name).includes(stakeholder)
           )
           .map((stakeholder, index) => (
             <div key={index} className="d-flex mb-2">
@@ -702,94 +720,57 @@ function DocumentFormComponent({
       {/* SCALE */}
       <Form.Group className="mb-3" controlId="formDocumentScale">
         <Form.Label>Scale *</Form.Label>
-        {/* Predefined Scale Options */}
-        <Form.Check
-          type="radio"
-          label="Text"
-          name="scaleOptions"
-          id="scaleText"
-          value="Text"
-          checked={document.scale === "Text"}
-          onChange={(e) => {
-            handleChange("scale", e.target.value);
-            setCustomScaleValue(""); // Clear custom scale when switching to predefined scale
-            setEnableCustomScale(false); // Disable custom scale inputs
-          }}
+        <Form.Control
+          as="select"
+          value={document.scale}
+          onChange={(e) => handleChange("scale", e.target.value)}
           isInvalid={!!errors.scale}
-        />
-        <Form.Check
-          type="radio"
-          label="Blueprint/Material effects"
-          name="scaleOptions"
-          id="scaleBlueprint"
-          value="Blueprint/Material effects"
-          checked={document.scale === "Blueprint/Material effects"}
-          onChange={(e) => {
-            handleChange("scale", e.target.value);
-            setCustomScaleValue(""); // Clear custom scale when switching to predefined scale
-            setEnableCustomScale(false); // Disable custom scale inputs
-          }}
-          isInvalid={!!errors.scale}
-        />
-        {/* Custom Scale Option */}
-        <Form.Check
-          type="radio"
-          name="scaleOptions"
-          id="scaleCustom"
-          value="Custom"
-          checked={
-            enableCustomScale ||
-            (document.scale &&
-              !["Text", "Blueprint/Material effects"].includes(document.scale))
-          }
-          onChange={() => {
-            setEnableCustomScale(true); // Enable custom scale inputs
-            handleChange("scale", customScaleValue); // Set scale to the current custom value
-          }}
-          isInvalid={!!errors.scale}
-          label={
-            <div className="d-flex align-items-center">
-              <Form.Control
-                type="number"
-                min={1}
-                value={customScaleValue.split(":")[0] || ""}
-                disabled={!enableCustomScale}
-                onChange={(e) =>
-                  setCustomScaleValue(
-                    `${e.target.value}:${customScaleValue.split(":")[1] || ""}`
-                  )
+          required
+        >
+          <option value="">Select scale</option>
+          {allScales.map((scaleOption) => (
+            <option key={scaleOption.id} value={scaleOption.name}>
+              {scaleOption.name}
+            </option>
+          ))}
+          <option value="Other">Other</option>
+        </Form.Control>
+        {document.scale === "Other" && (
+          <div className="d-flex mt-2">
+            <Form.Control
+              type="text"
+              placeholder="Enter custom scale"
+              value={document.customScale || ""}
+              onChange={(e) => handleChange("customScale", e.target.value)}
+              isInvalid={!!errors.scale}
+              className="me-2"
+            />
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (
+                  document.customScale &&
+                  !allScales.some((s) => s.name === document.customScale)
+                ) {
+                  allScales.push({
+                    id: Date.now(),
+                    name: document.customScale,
+                  });
+                  handleChange("scale", document.customScale);
                 }
-                onBlur={() => handleChange("scale", customScaleValue)}
-                isInvalid={!!errors.scale}
-                className="me-1"
-                style={{ width: "80px" }}
-              />
-              <span>:</span>
-              <Form.Control
-                type="number"
-                min={1}
-                value={customScaleValue.split(":")[1] || ""}
-                disabled={!enableCustomScale}
-                onChange={(e) =>
-                  setCustomScaleValue(
-                    `${customScaleValue.split(":")[0] || ""}:${e.target.value}`
-                  )
-                }
-                onBlur={() => handleChange("scale", customScaleValue)}
-                isInvalid={!!errors.scale}
-                className="ms-1"
-                style={{ width: "100px" }}
-              />
-            </div>
-          }
-        />
-        <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+              }}
+              title="Add custom scale"
+            >
+              <i className="bi bi-plus-square"></i>
+            </Button>
+          </div>
+        )}
+        <Form.Control.Feedback type="invalid">
           {errors.scale}
-        </div>
+        </Form.Control.Feedback>
       </Form.Group>
 
       <div className="divider" />
-
       {/* ISSUANCE DATE */}
       <Form.Group className="mb-3" controlId="formDocumentIssuanceDate">
         <Form.Label>Issuance Date *</Form.Label>
@@ -846,16 +827,47 @@ function DocumentFormComponent({
           required
         >
           <option value="">Select type</option>
-          <option value="Design document">Design document</option>
-          <option value="Material effect">Material effect</option>
-          <option value="Technical document">Technical document</option>
-          <option value="Prescriptive document">Prescriptive document</option>
-          <option value="Informative document">Informative document</option>
+          {allDocumentTypes.map((typeOption) => (
+            <option key={typeOption.id} value={typeOption.name}>
+              {typeOption.name}
+            </option>
+          ))}
+          <option value="Other">Other</option>
         </Form.Control>
-        <Form.Control.Feedback type="invalid">
-          {errors.type}
-        </Form.Control.Feedback>
+        {document.type === "Other" && (
+          <div className="d-flex mt-2">
+            <Form.Control
+              type="text"
+              placeholder="Enter custom type"
+              value={document.customType || ""}
+              onChange={(e) => handleChange("customType", e.target.value)}
+              isInvalid={!!errors.type}
+              className="me-2"
+            />
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (
+                  document.customType &&
+                  !allDocumentTypes.some((t) => t.name === document.customType)
+                ) {
+                  allDocumentTypes.push({
+                    id: Date.now(),
+                    name: document.customType,
+                  });
+                  handleChange("type", document.customType);
+                }
+              }}
+              title="Add custom type"
+            >
+              <i className="bi bi-plus-square"></i>
+            </Button>
+          </div>
+        )}
       </Form.Group>
+      <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+        {errors.type}
+      </div>
 
       <div className="divider" />
 
@@ -940,7 +952,6 @@ function DocumentFormComponent({
           max={23.28669305841499}
           step={0.00001}
           value={document.geolocation.longitude}
-          isInvalid={!!errors.longitude}
           onChange={handleLongitudeChange}
           disabled={document.geolocation.municipality === "Entire municipality"}
         />
