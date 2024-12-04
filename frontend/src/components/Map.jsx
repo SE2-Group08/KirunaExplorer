@@ -131,21 +131,19 @@ const MapKiruna = () => {
   const zoomLevel = 12;
   const [tileLayer, setTileLayer] = useState("satellite");
   const { setFeedbackFromError } = useContext(FeedbackContext);
-  const [searchTerm, setSearchTerm] = useState('');
   const [filteredDocuments, setFilteredDocuments] = useState([]);
 
-  // Per gestire il Polygon dinamico
+  // Reference for dynamic Polygon
   const kirunaPolygonRef = useRef(null);
 
   useEffect(() => {
     API.getAllDocumentSnippets()
         .then((docs) => {
           setDocuments(docs);
-          setFilteredDocuments(docs); // Initialize filtered documents
+          setFilteredDocuments(docs);
         })
         .catch((error) => setFeedbackFromError(error));
-  }, []);
-
+  }, [setFeedbackFromError]);
 
   const handleDocumentClick = (document) => {
     API.getDocumentById(document.id)
@@ -162,27 +160,23 @@ const MapKiruna = () => {
   };
 
   const kirunaBorderCoordinates = getKirunaArea();
-  const handleSearch = (query, typeFilter, stakeholderFilter) => {
-    setSearchTerm(query);
 
-    const lowerCaseQuery = query.toLowerCase();
+  const handleSearch = (keyword) => {
+    if (!keyword) {
+      setFilteredDocuments(documents);
+      return;
+    }
 
-    const filtered = documents.filter((doc) => {
-      const matchesQuery =
-          doc.title.toLowerCase().includes(lowerCaseQuery) ||
-          (doc.description && doc.description.toLowerCase().includes(lowerCaseQuery));
-
-      const matchesType = typeFilter ? doc.type === typeFilter : true;
-
-      const matchesStakeholder = stakeholderFilter
-          ? doc.stakeholders.includes(stakeholderFilter)
-          : true;
-
-      return matchesQuery && matchesType && matchesStakeholder;
-    });
-
-    setFilteredDocuments(filtered);
+    API.searchDocuments(keyword)
+        .then((data) => {
+          setFilteredDocuments(data);
+          console.log("Filtered documents: ", data);
+        })
+        .catch((error) => {
+          setFeedbackFromError(error);
+        });
   };
+
   return (
       <div style={{display: "flex", height: "100vh", position: "relative"}}>
         <div style={{position: 'absolute', top: '10px', left: '30px', zIndex: 1000, marginBottom:"5rem",
@@ -198,7 +192,7 @@ const MapKiruna = () => {
           <MapContainer
               center={kirunaPosition}
               zoom={zoomLevel}
-              style={{height: "100%", width: "100%"}}
+              style={{ height: "100%", width: "100%" }}
           >
             <TileLayer
                 url={
@@ -276,9 +270,9 @@ const MapKiruna = () => {
                     ]}
                     zoomLevel={15}
                 />
-            ) : selectedDocument && selectedDocument.geolocation.municipality ? (
-                <ZoomToMarker position={kirunaPosition} zoomLevel={15}/>
-            ) : (<ZoomToMarker position={kirunaPosition} zoomLevel={11}/>)}
+            ) : (
+                <ZoomToMarker position={kirunaPosition} zoomLevel={12} />
+            )}
           </MapContainer>
         </div>
 
@@ -291,5 +285,6 @@ const MapKiruna = () => {
       </div>
   );
 };
+
 
 export default MapKiruna;

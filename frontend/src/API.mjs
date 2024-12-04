@@ -136,7 +136,7 @@ const deleteLink = async (documentId, linkId) => {
  * ************************** */
 
 // Retrieve all documents snippets
-const getAllDocumentSnippets = async (filter) => {
+const getAllDocumentSnippets = async () => {
   const documents = await fetch(`${SERVER_URL}/documents`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
@@ -183,6 +183,24 @@ const deleteDocument = async (documentId) => {
   }).then(handleInvalidResponse);
 };
 
+const searchDocuments = async (keyword) => {
+  const params = new URLSearchParams();
+  if (keyword) {
+    params.append('keyword', keyword);
+  }
+
+  const queryString = params.toString(); // Automatically encodes spaces as '+'
+
+const response =  await fetch(`${SERVER_URL}/documents/search?${queryString}`, {
+    method: 'GET',
+    // Removed 'Content-Type' header as it's not needed for GET requests
+  })
+  .then(handleInvalidResponse)
+  .then((response) => response.json())
+  .then(mapAPISnippetsToSnippet);
+
+  return response;
+}
 // /* ************************** *
 //  *      Stakeholders APIs     *
 //  * ************************** */
@@ -299,6 +317,7 @@ const API = {
   getDocumentById,
   updateDocument,
   deleteDocument,
+  searchDocuments,
   // getAllStakeholders,
   // addStakeholder,
   // getStakeholderById,

@@ -8,7 +8,6 @@ import API from "../API";
 import LinkModal from "./LinkModal";
 import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
-import searchBar from "./SearchBar.jsx";
 import SearchBar from "./SearchBar.jsx";
 
 export default function ListDocuments({ shouldRefresh }) {
@@ -20,14 +19,17 @@ export default function ListDocuments({ shouldRefresh }) {
   const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
-
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
   const { setFeedbackFromError, setShouldRefresh, setFeedback } =
     useContext(FeedbackContext);
 
   useEffect(() => {
     if (shouldRefresh) {
       API.getAllDocumentSnippets()
-        .then(setDocuments)
+        .then((docs) => {
+          setDocuments(docs);
+          setFilteredDocuments(docs);
+        })
         .then(() => setShouldRefresh(false))
         .catch((error) => setFeedbackFromError(error));
     }
@@ -150,28 +152,20 @@ export default function ListDocuments({ shouldRefresh }) {
   };
 
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredDocuments, setFilteredDocuments] = useState([]);
-  const handleSearch = (query, typeFilter, stakeholderFilter) => {
-    setSearchTerm(query);
+  const handleSearch = (keyword) => {
+    if (!keyword) {
+      setFilteredDocuments(documents);
+      return;
+    }
 
-    const lowerCaseQuery = query.toLowerCase();
-
-    const filtered = documents.filter((doc) => {
-      const matchesQuery =
-          doc.title.toLowerCase().includes(lowerCaseQuery) ||
-          (doc.description && doc.description.toLowerCase().includes(lowerCaseQuery));
-
-      const matchesType = typeFilter ? doc.type === typeFilter : true;
-
-      const matchesStakeholder = stakeholderFilter
-          ? doc.stakeholders.includes(stakeholderFilter)
-          : true;
-
-      return matchesQuery && matchesType && matchesStakeholder;
-    });
-
-    setFilteredDocuments(filtered);
+    API.searchDocuments(keyword)
+        .then((data) => {
+          setFilteredDocuments(data);
+          console.log("Filtered documents: ", data);
+        })
+        .catch((error) => {
+          setFeedbackFromError(error);
+        });
   };
   return (
     <Container fluid className="scrollable-list-documents">
@@ -253,14 +247,14 @@ export default function ListDocuments({ shouldRefresh }) {
         ) : compactView ? (
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
-              documents={documents}
+              documents={filteredDocuments}
               onSelect={handleSelection}
               isLinkedDocument={isLinkedDocument}
             />
           </Row>
         ) : (
           <Row xs={1} sm={2} md={3} lg={4} className="g-4 mx-auto">
-            {documents.map((document) => (
+            {filteredDocuments.map((document) => (
               <DocumentSnippetCardComponent
                 key={document.id}
                 document={document}
@@ -310,7 +304,7 @@ ListDocuments.propTypes = {
 };
 
 function DocumentSnippetTableComponent({
-  documents,
+  filteredDocuments,
   onSelect,
   isLinkedDocument,
 }) {
@@ -325,7 +319,7 @@ function DocumentSnippetTableComponent({
         </tr>
       </thead>
       <tbody>
-        {documents.map((document) => (
+        {filteredDocuments.map((document) => (
           <tr
             key={document.id}
             onClick={() => {
@@ -370,7 +364,7 @@ function DocumentSnippetTableComponent({
 }
 
 DocumentSnippetTableComponent.propTypes = {
-  documents: PropTypes.array.isRequired,
+  filteredDocuments: PropTypes.array.isRequired,
   onSelect: PropTypes.func.isRequired,
   isLinkedDocument: PropTypes.func.isRequired,
 };
