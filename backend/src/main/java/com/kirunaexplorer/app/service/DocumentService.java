@@ -87,5 +87,12 @@ public class DocumentService {
         geoReference.updateFromDTO(documentRequest.geolocation()); // Update geolocation
         geoReferenceRepository.save(geoReference);
     }
+
+    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
+        List<Document> documents = documentRepository.searchDocuments(keyword, type);
+        return documents.stream()
+                .map(Document::toDocumentBriefResponseDTO)
+                .toList();
+    }
 }
 
