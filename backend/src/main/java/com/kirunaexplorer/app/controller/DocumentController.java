@@ -74,7 +74,7 @@ public class DocumentController {
     }
 
     @GetMapping("/search")
-    public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam String keyword, @RequestParam(required = false) String type) {
+    public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam(required = false) String keyword, @RequestParam(required = false) String type) {
         return documentService.searchDocuments(keyword, type);
     }
 }
