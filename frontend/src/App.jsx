@@ -8,7 +8,7 @@ import ListDocuments from "./components/ListDocuments";
 import SplashPage from "./components/SplashPage";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import Map from "./components/Map";
-import "./App.css";
+import "./App.scss";
 import FeedbackContext from "./contexts/FeedbackContext";
 
 function App() {

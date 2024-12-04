@@ -13,7 +13,7 @@ import "leaflet/dist/leaflet.css";
 import { Document } from "../model/Document.mjs";
 import ListDocumentLinks from "./ListDocumentLinks.jsx";
 import dayjs from "dayjs";
-import "../App.css";
+import "../App.scss";
 import API from "../API.mjs";
 import FeedbackContext from "../contexts/FeedbackContext.js";
 
