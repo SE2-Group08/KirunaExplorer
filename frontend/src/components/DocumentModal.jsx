@@ -1,13 +1,6 @@
 import PropTypes from "prop-types";
-import { useEffect, useState, useRef, useContext } from "react";
-import {
-  Button,
-  Modal,
-  Form,
-  OverlayTrigger,
-  Tooltip,
-  Spinner,
-} from "react-bootstrap";
+import {useEffect, useState, useRef, useContext} from "react";
+import { Spinner,Button, Modal, Form, OverlayTrigger, Tooltip, Row, Col, ListGroup } from "react-bootstrap";
 import {
   MapContainer,
   TileLayer,
@@ -162,16 +155,22 @@ export default function DocumentModal(props) {
       newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
     }
 
-    // Scale validation
+    const scalePatterns = [
+      "Text",
+      "Blueprint/Material effects",
+      /^[1-9]:[1-9][0-9]*$/,
+    ];
     if (
-      !document.scale ||
-      (document.scale === "Other" && !document.customScale)
+      typeof document.scale !== "string" ||
+      !document.scale.trim() ||
+      !scalePatterns.some((pattern) =>
+        typeof pattern === "string"
+          ? pattern === document.scale
+          : pattern.test(document.scale)
+      )
     ) {
-      newErrors.scale = "Scale is required.";
-    } else if (document.scale === "Other") {
-      newErrors.scale = "Scale cannot be 'Other'.";
-    } else if (document.scale.length > 64 && document.scale.length < 2) {
-      newErrors.scale = "Scale must be between 2 and 64 characters.";
+      newErrors.scale =
+        "Scale is required and must match one of the defined patterns.";
     } else if (document.scale.includes(":")) {
       const [first, second] = document.scale.split(":").map(Number);
       if (first > second) {
@@ -344,6 +343,10 @@ try {
     setFilesToUpload(newFiles);
   };
 
+  const handleLinksClick = () => {
+    setSliderOpen(!isSliderOpen);
+  };
+
   const handleDeleteExistingFile = (fileId) => {
     console.log('handleDeleteExistingFile called with fileId:', fileId);
     setDeletedExistingFiles((prev) => {
@@ -417,9 +420,15 @@ try {
             handleSubmit={handleSubmit}
             handleChange={handleChange}
             kirunaBorderCoordinates={kirunaBorderCoordinates}
+            updateFilesToUpload={updateFilesToUpload}
+            existingFiles={existingFiles}
+            handleDeleteExistingFile={handleDeleteExistingFile}
           />
         ) : (
-          <ModalBodyComponent document={document} />
+          <ModalBodyComponent  document={document}
+                               existingFiles={existingFiles}
+                               handleDownload={handleDownload}
+                               isEditable={isEditable} />
         )}
       </Modal.Body>
       <Modal.Footer className="mt-3">
@@ -476,104 +485,150 @@ DocumentModal.propTypes = {
   onSnippetClick: PropTypes.func,
 };
 
-function ModalBodyComponent({ document }) {
+function ModalBodyComponent({ document, existingFiles, handleDownload, isEditable }) {
+  const [viewMode, setViewMode] = useState("list");
+
   return (
-    <div className="document-info">
-      <div className="info-section">
-        <div className="info-item">
-          <label>Stakeholders:</label>
-          <span>
-            {document.stakeholders ? document.stakeholders.join(", ") : ""}
-          </span>
-        </div>
+      <div className="modal-body-component">
+        <Row>
+          <Col md={6}>
+            <div className="info-section">
+              <div className="info-item">
+                <label>Stakeholders:</label>
+                <span>
+                {document.stakeholders ? document.stakeholders.join(", ") : ""}
+              </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Scale:</label>
+                <span>{document.scale}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Issuance Date:</label>
+                <span>
+                {dayjs(document.issuanceDate).format(
+                    document.issuanceDate.length === 4
+                        ? "YYYY"
+                        : document.issuanceDate.length === 7
+                            ? "MM/YYYY"
+                            : "DD/MM/YYYY"
+                )}
+              </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Type:</label>
+                <span>{document.type}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Connections:</label>
+                <span>
+                {document.nrConnections === 0 ? (
+                    <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            This document has no links yet. Remember to add them.
+                          </Tooltip>
+                        }
+                    >
+                      <i className="bi bi-exclamation-triangle"></i>
+                    </OverlayTrigger>
+                ) : (
+                    document.nrConnections
+                )}
+              </span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Language:</label>
+                <span>{document.language ? `${document.language}` : "-"}</span>
+              </div>
+              <div className="divider"></div>
+
+              <div className="info-item">
+                <label>Pages:</label>
+                <span>{document.nrPages > 0 ? `${document.nrPages}` : "-"}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="info-item">
+                <label>Location:</label>
+                <span>
+                {document.geolocation.latitude && document.geolocation.longitude ? (
+                    `${document.geolocation.latitude}, ${document.geolocation.longitude}`
+                ) : document.geolocation.municipality ? (
+                    `${document.geolocation.municipality}`
+                ) : (
+                    <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            This document hasn&apos;t been geolocated yet. Remember to
+                            add it.
+                          </Tooltip>
+                        }
+                    >
+                      <i className="bi bi-exclamation-triangle"></i>
+                    </OverlayTrigger>
+                )}
+              </span>
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="description-area">
+              <label>Description:</label>
+              <p>{document.description}</p>
+            </div>
+          </Col>
+        </Row>
         <div className="divider"></div>
-        <div className="info-item">
-          <label>Scale:</label>
-          <span>{document.scale}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Issuance Date:</label>
-          <span>
-            {dayjs(document.issuanceDate).format(
-              document.issuanceDate.length === 4
-                ? "YYYY"
-                : document.issuanceDate.length === 7
-                ? "MM/YYYY"
-                : "DD/MM/YYYY"
-            )}
-          </span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Type:</label>
-          <span>{document.type}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Connections:</label>
-          <span>
-            {document.nrConnections === 0 ? (
-              <OverlayTrigger
-                placement="top"
-                overlay={
-                  <Tooltip>
-                    This document has no links yet. Remember to add them.
-                  </Tooltip>
-                }
-              >
-                <i className="bi bi-exclamation-triangle"></i>
-              </OverlayTrigger>
-            ) : (
-              document.nrConnections
-            )}
-          </span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Language:</label>
-          <span>{document.language ? `${document.language}` : "-"}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Pages:</label>
-          <span>{document.nrPages > 0 ? `${document.nrPages}` : "-"}</span>
-        </div>
-        <div className="divider"></div>
-        <div className="info-item">
-          <label>Location:</label>
-          <span>
-            {document.geolocation.latitude && document.geolocation.longitude ? (
-              `${document.geolocation.latitude}, ${document.geolocation.longitude}`
-            ) : document.geolocation.municipality ? (
-              `${document.geolocation.municipality}`
-            ) : (
-              <OverlayTrigger
-                placement="top"
-                overlay={
-                  <Tooltip>
-                    This document hasn&apos;t been geolocated yet. Remember to
-                    add it.
-                  </Tooltip>
-                }
-              >
-                <i className="bi bi-exclamation-triangle"></i>
-              </OverlayTrigger>
-            )}
-          </span>
-        </div>
+        <Row className="mt-4">
+          <Col>
+            <div className="document-resources-section">
+              <div className="info-item d-flex justify-content-between align-items-center mb-3">
+                <label>Resources: </label>
+                {existingFiles.length>0 ? (<Button
+                    onClick={() => setViewMode((prev) => (prev === "list" ? "grid" : "list"))}
+                    title={`Switch to ${viewMode === "list" ? "grid" : "list"} view`}
+                >
+                  <i className={`bi ${viewMode === "list" ? "bi-grid" : "bi-list-task"}`}></i>
+                </Button>) :
+                  (
+                  <OverlayTrigger
+                      placement="top"
+                      overlay={
+                      <Tooltip>
+                      This document has no resources yet. Modify the document to add them.
+                      </Tooltip>
+                    }
+                  >
+                    <i className="bi bi-exclamation-triangle"></i>
+                  </OverlayTrigger>
+                  )}
+              </div>
+              <DocumentResources
+                  resources={existingFiles}
+                  onDelete={() => {}} // Deleting files is not allowed in view mode
+                  onDownload={handleDownload}
+                  viewMode={viewMode}
+                  isEditable={isEditable}
+              />
+            </div>
+          </Col>
+        </Row>
       </div>
-      <div className="divider-vertical"></div>
-      <div className="description-area">
-        <label>Description:</label>
-        <p>{document.description}</p>
-      </div>
-    </div>
   );
 }
 
 ModalBodyComponent.propTypes = {
   document: PropTypes.object.isRequired,
+  existingFiles: PropTypes.array.isRequired,
+  handleDownload: PropTypes.func.isRequired,
+  isEditable: PropTypes.bool.isRequired,
 };
 
 function DocumentFormComponent({
@@ -581,6 +636,9 @@ function DocumentFormComponent({
   errors,
   handleChange,
   kirunaBorderCoordinates,
+  updateFilesToUpload,
+  existingFiles,
+  handleDeleteExistingFile,
 }) {
   // const [customScaleValue, setCustomScaleValue] = useState(
   //   document.scale !== "Text" && document.scale !== "Blueprint/Material effects"
@@ -769,26 +827,54 @@ function DocumentFormComponent({
 
   return (
     <Form style={{ width: "100%" }} className="mx-auto">
-      {/* TITLE */}
-      <Form.Group className="mb-3" controlId="formDocumentTitle">
-        <Form.Label>Title *</Form.Label>
-        <Form.Control
-          type="text"
-          value={document.title}
-          onChange={(e) => handleChange("title", e.target.value)}
-          placeholder="Example title"
-          isInvalid={!!errors.title}
-          required
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.title}
-        </Form.Control.Feedback>
-      </Form.Group>
+      {/* TITLE AND TYPE */}
+      <Row className="mb-4">
+        <Col md={6}>
+          <Form.Group controlId="formDocumentTitle">
+            <Form.Label>Title *</Form.Label>
+            <div className="form-divider"/>
+            <Form.Control
+                type="text"
+                value={document.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                placeholder="Example title"
+                isInvalid={!!errors.title}
+                required
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.title}
+            </Form.Control.Feedback>
+          </Form.Group>
+        </Col>
+        <Col md={6}>
+          <Form.Group controlId="formDocumentType">
+            <Form.Label>Type *</Form.Label>
+            <div className="form-divider" />
+            <Form.Control
+                as="select"
+                value={document.type}
+                onChange={(e) => handleChange("type", e.target.value)}
+                isInvalid={!!errors.type}
+                required
+            >
+              <option value="">Select type</option>
+              <option value="Design document">Design document</option>
+              <option value="Material effect">Material effect</option>
+              <option value="Technical document">Technical document</option>
+              <option value="Prescriptive document">Prescriptive document</option>
+              <option value="Informative document">Informative document</option>
+            </Form.Control>
+            <Form.Control.Feedback type="invalid">
+              {errors.type}
+            </Form.Control.Feedback>
+          </Form.Group>
+        </Col>
+      </Row>
 
-      <div className="divider" />
-
-      {/* STAKEHOLDERS */}
-      <Form.Group className="mb-3" controlId="formDocumentStakeholders">
+      {/* STAKEHOLDERS AND SCALE */}
+      <Row className="mb-4">
+        <Col md={6}>
+          <Form.Group controlId="formDocumentStakeholders">
         <Form.Label>Stakeholders *</Form.Label>
         {allStakeholders.length ? (
           allStakeholders.map((stakeholderOption) => (

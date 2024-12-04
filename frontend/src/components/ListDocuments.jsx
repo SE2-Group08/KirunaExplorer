@@ -57,6 +57,11 @@ export default function ListDocuments({ shouldRefresh }) {
       .catch((error) => setFeedbackFromError(error));
   }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
 
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    setShouldRefresh(true);
+  };
+
   const handleSelection = async (document) => {
     try {
       const newDoc = await API.getDocumentById(document.id).catch((error) =>

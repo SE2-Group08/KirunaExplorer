@@ -1,5 +1,6 @@
 package com.kirunaexplorer.app.exception;
 
+import com.kirunaexplorer.app.config.FileUploadProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

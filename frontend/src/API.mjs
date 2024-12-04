@@ -407,7 +407,7 @@ const API = {
   /* Link */
   createLink,
   getAllLinksOfDocument,
-  updateLink,
+  //updateLink,
   deleteLink,
   /* Document Type */
   getAllDocumentTypes,
