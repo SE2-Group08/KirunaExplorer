@@ -103,9 +103,9 @@ public class DocumentService {
         // Get existing scales
         List<DocumentScale> existingScales = documentScaleRepository.findAll();
         // Get new scale to add to the db
-        DocumentScale newScale =  DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
+        DocumentScale newScale = DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
         // Add new scale to the db
-        if(newScale != null) {
+        if (newScale != null) {
             documentScaleRepository.save(newScale);
         }
 
@@ -145,14 +145,14 @@ public class DocumentService {
         // Get existing scales
         List<DocumentScale> existingScales = documentScaleRepository.findAll();
         // Get new scale to add to the db
-        DocumentScale newScale =  DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
+        DocumentScale newScale = DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
         // Add new scale to the db
-        if(newScale != null) {
+        if (newScale != null) {
             documentScaleRepository.save(newScale);
         }
 
         // Update document
-        document.updateFromDTO(documentRequest);
+        document.updateFromDocumentRequestDTO(documentRequest);
         documentRepository.save(document);
 
         GeoReference geoReference = geoReferenceRepository.findById(document.getId())
