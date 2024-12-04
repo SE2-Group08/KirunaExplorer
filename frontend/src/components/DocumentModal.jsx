@@ -338,7 +338,7 @@ export default function DocumentModal(props) {
           <Button title="Save" variant="success" onClick={handleSubmit}>
             <i className="bi bi-check-square"></i>
           </Button>
-        ) : props.loggedIn && props.user.role === "Urban Planner" &&(
+        ) : (
           <div className="d-flex align-items-center">
             {/* <Button
               variant="primary"
@@ -384,8 +384,6 @@ DocumentModal.propTypes = {
   onLinkToClick: PropTypes.func,
   onLinksClick: PropTypes.func,
   onSnippetClick: PropTypes.func,
-  loggedIn: PropTypes.bool,
-  user: PropTypes.object
 };
 
 function ModalBodyComponent({ document }) {

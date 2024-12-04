@@ -1,8 +1,6 @@
-vexport class User {
+export class User {
     static Role = Object.freeze({
-        ADMIN: "ADMIN",
-        USER: "USER",
-        GUEST: "GUEST", // Add roles as needed
+        URBAN_PLANNER: "URBAN_PLANNER",
     });
 
     constructor(id, username, role) {

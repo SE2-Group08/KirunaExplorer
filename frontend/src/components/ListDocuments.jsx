@@ -9,7 +9,7 @@ import LinkModal from "./LinkModal";
 import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
 
-export default function ListDocuments({loggedIn, user}) {
+export default function ListDocuments({shouldRefresh}) {
   const [documents, setDocuments] = useState([]);
   const [show, setShow] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -61,7 +61,7 @@ export default function ListDocuments({loggedIn, user}) {
   };
 
   const handleSave = (document) => {
-    API.updateDocument(document.id, document)
+    API.updateDocument(document)
       .then(() => API.getAllDocumentSnippets().then(setDocuments))
       .then(() => setShouldRefresh(false))
       .then(() =>
@@ -187,7 +187,7 @@ export default function ListDocuments({loggedIn, user}) {
                 <i className="bi bi-box-arrow-left"></i>
               </Button>
             </>
-          ) :  loggedIn && user.role === "Urban Planner" && (
+          ) : (
             <Button
               title="Add new document"
               variant="primary"
@@ -274,9 +274,7 @@ export default function ListDocuments({loggedIn, user}) {
 }
 
 ListDocuments.propTypes = {
-  thinCardLayout: PropTypes.bool,
-  loggedIn: PropTypes.bool,
-  user: PropTypes.object
+  shouldRefresh: PropTypes.bool,
 };
 
 function DocumentSnippetTableComponent({

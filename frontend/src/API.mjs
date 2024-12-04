@@ -7,33 +7,41 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  *      Authentication APIs     *
  * **************************** */
 
-// Given a credentials object containing username and password it executes login
 const logIn = async (credentials) => {
-  const response = await fetch(SERVER_URL + "/auth/authenticate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include", // Include cookies if the server uses them
-    body: JSON.stringify(credentials),
-  }).then(handleInvalidResponse);
+  try {
+    const response = await fetch(SERVER_URL + "/auth/authenticate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(credentials),
+    });
 
-  const data = await response.json();
-  const token = data.token;
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.message || "Login failed. Please check your credentials.";
+      throw new Error(errorMessage);
+    }
 
-  if (token) {
-    localStorage.setItem("authToken", token);
+    const data = await response.json();
+
+    const token = data.token;
+    if (token) {
+      localStorage.setItem("authToken", token);
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
   }
-
-  return response;
 };
 
-// Verifies if user is still logged-in. It returns a JSON with the user info
+
+
 const getUserInfo = async () => {
   return !!localStorage.getItem("authToken");
-
 };
-
 
 const logOut = async () => {
   const token = localStorage.getItem("authToken"); // Retrieve the token
@@ -109,7 +117,7 @@ const createLink = async (document, linkedDocument) => {
 
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
-  const links = await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`)
+  const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
     .then(handleInvalidResponse)
     .then((response) => response.json());
   return links;
@@ -117,7 +125,7 @@ const getAllLinksOfDocument = async (documentId) => {
 
 // Update a link for a document
 const updateLink = async (documentId, linkId, updatedLink) => {
-  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`, {
+  return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -128,7 +136,7 @@ const updateLink = async (documentId, linkId, updatedLink) => {
 
 // Delete a link for a document
 const deleteLink = async (documentId, linkId) => {
-  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links/${linkId}`, {
+  return await fetch(`${SERVER_URL}/documents/${documentId}/links/${linkId}`, {
     method: "DELETE",
   }).then(handleInvalidResponse);
 };
@@ -148,12 +156,14 @@ const getAllDocumentSnippets = async (filter) => {
 
 // Create a new document
 const addDocument = async (document) => {
-  console.log("ADD DOCUMENT: ", document);
+  const token = localStorage.getItem("authToken");
   return await fetch(`${SERVER_URL}/documents`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
     },
+    credentials: "include",
     body: JSON.stringify(document),
   }).then(handleInvalidResponse);
 };
@@ -167,15 +177,38 @@ const getDocumentById = async (documentId) => {
   return document;
 };
 
-// Update a document given its id
-const updateDocument = async (documentId, nextDocument) => {
-  return await fetch(`${SERVER_URL}/documents`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(nextDocument),
-  }).then(handleInvalidResponse);
+// Update a document (PUT request without an ID in the URL)
+const updateDocument = async (nextDocument) => {
+  const token = localStorage.getItem("authToken");
+
+  // Ensure token exists before making the request
+  if (!token) {
+    throw new Error("Unauthorized: No auth token found. Please log in.");
+  }
+
+  try {
+    const response = await fetch(`${SERVER_URL}/documents`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      credentials: "include",
+      body: JSON.stringify(nextDocument),
+    });
+
+    // Check if response is OK (status code 200-299)
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update document.");
+    }
+
+    // Return response data
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating document:", error.message);
+    throw error; // Propagate the error to be handled by the caller
+  }
 };
 
 // Delete a document given its id
