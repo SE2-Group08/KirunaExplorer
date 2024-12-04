@@ -37,7 +37,6 @@ export default function DocumentModal(props) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [isEditable, setIsEditable] = useState(false);
   const [isSliderOpen, setSliderOpen] = useState(false);
-  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
 
   const [document, setDocument] = useState({
     title: "",
@@ -289,9 +288,9 @@ export default function DocumentModal(props) {
     }));
   };
 
-  // const handleLinksClick = () => {
-  //   setSliderOpen(!isSliderOpen);
-  // };
+  const handleLinksClick = () => {
+    setSliderOpen(!isSliderOpen);
+  };
 
   const handleCloseSlider = () => {
     setSliderOpen(false);
