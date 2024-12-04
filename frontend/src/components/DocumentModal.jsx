@@ -37,7 +37,6 @@ export default function DocumentModal(props) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [isEditable, setIsEditable] = useState(false);
   const [isSliderOpen, setSliderOpen] = useState(false);
-  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
 
   const [document, setDocument] = useState({
     title: "",
@@ -150,7 +149,10 @@ export default function DocumentModal(props) {
     //       "The first number of the scale must be smaller than the second one.";
     //   }
     // }
-    if (!document.scale || (document.scale === "Other" && !document.customScale)) {
+    if (
+      !document.scale ||
+      (document.scale === "Other" && !document.customScale)
+    ) {
       newErrors.scale = "Scale is required.";
     } else if (document.scale === "Other") {
       newErrors.scale = "Scale cannot be 'Other'.";
@@ -295,9 +297,9 @@ export default function DocumentModal(props) {
     }));
   };
 
-  // const handleLinksClick = () => {
-  //   setSliderOpen(!isSliderOpen);
-  // };
+  const handleLinksClick = () => {
+    setSliderOpen(!isSliderOpen);
+  };
 
   const handleCloseSlider = () => {
     setSliderOpen(false);
@@ -351,7 +353,7 @@ export default function DocumentModal(props) {
               className="me-2"
             >
               Links
-            </Button> 
+            </Button>
             <Button
               variant="primary"
               onClick={handleLinkToClick}
@@ -520,7 +522,7 @@ function DocumentFormComponent({
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
   const [allScales, setAllScales] = useState([]);
-  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
+  const { setFeedbackFromError } = useContext(FeedbackContext);
 
   const dayRef = useRef(null);
   const monthRef = useRef(null);

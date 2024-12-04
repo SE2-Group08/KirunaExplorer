@@ -27,7 +27,9 @@ export default function ListDocuments({ shouldRefresh }) {
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
   const [links, setLinks] = useState([]);
-  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState([]);
+  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
+    []
+  );
 
   useEffect(() => {
     if (linking) {
@@ -70,6 +72,14 @@ export default function ListDocuments({ shouldRefresh }) {
     } catch (error) {
       console.error("Error fetching document details:", error);
     }
+  };
+
+  DocumentSnippetCardComponent.propTypes = {
+    document: PropTypes.object.isRequired,
+    isLinkedDocument: PropTypes.func.isRequired,
+    onSelect: PropTypes.func.isRequired,
+    allLinksOfSelectedDocument: PropTypes.array.isRequired,
+    linking: PropTypes.bool.isRequired,
   };
 
   const handleSave = async (document) => {
@@ -128,8 +138,8 @@ export default function ListDocuments({ shouldRefresh }) {
   };
 
   const handleCompleteLink = async () => {
-      setLinking(false);
-      setSelectedLinkDocuments([]);
+    setLinking(false);
+    setSelectedLinkDocuments([]);
   };
 
   const isLinkedDocument = (document) => {
@@ -140,11 +150,6 @@ export default function ListDocuments({ shouldRefresh }) {
     );
   };
 
-  const handleExitLinkMode = () => {
-    setLinking(false);
-    setSelectedLinkDocuments([]);
-  };
-
   return (
     <Container fluid className="scrollable-list-documents">
       <Row>
@@ -152,27 +157,37 @@ export default function ListDocuments({ shouldRefresh }) {
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (
-          <p style={{
-            fontSize: "1.2rem",
-            marginBottom: "0.5rem",
-            marginTop: "0.5rem",
-            fontWeight: "500",
-          }}>Choose the document you want to link</p>
-        ) : (
-          <>
-            <p style={{
+          <p
+            style={{
               fontSize: "1.2rem",
               marginBottom: "0.5rem",
               marginTop: "0.5rem",
               fontWeight: "500",
-            }}>
+            }}
+          >
+            Choose the document you want to link
+          </p>
+        ) : (
+          <>
+            <p
+              style={{
+                fontSize: "1.2rem",
+                marginBottom: "0.5rem",
+                marginTop: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Here you can find all the documents about Kiruna&apos;s relocation
               process.
             </p>
-            <p style={{
-              fontSize: "1.2rem",
-              fontWeight: "500",
-            }}>Click on a document to see more details.</p>
+            <p
+              style={{
+                fontSize: "1.2rem",
+                fontWeight: "500",
+              }}
+            >
+              Click on a document to see more details.
+            </p>
           </>
         )}
       </Row>
@@ -289,7 +304,7 @@ function DocumentSnippetTableComponent({
   isLinkedDocument,
 }) {
   return (
-    <Table hover responsive style={{backgroundColor:"#E6E8EA"}}>
+    <Table hover responsive style={{ backgroundColor: "#E6E8EA" }}>
       <thead>
         <tr>
           <th>Title</th>
@@ -356,9 +371,9 @@ const DocumentSnippetCardComponent = ({
   allLinksOfSelectedDocument,
   linking,
 }) => {
-  const documentLinks = allLinksOfSelectedDocument.find(
-    (doc) => doc.document.id === document.id
-  )?.links || [];
+  const documentLinks =
+    allLinksOfSelectedDocument.find((doc) => doc.document.id === document.id)
+      ?.links || [];
 
   const linkInitials = documentLinks.map((link) => {
     switch (link.linkType) {
