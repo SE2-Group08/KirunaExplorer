@@ -45,7 +45,6 @@ export default function ListDocuments({ shouldRefresh }) {
     useContext(FeedbackContext);
 
   useEffect(() => {
-    console.log("ListDocuments: useEffect");
     window.scrollTo(0, 0);
     //if (shouldRefresh) {
     API.getDocumentsByPageNumber(currentPage)
@@ -86,6 +85,14 @@ export default function ListDocuments({ shouldRefresh }) {
     }
   };
 
+  DocumentSnippetCardComponent.propTypes = {
+    document: PropTypes.object.isRequired,
+    isLinkedDocument: PropTypes.func.isRequired,
+    onSelect: PropTypes.func.isRequired,
+    allLinksOfSelectedDocument: PropTypes.array.isRequired,
+    linking: PropTypes.bool.isRequired,
+  };
+
   const handleSave = async (document) => {
     try {
       await API.updateDocument(document.id, document);
@@ -116,21 +123,6 @@ export default function ListDocuments({ shouldRefresh }) {
     }
   };
 
-  // const handleDelete = (documentId) => {
-  //   API.deleteDocument(documentId)
-  //     .then(() => API.getAllDocumentSnippets().then(setDocuments))
-  //     .then(() => setShouldRefresh(false))
-  //     .then(() =>
-  //       setFeedback({
-  //         type: "success",
-  //         message: "Document deleted successfully",
-  //       })
-  //     )
-  //     .catch((error) => setFeedbackFromError(error));
-  //   setShow(false);
-  //   setShouldRefresh(true);
-  // };
-
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
     setLinking(true);
@@ -154,11 +146,6 @@ export default function ListDocuments({ shouldRefresh }) {
     );
   };
 
-  const handleExitLinkMode = () => {
-    setLinking(false);
-    setSelectedLinkDocuments([]);
-  };
-
   return (
     <Container fluid className="scrollable-list-documents">
       <Row>
@@ -166,27 +153,37 @@ export default function ListDocuments({ shouldRefresh }) {
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (
-          <p style={{
-            fontSize: "1.2rem",
-            marginBottom: "0.5rem",
-            marginTop: "0.5rem",
-            fontWeight: "500",
-          }}>Choose the document you want to link</p>
-        ) : (
-          <>
-            <p style={{
+          <p
+            style={{
               fontSize: "1.2rem",
               marginBottom: "0.5rem",
               marginTop: "0.5rem",
               fontWeight: "500",
-            }}>
+            }}
+          >
+            Choose the document you want to link
+          </p>
+        ) : (
+          <>
+            <p
+              style={{
+                fontSize: "1.2rem",
+                marginBottom: "0.5rem",
+                marginTop: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Here you can find all the documents about Kiruna&apos;s relocation
               process.
             </p>
-            <p style={{
-              fontSize: "1.2rem",
-              fontWeight: "500",
-            }}>Click on a document to see more details.</p>
+            <p
+              style={{
+                fontSize: "1.2rem",
+                fontWeight: "500",
+              }}
+            >
+              Click on a document to see more details.
+            </p>
           </>
         )}
       </Row>
@@ -385,9 +382,9 @@ const DocumentSnippetCardComponent = ({
   allLinksOfSelectedDocument,
   linking,
 }) => {
-  const documentLinks = allLinksOfSelectedDocument.find(
-    (doc) => doc.document.id === document.id
-  )?.links || [];
+  const documentLinks =
+    allLinksOfSelectedDocument.find((doc) => doc.document.id === document.id)
+      ?.links || [];
 
   const linkInitials = documentLinks.map((link) => {
     switch (link.linkType) {
@@ -431,17 +428,25 @@ const DocumentSnippetCardComponent = ({
         }}
       >
         <Card.Body>
-          <div className="d-flex align-items-center">
-            <img
-              src={getIconUrlForDocument(document.type, document.stakeholders)}
-              alt={`${document.type} icon`}
-              style={{ width: "70px", height: "70px", marginRight: "10px" }}
-            />
-            <Card.Title className="document-card-title"
-              style={{ fontSize: "17px" }}>
-              {document.title}
-            </Card.Title>
-          </div>
+          {linking && linkInitials.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "8px",
+                right: "8px",
+                backgroundColor: "#e9ecef",
+                borderRadius: "4px",
+                padding: "2px 6px",
+                fontSize: "12px",
+                fontWeight: "bold",
+              }}
+            >
+              {linkInitials.join(", ")}
+            </div>
+          )}
+          <Card.Title className="document-card-title">
+            {document.title}
+          </Card.Title>
           <div className="divider" />
           <Card.Text className="document-card-text">
             <strong>Scale:</strong> {document.scale}

@@ -141,16 +141,10 @@ export default function DocumentModal(props) {
     }
 
     // Scale validation
-    // if (typeof document.scale !== "string" || !document.scale.trim()) {
-    //   newErrors.scale = "Scale must be present.";
-    // } else if (document.scale.includes(":")) {
-    //   const [first, second] = document.scale.split(":").map(Number);
-    //   if (first > second) {
-    //     newErrors.scale =
-    //       "The first number of the scale must be smaller than the second one.";
-    //   }
-    // }
-    if (!document.scale || (document.scale === "Other" && !document.customScale)) {
+    if (
+      !document.scale ||
+      (document.scale === "Other" && !document.customScale)
+    ) {
       newErrors.scale = "Scale is required.";
     } else if (document.scale === "Other") {
       newErrors.scale = "Scale cannot be 'Other'.";
@@ -351,7 +345,7 @@ export default function DocumentModal(props) {
               className="me-2"
             >
               Links
-            </Button> 
+            </Button>
             <Button
               variant="primary"
               onClick={handleLinkToClick}
@@ -520,7 +514,7 @@ function DocumentFormComponent({
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
   const [allScales, setAllScales] = useState([]);
-  const { setFeedback, setFeedbackFromError } = useContext(FeedbackContext);
+  const { setFeedbackFromError } = useContext(FeedbackContext);
 
   const dayRef = useRef(null);
   const monthRef = useRef(null);

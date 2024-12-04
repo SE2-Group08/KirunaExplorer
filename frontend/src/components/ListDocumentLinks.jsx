@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
 import { Button, Card, Row, Col, ListGroup } from "react-bootstrap";
 import API from "../API.mjs";
 import "../App.css";
-// import LinkModal from "./LinkModal.jsx";
+import FeedbackContext  from "../contexts/FeedbackContext.js";
 
 const ListDocumentLinks = ({
   documentId,
@@ -17,7 +17,7 @@ const ListDocumentLinks = ({
   // const [showLinkModal, setShowLinkModal] = useState(false);
   // const [selectedSnippet, setSelectedSnippet] = useState({});
   // const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
-  const [links, setLinks] = useState([]);
+  // const [links, setLinks] = useState([]);
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {

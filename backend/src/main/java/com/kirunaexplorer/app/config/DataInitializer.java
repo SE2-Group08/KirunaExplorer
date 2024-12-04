@@ -264,7 +264,6 @@ public class DataInitializer implements CommandLineRunner {
             geometryFactory.createPoint(new Coordinate(20.2500, 67.9000)) // Specific location
         );
         geoReferenceRepository.save(geoRef);
-
     }
 
     private void initializeStakeholders() {

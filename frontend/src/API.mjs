@@ -16,26 +16,13 @@ const createLink = async (documentId, link) => {
     documentId: link.documentId,
   };
 
-  // ("REQUEST BODY: ", requestBody);
-  requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  try {
-    const response = await fetch(`${SERVER_URL}/documents/${document.id}/links`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody)
-    }).then(handleInvalidResponse);
-
-    if (response.ok) {
-      const responseData = response.status !== 201 ? await response.json() : null;
-      console.log("Link creato con successo:", responseData);
-    } else {
-      console.error("Errore nella creazione del link:", response.status, response.statusText);
-    }
-  } catch (error) {
-    console.error("Errore nella richiesta:", error);
-  }
+  return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  }).then(handleInvalidResponse);
 };
 
 // Retrieve all links of a document
@@ -43,7 +30,6 @@ const getAllLinksOfDocument = async (documentId) => {
   const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
     .then(handleInvalidResponse)
     .then((response) => response.json());
-  console.log("API GET ALL LINKS: ", links);
   return links;
 };
 
@@ -195,7 +181,6 @@ const getAllScales = async () => {
       return [...textScales, ...numericScales];
     })
     .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));
-  console.log(scales);
   return scales;
 };
 
@@ -285,12 +270,12 @@ const API = {
   getAllLinksOfDocument,
   // updateLink,
   deleteLink,
-  getDocumentsByPageNumber,
   /* Document Type */
   getAllDocumentTypes,
   addDocumentType,
   /* Scale */
   getAllScales,
   addScale,
+  getDocumentsByPageNumber,
 };
 export default API;
