@@ -57,11 +57,6 @@ export default function ListDocuments({ shouldRefresh }) {
       .catch((error) => setFeedbackFromError(error));
   }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-    setShouldRefresh(true);
-  };
-
   const handleSelection = async (document) => {
     try {
       const newDoc = await API.getDocumentById(document.id).catch((error) =>
@@ -89,40 +84,64 @@ export default function ListDocuments({ shouldRefresh }) {
     }
   };
 
-  const handleSave = async (document) => {
-    try {
-      await API.updateDocument(document.id, document)
-        .then(() => {
-          setFeedback({
-            type: "success",
-            message: "Document added successfully",
-          });
-          setShouldRefresh(true);
+  const handleSave = (document) => {
+    API.updateDocument(document.id, document)
+      .then(() => API.getAllDocumentSnippets().then(setDocuments))
+      .then(() => setShouldRefresh(false))
+      .then(() =>
+        setFeedback({
+          type: "success",
+          message: "Document updated successfully",
         })
-        .catch((error) => setFeedbackFromError(error));
-    } catch (error) {
-      setFeedbackFromError(error);
-    } finally {
-      setShow(false);
-    }
+      )
+      .catch((error) =>
+        setFeedbackFromError(error)
+      );
+    setShow(false);
+    setShouldRefresh(true);
   };
 
   const handleAdd = async (document) => {
     try {
-      await API.addDocument(document)
-        .then(() => {
-          setFeedback({
-            type: "success",
-            message: "Document added successfully",
-          });
-          setShouldRefresh(true);
-        })
-        .catch((error) => setFeedbackFromError(error));
-    } catch (error) {
-      setFeedbackFromError(error);
-    } finally {
+      // Aggiungi il documento e ottieni la risposta
+      const newDocResponse = await API.addDocument(document);
+
+      /* Estrai l'ID dal documento creato
+      const newDocId = newDocResponse.id || newDocResponse.data?.id;*/
+
+      // Aggiorna la lista dei documenti
+      const updatedDocuments = await API.getAllDocumentSnippets();
+      setDocuments(updatedDocuments);
+
+      // Aggiorna lo stato e fornisci feedback
+      setShouldRefresh(false);
+      setFeedback({ type: "success", message: "Document added successfully" });
       setShow(false);
+
+
+      return newDocResponse;
+    } catch (error) {
+      // Gestione errori
+      setFeedbackFromError(error);
+      throw error; // Propaga l'errore se necessario
     }
+  };
+
+  const handleDelete = (documentId) => {
+    API.deleteDocument(documentId)
+      .then(() => API.getAllDocumentSnippets().then(setDocuments))
+      .then(() => setShouldRefresh(false))
+      .then(() =>
+        setFeedback({
+          type: "success",
+          message: "Document deleted successfully",
+        })
+      )
+      .catch((error) =>
+        setFeedbackFromError(error)
+      );
+    setShow(false);
+    setShouldRefresh(true);
   };
 
   const handleLinkToClick = () => {
@@ -136,8 +155,19 @@ export default function ListDocuments({ shouldRefresh }) {
   };
 
   const handleCompleteLink = async () => {
-    setLinking(false);
-    setSelectedLinkDocuments([]);
+    try {
+      await Promise.all(
+        selectedLinkDocuments.map((linkedDoc) =>
+          API.createLink(selectedDocumentToLink, linkedDoc)
+        )
+      );
+      setFeedback({ type: "success", message: "Document linked successfully" });
+      setShouldRefresh(true);
+      setLinking(false);
+      setSelectedLinkDocuments([]);
+    } catch (error) {
+      setFeedbackFromError(error);
+    }
   };
 
   const isLinkedDocument = (document) => {
@@ -148,22 +178,49 @@ export default function ListDocuments({ shouldRefresh }) {
     );
   };
 
+  const handleExitLinkMode = () => {
+    setLinking(false);
+    setSelectedLinkDocuments([]);
+  };
+
   return (
     <Container fluid className="scrollable-list-documents">
       <Row>
         <h1>{linking ? "Link a Document" : "Documents"}</h1>
-        <LegendModal show={showLegend} onHide={() => setShowLegend(false)} />
+      </Row>
+      <Row className="d-flex justify-content-between align-items-center mb-3">
+        {linking ? (
+          <p>Choose the document you want to link</p>
+        ) : (
+          <>
+            <p>
+              Here you can find all the documents about Kiruna&apos;s relocation
+              process.
+            </p>
+            <p>Click on a document to see more details.</p>
+          </>
+        )}
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         <Col xs="auto">
           {linking ? (
             <>
               <Button
-                title="Done"
-                variant="primary"
+                title="Confirm links"
+                variant="success"
                 onClick={handleCompleteLink}
               >
                 <i className="bi bi-check-square"></i>
+              </Button>
+              <Button
+                title="Exit link mode"
+                variant="secondary"
+                onClick={() => {
+                  handleExitLinkMode();
+                }}
+                className="ms-2"
+              >
+                <i className="bi bi-box-arrow-left"></i>
               </Button>
             </>
           ) : (

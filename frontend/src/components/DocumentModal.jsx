@@ -27,8 +27,8 @@ import { getIconUrlForDocument } from "../utils/iconMapping";
 
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
+import DocumentResources from "./DocumentResources.jsx";
 dayjs.extend(customParseFormat);
-// import { useMap } from "react-leaflet";
 
 export default function DocumentModal(props) {
   // Initialize Leaflet marker icon defaults
@@ -45,7 +45,6 @@ export default function DocumentModal(props) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [isEditable, setIsEditable] = useState(false);
   const [isSliderOpen, setSliderOpen] = useState(false);
-
   const [document, setDocument] = useState({
     title: "",
     stakeholders: [],
@@ -66,6 +65,22 @@ export default function DocumentModal(props) {
     description: "",
   });
   const [errors, setErrors] = useState({});
+  const [filesToUpload, setFilesToUpload] = useState([]);
+  const [existingFiles, setExistingFiles] = useState([]);
+  const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
+
+  useEffect(() => {
+    if (props.document && props.document.id) {
+      API.getDocumentFiles(props.document.id)
+          .then((files) => {
+            console.log('Fetched existing files:', files);
+            setExistingFiles(files);
+            setDeletedExistingFiles([])
+          })
+          .catch((error) => console.error('Error loading files:', error));
+    }
+  }, [props.document]);
+
 
   // Update the state when the document prop changes
   useEffect(() => {
@@ -106,7 +121,7 @@ export default function DocumentModal(props) {
     setErrors({});
   }, [props.document]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {}; // Reset errors
 
@@ -248,41 +263,108 @@ export default function DocumentModal(props) {
       setErrors(newErrors);
       return;
     }
-
+try {
     if (props.document.id === undefined) {
-      props.handleAdd(
-        new Document(
-          null,
-          document.title,
-          document.stakeholders,
-          document.scale,
-          combinedIssuanceDate,
-          document.type,
-          document.nrConnections,
-          document.language,
-          document.nrPages,
-          sanitizedGeolocation,
-          document.description
-        )
+      const newDocId = await props.handleAdd(
+          new Document(
+              null,
+              document.title,
+              document.stakeholders,
+              document.scale,
+              combinedIssuanceDate,
+              document.type,
+              document.nrConnections,
+              document.language,
+              document.nrPages,
+              sanitizedGeolocation,
+              document.description
+          )
       );
+
+      console.log(newDocId);
+
+      if (filesToUpload.length > 0) {
+        try {
+          await API.uploadFiles(newDocId, filesToUpload);
+        } catch (error) {
+          console.error("Error uploading files:", error);
+          alert("An error occurred while uploading files. Please try again.");
+        }
+      }
+
     } else {
-      props.handleSave(
-        new Document(
-          props.document.id,
-          document.title,
-          document.stakeholders,
-          document.scale,
-          combinedIssuanceDate,
-          document.type,
-          document.nrConnections,
-          document.language,
-          document.nrPages,
-          sanitizedGeolocation,
-          document.description
-        )
+      await props.handleSave(
+          new Document(
+              props.document.id,
+              document.title,
+              document.stakeholders,
+              document.scale,
+              combinedIssuanceDate,
+              document.type,
+              document.nrConnections,
+              document.language,
+              document.nrPages,
+              sanitizedGeolocation,
+              document.description
+          )
+      );
+
+      if (filesToUpload.length > 0) {
+        try {
+          await API.uploadFiles(props.document.id, filesToUpload);
+        } catch (error) {
+          console.error("Error uploading files:", error);
+          alert("An error occurred while uploading files. Please try again.");
+        }
+      }
+
+        if (deletedExistingFiles.length > 0) {
+          try {
+            await Promise.all(
+                deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+            );
+          } catch (error) {
+            console.error("Error deleting files:", error);
+            alert(
+                "An error occurred while deleting files. Some files may not have been removed."
+            );
+          }
+        }
+      }
+      setFilesToUpload([]);
+      props.onHide();
+    } catch (error) {
+      alert(
+          "An error occurred while saving the document. Please check your input and try again."
       );
     }
-    props.onHide();
+  };
+
+  const updateFilesToUpload = (newFiles) => {
+    setFilesToUpload(newFiles);
+  };
+
+  const handleDeleteExistingFile = (fileId) => {
+    console.log('handleDeleteExistingFile called with fileId:', fileId);
+    setDeletedExistingFiles((prev) => {
+      const updatedList = [...prev, fileId];
+      console.log('Updated deletedExistingFiles:', updatedList);
+      return updatedList;
+    });
+    setExistingFiles((prevFiles) => {
+      const updatedFiles = prevFiles.filter((file) => file.id !== fileId);
+      console.log('Updated existingFiles:', updatedFiles);
+      return updatedFiles;
+    });
+  };
+
+
+  const handleDownload = async (id, name, extension) => {
+    try {
+      await API.downloadFile(id, name, extension);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
   };
 
   const handleLinkToClick = () => {
@@ -294,10 +376,6 @@ export default function DocumentModal(props) {
       ...prevDocument,
       [field]: value,
     }));
-  };
-
-  const handleLinksClick = () => {
-    setSliderOpen(!isSliderOpen);
   };
 
   const handleCloseSlider = () => {
@@ -550,6 +628,47 @@ function DocumentFormComponent({
       });
   }, []);
 
+  const [files, setFiles] = useState([]);
+  const [filePreviews, setFilePreviews] = useState({});
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const newFiles = Array.from(e.target.files);
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+    const newFilePreviews = {};
+    const oversizedFiles = [];
+
+    newFiles.forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(file.name);
+      } else {
+        const url = URL.createObjectURL(file);
+        newFilePreviews[file.name] = url;
+      }
+    });
+
+    if (oversizedFiles.length > 0) {
+      alert(
+          `The following files exceed the maximum size of 25 MB and will not be uploaded:\n${oversizedFiles.join(
+              ", "
+          )}`
+      );
+    }
+
+    const validFiles = newFiles.filter((file) => file.size <= MAX_FILE_SIZE);
+
+    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+    setFilePreviews((prevPreviews) => ({ ...prevPreviews, ...newFilePreviews }));
+    updateFilesToUpload([...files, ...validFiles]);
+  };
+
+
+  useEffect(() => {
+    return () => {
+      Object.values(filePreviews).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [filePreviews]);
+
   const handleDayChange = (e) => {
     const value = e.target.value;
     if (value.length <= 2) {
@@ -575,6 +694,25 @@ function DocumentFormComponent({
     if (value.length <= 4) {
       handleChange("year", value);
     }
+  };
+  const handleDeleteNewFile = (index) => {
+    setFiles((prevFiles) => {
+      const newFiles = [...prevFiles];
+      const [removedFile] = newFiles.splice(index, 1);
+      // Revoke object URL to avoid memory leaks
+      URL.revokeObjectURL(filePreviews[removedFile.name]);
+      return newFiles;
+    });
+    setFilePreviews((prevPreviews) => {
+      const newPreviews = { ...prevPreviews };
+      delete newPreviews[files[index].name];
+      return newPreviews;
+    });
+    updateFilesToUpload((prevFilesToUpload) => {
+      const newFilesToUpload = [...prevFilesToUpload];
+      newFilesToUpload.splice(index, 1);
+      return newFilesToUpload;
+    });
   };
 
   useEffect(() => {
@@ -1043,4 +1181,7 @@ DocumentFormComponent.propTypes = {
   errors: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   kirunaBorderCoordinates: PropTypes.array.isRequired,
+  updateFilesToUpload: PropTypes.func.isRequired,
+  existingFiles: PropTypes.array.isRequired,
+  handleDeleteExistingFile: PropTypes.func.isRequired,
 };

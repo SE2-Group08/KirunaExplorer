@@ -56,19 +56,50 @@
   
   
   .card-text strong {
-    color: #2f354b; 
-    align-items: justify;
+    color: #2f354b;
   }
   
   .card-text p {
     color: #51576d; 
   }
-  
-  
-  @media (max-width: 768px) {
+
+.view-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.view-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.view-toggle-btn.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.view-toggle-btn:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+.resources-section {
+    margin-top: 15px;
+}
+
+button[title] {
+    cursor: pointer;
+}
+
+
+@media (max-width: 768px) {
     .document-side-panel {
       width: 100%;
       height: calc(100% - 20px);
     }
   }
-  

@@ -724,6 +724,149 @@
         }
       }
     },
+    "api/v1/files/{fileId}": {
+      "parameters": [
+        {
+          "name": "fileId",
+          "schema": {
+            "type": "integer"
+          },
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Download the {fileId} file",
+        "tags": [
+          "file"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {}
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete the {fileId} file",
+        "tags": [
+          "file"
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/files": {
+      "parameters": [
+        {
+          "name": "id",
+          "schema": {
+            "type": "integer"
+          },
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get description of all files of a document",
+        "tags": [
+          "file"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FileSnippet"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "summary": "Upload one or more files for the {id} document",
+        "tags": [
+          "file"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/File"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/documents/{id}/links/{linkId}": {
       "delete": {
         "summary": "Delete the {linkId} link for a document",

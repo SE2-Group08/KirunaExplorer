@@ -55,7 +55,7 @@ public class Document {
     @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private GeoReference geoReference; // One-to-one relationship
 
-    @OneToMany(mappedBy = "id")
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DocumentFile> documentFiles;
 
 
@@ -145,6 +145,14 @@ public class Document {
         this.language = dto.language();
         this.pages = dto.nrPages();
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void addFile(DocumentFile file) {
+        this.documentFiles.add(file);
+    }
+
+    public void removeFile(DocumentFile file) {
+        this.documentFiles.remove(file);
     }
 
     /**
