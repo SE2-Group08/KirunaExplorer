@@ -72,6 +72,11 @@ public class DocumentController {
         documentService.updateDocument(document);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/search")
+    public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam String keyword, @RequestParam(required = false) String type) {
+        return documentService.searchDocuments(keyword, type);
+    }
 }
 
 
