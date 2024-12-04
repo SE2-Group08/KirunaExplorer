@@ -90,9 +90,12 @@ public class DocumentService {
 
     public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
         List<Document> documents = documentRepository.searchDocuments(keyword, type);
+        if (documents == null) {
+            return List.of();
+        }
         return documents.stream()
-                .map(Document::toDocumentBriefResponseDTO)
-                .toList();
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
     }
 }
 
