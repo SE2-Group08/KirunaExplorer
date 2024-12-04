@@ -289,9 +289,9 @@ export default function DocumentModal(props) {
     }));
   };
 
-  // const handleLinksClick = () => {
-  //   setSliderOpen(!isSliderOpen);
-  // };
+  const handleLinksClick = () => {
+    setSliderOpen(!isSliderOpen);
+  };
 
   const handleCloseSlider = () => {
     setSliderOpen(false);
