@@ -310,7 +310,7 @@ function DocumentSnippetTableComponent({
     <Table hover responsive style={{ backgroundColor: "#E6E8EA" }}>
       <thead>
         <tr>
-          <th>Icon</th>
+          <th>Type</th>
           <th>Title</th>
           <th>Scale</th>
           <th>Issuance Date</th>
@@ -465,6 +465,17 @@ const DocumentSnippetCardComponent = ({
           {/* <Card.Text className="document-card-text">
             <strong>Type:</strong> {document.type}
           </Card.Text> */}
+          <img
+            src={getIconUrlForDocument(document.type, document.stakeholders)}
+            alt={`${document.type} icon`}
+            style={{
+              width: "40px",
+              height: "40px",
+              position: "absolute",
+              bottom: "3px",
+              right: "3px",
+            }}
+          />
         </Card.Body>
       </Card>
     </Col>
