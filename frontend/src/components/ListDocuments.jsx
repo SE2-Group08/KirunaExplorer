@@ -247,7 +247,7 @@ export default function ListDocuments({ shouldRefresh }) {
         ) : compactView ? (
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
-              documents={filteredDocuments}
+              filteredDocuments={filteredDocuments}
               onSelect={handleSelection}
               isLinkedDocument={isLinkedDocument}
             />
