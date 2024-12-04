@@ -89,42 +89,6 @@ export default function ListDocuments({ shouldRefresh }) {
     }
   };
 
-  const handleSave = async (document) => {
-    try {
-      await API.updateDocument(document.id, document)
-        .then(() => {
-          setFeedback({
-            type: "success",
-            message: "Document added successfully",
-          });
-          setShouldRefresh(true);
-        })
-        .catch((error) => setFeedbackFromError(error));
-    } catch (error) {
-      setFeedbackFromError(error);
-    } finally {
-      setShow(false);
-    }
-  };
-
-  const handleAdd = async (document) => {
-    try {
-      await API.addDocument(document)
-        .then(() => {
-          setFeedback({
-            type: "success",
-            message: "Document added successfully",
-          });
-          setShouldRefresh(true);
-        })
-        .catch((error) => setFeedbackFromError(error));
-    } catch (error) {
-      setFeedbackFromError(error);
-    } finally {
-      setShow(false);
-    }
-  };
-
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
     setLinking(true);
@@ -214,6 +178,7 @@ export default function ListDocuments({ shouldRefresh }) {
               documents={documents}
               onSelect={handleSelection}
               isLinkedDocument={isLinkedDocument}
+
             />
           </Row>
         ) : (
@@ -247,10 +212,9 @@ export default function ListDocuments({ shouldRefresh }) {
               setShow(false);
             }}
             document={selectedDocument}
-            handleSave={handleSave}
             // handleDelete={handleDelete}
-            handleAdd={handleAdd}
             onSnippetClick={handleSelection}
+            setShow={setShow}
           />
         )}
         {selectedDocumentToLink && showLinkModal && (
