@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Card, Row, Col } from 'react-bootstrap';
 import API from '../API.mjs';
 import '../App.css';
+import { useContext } from 'react';
+import FeedbackContext from '../contexts/FeedbackContext';
 
 const ListDocumentLinks = ({ documentId, isOpen, onClose, onSnippetClick }) => {
   const [snippets, setSnippets] = useState([]);
+  const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {
     if (isOpen) {
@@ -13,7 +16,7 @@ const ListDocumentLinks = ({ documentId, isOpen, onClose, onSnippetClick }) => {
           setSnippets(response);
         })
         .catch((error) => {
-          console.error(error);
+          setFeedbackFromError(error)
         });
     }
   }, [isOpen]);

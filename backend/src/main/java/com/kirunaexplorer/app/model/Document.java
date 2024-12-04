@@ -58,8 +58,9 @@ public class Document {
     private Set<DocumentFile> documentFiles;
 
 
-    /***
+    /**
      * Converts the Document object to a DocumentResponseDTO object.
+     *
      * @return DocumentResponseDTO object
      */
     public DocumentResponseDTO toResponseDTO(Integer nrConnections) {
@@ -78,8 +79,9 @@ public class Document {
         );
     }
 
-    /***
+    /**
      * Converts the Document object to a DocumentBriefResponseDTO object.
+     *
      * @return DocumentBriefResponseDTO object
      */
     public DocumentBriefResponseDTO toDocumentBriefResponseDTO() {
@@ -107,9 +109,10 @@ public class Document {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /***
+    /**
      * Parse the date to a string given the precision
-     * @param issuanceDate date
+     *
+     * @param issuanceDate  date
      * @param datePrecision precision
      * @return String
      */

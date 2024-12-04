@@ -1,9 +1,10 @@
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
+import {LoginButton, LogoutButton} from "./LoginPage.jsx";
 import PropTypes from "prop-types";
 
-function Header({loggedIn, user}) {
+function Header({loggedIn, logout}) {
   return (
     <Navbar style={{ backgroundColor: "#e7ebda" }} fixed="top">
       <Container fluid className="px-3">
@@ -15,7 +16,11 @@ function Header({loggedIn, user}) {
             <Nav.Link className='align-middle' href="/map">Map</Nav.Link>
           </Nav>
           <Nav className="ms-auto">
-            <Nav.Link className='align-middle' href="/login">Login</Nav.Link>
+            {loggedIn ? (
+                <LogoutButton logout={logout} />
+            ) : (
+                <LoginButton  />
+            )}
           </Nav>
         </Navbar.Collapse>
       </Container>
@@ -24,7 +29,8 @@ function Header({loggedIn, user}) {
 }
 
 Header.propTypes = {
-  loggedIn: PropTypes.bool,
+  loggedIn: PropTypes.bool.isRequired,
+  logout: PropTypes.func.isRequired,
   user: PropTypes.object
 }
 

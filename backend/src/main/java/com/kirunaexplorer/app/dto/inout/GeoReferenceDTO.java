@@ -23,8 +23,9 @@ public record GeoReferenceDTO(
     @Size(min = 2, max = 64)
     String municipality  // To match the string type with pattern and length constraints
 ) {
-    /***
+    /**
      * Converts the GeoReferenceDTO to a GeoReference object.
+     *
      * @param document Document reference
      * @return GeoReference object
      */

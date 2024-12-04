@@ -1,5 +1,11 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polygon, useMap } from "react-leaflet";
+import { useEffect, useState, useRef, useContext } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polygon,
+  useMap,
+} from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import "leaflet/dist/leaflet.css";
 import "react-leaflet-markercluster/dist/styles.min.css";
@@ -17,11 +23,13 @@ import prescriptiveDocument_Kommun from "../public/icons/Prescriptive-document-K
 import informativeDocument_KommunResidents from "../public/icons/Informative-document-KOMMUN-RESIDENTS.png";
 import designDocument_KommunWhiteArkitekter from "../public/icons/Design-document-KOMMUN-ARKITEKTER.png";
 import getKirunaArea from "./KirunaArea";
+import MapStyleToggle from "./MapStyleToggle";
+import FeedbackContext from "../contexts/FeedbackContext";
 
 // Icon mapping
 const iconMapping = {
   "Prescriptive document": {
-    "LKAB": new L.Icon({
+    LKAB: new L.Icon({
       iconUrl: prescpritiveDocument_LKAB,
       iconSize: [45, 45],
       iconAnchor: [20, 37],
@@ -35,7 +43,7 @@ const iconMapping = {
     }),
   },
   "Informative document": {
-    "LKAB": new L.Icon({
+    LKAB: new L.Icon({
       iconUrl: informativeDocument_LKAB,
       iconSize: [45, 45],
       iconAnchor: [20, 37],
@@ -49,7 +57,7 @@ const iconMapping = {
     }),
   },
   "Design document": {
-    "LKAB": new L.Icon({
+    LKAB: new L.Icon({
       iconUrl: designDocument_LKAB,
       iconSize: [45, 45],
       iconAnchor: [20, 37],
@@ -63,7 +71,7 @@ const iconMapping = {
     }),
   },
   "Material effect": {
-    "LKAB": new L.Icon({
+    LKAB: new L.Icon({
       iconUrl: actionDocument_LKAB,
       iconSize: [45, 45],
       iconAnchor: [20, 37],
@@ -71,13 +79,13 @@ const iconMapping = {
     }),
   },
   "Technical document": {
-    "LKAB": new L.Icon({
+    LKAB: new L.Icon({
       iconUrl: technicalDocument_LKAB,
       iconSize: [45, 45],
       iconAnchor: [20, 37],
       popupAnchor: [1, -25],
     }),
-  }
+  },
 };
 
 const defaultIcon = new L.Icon({
@@ -92,7 +100,6 @@ const defaultIcon = new L.Icon({
 const getIconForDocument = (type, stakeholders) => {
   if (iconMapping[type]) {
     const stakeholdersKey = stakeholders.sort().join(",");
-    console.log(stakeholdersKey);
     return iconMapping[type][stakeholdersKey] || defaultIcon;
   }
   return defaultIcon;
@@ -115,55 +122,66 @@ ZoomToMarker.propTypes = {
   zoomLevel: PropTypes.number,
 };
 
-
 const MapKiruna = () => {
   const [documents, setDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [show, setShow] = useState(true);
-  const kirunaPosition = [67.8400, 20.2253];
+  const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
+  const [tileLayer, setTileLayer] = useState("satellite");
+  const { setFeedbackFromError } = useContext(FeedbackContext);
+
+  // Per gestire il Polygon dinamico
+  const kirunaPolygonRef = useRef(null);
 
   useEffect(() => {
     API.getAllDocumentSnippets()
       .then(setDocuments)
-      .catch((error) => console.error("Error fetching documents:", error));
+      .catch((error) => setFeedbackFromError(error));
   }, []);
 
   const handleDocumentClick = (document) => {
-    console.log(documents)
     API.getDocumentById(document.id)
       .then((response) => {
         setSelectedDocument(response);
         setShow(true);
       })
-      .catch((error) => console.error("Error fetching document:", error));
+      .catch((error) => setFeedbackFromError(error));
   };
 
   const closeSidePanel = () => {
-    console.log("closeSidePanel");
     setShow(false);
     setSelectedDocument(null);
   };
 
   const kirunaBorderCoordinates = getKirunaArea();
-  
 
   return (
-    <div style={{ display: "flex", height: "90vh", position: "relative" }}>
+    <div style={{ display: "flex", height: "100vh", position: "relative" }}>
+      <MapStyleToggle setTileLayer={setTileLayer} />
       <div style={{ flex: 2, position: "relative" }}>
-        <MapContainer center={kirunaPosition} zoom={zoomLevel} style={{ height: "100%", width: "100%" }}>
+        <MapContainer
+          center={kirunaPosition}
+          zoom={zoomLevel}
+          style={{ height: "100%", width: "100%" }}
+        >
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution="&copy; OpenStreetMap contributors"
-          />
-          { selectedDocument && 
-            selectedDocument.geolocation.municipality === "Entire municipality" && 
-            <Polygon positions={kirunaBorderCoordinates} color="purple" weight={3} fillOpacity={0.1} />
+            url={
+              tileLayer === "paper"
+                ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             }
-            <MarkerClusterGroup>
+            attribution={
+              tileLayer === "paper"
+                ? "&copy; OpenStreetMap contributors"
+                : "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+            }
+          />
+          <MarkerClusterGroup>
             {documents.map((doc, index) => {
-              const position = doc.geolocation.latitude ? [doc.geolocation.latitude, doc.geolocation.longitude] : kirunaPosition;
-              //const icon = iconMapping[doc.type] || defaultIcon;
+              const position = doc.geolocation.latitude
+                ? [doc.geolocation.latitude, doc.geolocation.longitude]
+                : kirunaPosition;
 
               return (
                 <Marker
@@ -172,6 +190,44 @@ const MapKiruna = () => {
                   icon={getIconForDocument(doc.type, doc.stakeholders)}
                   eventHandlers={{
                     click: () => handleDocumentClick(doc),
+                    mouseover: (e) => {
+                      const marker = e.target;
+                      // Showing the title of the document as a tooltip
+                      marker
+                        .bindTooltip(doc.title, {
+                          permanent: false,
+                          offset: [2, -33],
+                          direction: "top",
+                        })
+                        .openTooltip();
+                      // Showing the polygon when mouseover on the document
+                      if (
+                        doc.geolocation.municipality === "Entire municipality"
+                      ) {
+                        const map = marker._map;
+                        if (!kirunaPolygonRef.current) {
+                          kirunaPolygonRef.current = L.polygon(
+                            kirunaBorderCoordinates,
+                            {
+                              color: "purple",
+                              weight: 3,
+                              fillOpacity: 0.1,
+                            }
+                          ).addTo(map);
+                        }
+                      }
+                    },
+                    mouseout: (e) => {
+                      const marker = e.target;
+                      marker.closeTooltip();
+
+                      // Removing the polygon when mouseout
+                      if (kirunaPolygonRef.current) {
+                        const map = marker._map;
+                        map.removeLayer(kirunaPolygonRef.current);
+                        kirunaPolygonRef.current = null;
+                      }
+                    },
                   }}
                 />
               );
@@ -181,24 +237,24 @@ const MapKiruna = () => {
             <ZoomToMarker
               position={[
                 selectedDocument.geolocation.latitude,
-                selectedDocument.geolocation.longitude
+                selectedDocument.geolocation.longitude,
               ]}
-              zoomLevel={15} // Zoom to level 15 for the selected document
+              zoomLevel={15}
             />
           ) : (
-            <ZoomToMarker position={kirunaPosition} zoomLevel={12} /> // Reset to initial view
+            <ZoomToMarker position={kirunaPosition} zoomLevel={12} />
           )}
         </MapContainer>
       </div>
-  
-      {selectedDocument && show &&(
+
+      {selectedDocument && show && (
         <DocumentSidePanel
           document={selectedDocument}
           onClose={closeSidePanel}
         />
-        )}
+      )}
     </div>
   );
 };
 
-export default MapKiruna; 
+export default MapKiruna;
