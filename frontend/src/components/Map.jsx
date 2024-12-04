@@ -1,10 +1,6 @@
 import { useEffect, useState, useRef, useContext } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMap,
-} from "react-leaflet";
+import { Button } from "react-bootstrap";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import "leaflet/dist/leaflet.css";
 import "react-leaflet-markercluster/dist/styles.min.css";
@@ -17,6 +13,7 @@ import getKirunaArea from "./KirunaArea";
 import MapStyleToggle from "./MapStyleToggle";
 import FeedbackContext from "../contexts/FeedbackContext";
 import { getIconForDocument } from "../utils/iconMapping";
+import LegendModal from "./Legend";
 
 const ZoomToMarker = ({ position, zoomLevel }) => {
   const map = useMap();
@@ -38,35 +35,37 @@ ZoomToMarker.propTypes = {
 const MapKiruna = () => {
   const [documents, setDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
-  const [show, setShow] = useState(true);
+  const [showDocumentSidePanel, setShowDocumentSidePanel] = useState(true);
+  const [showLegend, setShowLegend] = useState(false);
   const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
   const [tileLayer, setTileLayer] = useState("satellite");
-  const { setFeedbackFromError, setShouldRefresh } = useContext(FeedbackContext);
+  const { setFeedbackFromError, setShouldRefresh } =
+    useContext(FeedbackContext);
 
   // Per gestire il Polygon dinamico
   const kirunaPolygonRef = useRef(null);
 
   useEffect(() => {
     API.getDocumentsByPageNumber()
-    .then((response) => {
-      setDocuments(response[0].documentSnippets);
-    })
-    .then(() => setShouldRefresh(false))
-    .catch((error) => setFeedbackFromError(error));
+      .then((response) => {
+        setDocuments(response[0].documentSnippets);
+      })
+      .then(() => setShouldRefresh(false))
+      .catch((error) => setFeedbackFromError(error));
   }, []);
 
   const handleDocumentClick = (document) => {
     API.getDocumentById(document.id)
       .then((response) => {
         setSelectedDocument(response);
-        setShow(true);
+        setShowDocumentSidePanel(true);
       })
       .catch((error) => setFeedbackFromError(error));
   };
 
   const closeSidePanel = () => {
-    setShow(false);
+    setShowDocumentSidePanel(false);
     setSelectedDocument(null);
   };
 
@@ -75,6 +74,21 @@ const MapKiruna = () => {
   return (
     <div style={{ display: "flex", height: "90vh", position: "relative" }}>
       <MapStyleToggle setTileLayer={setTileLayer} />
+      <Button
+        title={"legend"}
+        variant="white"
+        onClick={() => {
+          setShowLegend(!showLegend);
+        }}
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          zIndex: 1000,
+        }}
+      >
+        <i className="bi bi-question-circle"></i>
+      </Button>
       <div style={{ flex: 2, position: "relative" }}>
         <MapContainer
           center={kirunaPosition}
@@ -99,7 +113,12 @@ const MapKiruna = () => {
                 ? [doc.geolocation.latitude, doc.geolocation.longitude]
                 : kirunaPosition;
 
-                {console.log("Icon Path Map:", getIconForDocument(doc.type, doc.stakeholders))}
+              {
+                console.log(
+                  "Icon Path Map:",
+                  getIconForDocument(doc.type, doc.stakeholders)
+                );
+              }
               return (
                 <Marker
                   key={index}
@@ -164,11 +183,14 @@ const MapKiruna = () => {
         </MapContainer>
       </div>
 
-      {selectedDocument && show && (
+      {selectedDocument && showDocumentSidePanel && (
         <DocumentSidePanel
           document={selectedDocument}
           onClose={closeSidePanel}
         />
+      )}
+      {showLegend && (
+        <LegendModal show={showLegend} onHide={() => setShowLegend(false)} />
       )}
     </div>
   );

@@ -211,11 +211,6 @@ export default function LegendModal({ show, onHide }) {
           </Row>
         </Col>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onHide}>
-          Close
-        </Button>
-      </Modal.Footer>
     </Modal>
   );
 }
