@@ -56,7 +56,7 @@ public class DocumentService {
      * @return List of DocumentBriefPageResponseDTO
      */
     public List<DocumentBriefPageResponseDTO> getDocumentsByPageNumber(int pageNo) {
-        Page<Document> pagedResult = documentRepository.findAll(PageRequest.of(pageNo, PAGE_SIZE));
+        Page<Document> pagedResult = documentRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNo, PAGE_SIZE));
 
         return List.of(DocumentBriefPageResponseDTO.from(pagedResult));
     }
