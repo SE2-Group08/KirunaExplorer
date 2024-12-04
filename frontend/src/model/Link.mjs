@@ -6,4 +6,4 @@ export class Link {
   }
 }
 
-export default { Link };
+export default Link;
