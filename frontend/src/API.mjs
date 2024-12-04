@@ -1,5 +1,6 @@
 import { Document, DocumentSnippet } from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
+import Link from "./model/Link.mjs";
 import { DocumentType } from "./model/DocumentType.mjs";
 import { Scale } from "./model/Scale.mjs";
 
@@ -9,75 +10,37 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  *       Link APIs      *
  * ************************** */
 
-const createLink = async (document, linkedDocument) => {
-  console.log("CREATE LINK: ", document, linkedDocument);
+const createLink = async (documentId, link) => {
   const requestBody = {
-    type: linkedDocument.linkType.toUpperCase(),
-    linkId: null,
-    documentId: linkedDocument.document.id,
+    type: link.type.toUpperCase().replace(/ /g, "_"),
+    documentId: link.documentId,
   };
-  console.log("REQUEST BODY: ", requestBody);
 
-  // ("REQUEST BODY: ", requestBody);
-  requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  console.log(document.id);
-  try {
-    const response = await fetch(
-      `${SERVER_URL}/documents/${document.id}/links`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      }
-    );
-
-    if (response.ok) {
-      const responseData =
-        response.status !== 201 ? await response.json() : null;
-      console.log("Link creato con successo:", responseData);
-    } else {
-      console.error(
-        "Errore nella creazione del link:",
-        response.status,
-        response.statusText
-      );
-    }
-  } catch (error) {
-    console.error("Errore nella richiesta:", error);
-  }
+  return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  }).then(handleInvalidResponse);
 };
 
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
-  const links = await fetch(
-    `${SERVER_URL}/api/v1/documents/${documentId}/links`
-  )
+  const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
     .then(handleInvalidResponse)
     .then((response) => response.json());
+    console.log("API GET ALL LINKS: ", links);
   return links;
 };
 
-// Update a link for a document
-const updateLink = async (documentId, linkId, updatedLink) => {
-  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(updatedLink),
-  }).then(handleInvalidResponse);
-};
 
 // Delete a link for a document
-const deleteLink = async (documentId, linkId) => {
-  return await fetch(
-    `${SERVER_URL}/api/v1/documents/${documentId}/links/${linkId}`,
-    {
-      method: "DELETE",
-    }
-  ).then(handleInvalidResponse);
+const deleteLink = async (linkId) => {
+  console.log("API DELETE LINK: ", linkId);
+  return await fetch(`${SERVER_URL}/links/${linkId}`, {
+    method: "DELETE",
+  }).then(handleInvalidResponse);
 };
 
 /* ************************** *
@@ -292,7 +255,7 @@ const API = {
   /* Link */
   createLink,
   getAllLinksOfDocument,
-  updateLink,
+  // updateLink,
   deleteLink,
   /* Document Type */
   getAllDocumentTypes,

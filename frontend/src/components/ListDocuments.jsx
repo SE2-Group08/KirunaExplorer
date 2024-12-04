@@ -26,6 +26,16 @@ export default function ListDocuments({ shouldRefresh }) {
   const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
   const [selectedDocumentToLink, setSelectedDocumentToLink] = useState(null);
   const [compactView, setCompactView] = useState(false);
+  const [links, setLinks] = useState([]);
+  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState([]);
+
+  useEffect(() => {
+    if (linking) {
+      API.getAllLinksOfDocument(selectedDocumentToLink.id)
+        .then(setAllLinksOfSelectedDocument)
+        .catch((error) => console.error("Error fetching links:", error));
+    }
+  }, [linking, showLinkModal]);
 
   const { setFeedbackFromError, setShouldRefresh, setFeedback } =
     useContext(FeedbackContext);
@@ -40,55 +50,27 @@ export default function ListDocuments({ shouldRefresh }) {
   }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
 
   const handleSelection = async (document) => {
-    const newDoc = await API.getDocumentById(document.id).catch((error) =>
-      setFeedbackFromError(error)
-    );
-    setSelectedDocument(newDoc);
-    if (linking) {
-      if (
-        selectedDocumentToLink &&
-        document.id === selectedDocumentToLink?.id
-      ) {
-        return;
-      }
-      const alreadySelected = selectedLinkDocuments.some(
-        (doc) => doc.document.id === document.id
-      );
-      if (alreadySelected) {
-        setSelectedLinkDocuments((prevDocuments) =>
-          prevDocuments.filter((doc) => doc.document.id !== document.id)
-        );
-      } else {
-        setShowLinkModal(true);
-        setSelectedDocument(newDoc);
-      }
-    } else {
+    try {
+      const newDoc = await API.getDocumentById(document.id);
       setSelectedDocument(newDoc);
-      setShow(true);
+
+      if (linking) {
+        const dLinks = await API.getAllLinksOfDocument(newDoc.id);
+        setLinks(dLinks);
+        if (
+          selectedDocumentToLink &&
+          document.id === selectedDocumentToLink.id
+        ) {
+          return;
+        }
+        setShowLinkModal(true);
+      } else {
+        setShow(true);
+      }
+    } catch (error) {
+      console.error("Error fetching document details:", error);
     }
   };
-
-  // const handleStakeholders = async (document) => {
-  //   const allStakeholders = await API.getAllStakeholders();
-  //   const uniqueStakeholders = [
-  //     ...new Map(
-  //       document.stakeholders.map((stakeholder) => [
-  //         stakeholder.name,
-  //         stakeholder,
-  //       ])
-  //     ).values(),
-  //   ];
-  //   const newStakeholders = uniqueStakeholders.filter(
-  //     (stakeholder) =>
-  //       !allStakeholders.some(
-  //         (existingStakeholder) => existingStakeholder.name === stakeholder.name
-  //       )
-  //   );
-
-  //   await Promise.all(
-  //     newStakeholders.map((stakeholder) => API.addStakeholder(stakeholder))
-  //   );
-  // };
 
   const handleSave = async (document) => {
     try {
@@ -146,22 +128,8 @@ export default function ListDocuments({ shouldRefresh }) {
   };
 
   const handleCompleteLink = async () => {
-    try {
-      await Promise.all(
-        selectedLinkDocuments.map((linkedDoc) =>
-          API.createLink(selectedDocumentToLink, linkedDoc)
-        )
-      );
-      setFeedback({
-        type: "success",
-        message: "Document linked successfully",
-      });
-      setShouldRefresh(true);
       setLinking(false);
       setSelectedLinkDocuments([]);
-    } catch (error) {
-      setFeedbackFromError(error);
-    }
   };
 
   const isLinkedDocument = (document) => {
@@ -213,21 +181,11 @@ export default function ListDocuments({ shouldRefresh }) {
           {linking ? (
             <>
               <Button
-                title="Confirm links"
-                variant="success"
+                title="Done"
+                variant="primary"
                 onClick={handleCompleteLink}
               >
                 <i className="bi bi-check-square"></i>
-              </Button>
-              <Button
-                title="Exit link mode"
-                variant="secondary"
-                onClick={() => {
-                  handleExitLinkMode();
-                }}
-                className="ms-2"
-              >
-                <i className="bi bi-box-arrow-left"></i>
               </Button>
             </>
           ) : (
@@ -278,6 +236,8 @@ export default function ListDocuments({ shouldRefresh }) {
                 document={document}
                 isLinkedDocument={isLinkedDocument}
                 onSelect={handleSelection}
+                allLinksOfSelectedDocument={allLinksOfSelectedDocument}
+                linking={linking}
               />
             ))}
           </Row>
@@ -309,6 +269,8 @@ export default function ListDocuments({ shouldRefresh }) {
             selectedLinkDocuments={selectedLinkDocuments}
             document={selectedDocument}
             onLinkConfirm={handleLinkConfirm}
+            links={links}
+            selectedDocumentToLink={selectedDocumentToLink}
           />
         )}
       </Row>
@@ -391,7 +353,28 @@ const DocumentSnippetCardComponent = ({
   document,
   isLinkedDocument,
   onSelect,
+  allLinksOfSelectedDocument,
+  linking,
 }) => {
+  const documentLinks = allLinksOfSelectedDocument.find(
+    (doc) => doc.document.id === document.id
+  )?.links || [];
+
+  const linkInitials = documentLinks.map((link) => {
+    switch (link.linkType) {
+      case "PREVISION":
+        return "P";
+      case "DIRECT_CONSEQUENCE":
+        return "DC";
+      case "COLLATERAL_CONSEQUENCE":
+        return "CC";
+      case "UPDATE":
+        return "U";
+      default:
+        return "";
+    }
+  });
+
   return (
     <Col key={document.id}>
       <Card
@@ -419,6 +402,22 @@ const DocumentSnippetCardComponent = ({
         }}
       >
         <Card.Body>
+          {linking && linkInitials.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "8px",
+                right: "8px",
+                backgroundColor: "#e9ecef",
+                borderRadius: "4px",
+                padding: "2px 6px",
+                fontSize: "12px",
+                fontWeight: "bold",
+              }}
+            >
+              {linkInitials.join(", ")}
+            </div>
+          )}
           <Card.Title className="document-card-title">
             {document.title}
           </Card.Title>

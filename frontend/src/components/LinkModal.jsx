@@ -1,91 +1,132 @@
-import { useState } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
-import PropTypes from 'prop-types';
+import { useState, useEffect } from "react";
+import { Modal, Button, Form } from "react-bootstrap";
+import PropTypes from "prop-types";
+import API from "../API.mjs";
 
-const LinkModal = ({ showModal, handleClose, document, setSelectedLinkDocuments }) => {
-  const [selectedLinks, setSelectedLinks] = useState([{ id: Date.now(), value: '' }]);
+const LinkModal = ({
+  showModal,
+  handleClose,
+  document,
+  setSelectedLinkDocuments,
+  links,
+  selectedDocumentToLink,
+}) => {
+  const [selectedLinks, setSelectedLinks] = useState([]);
+  const [initialSelectedLinks, setInitialSelectedLinks] = useState([]);
   const [errors, setErrors] = useState({});
 
-  const handleChange = (id, value) => {
-    setSelectedLinks((prevLinks) =>
-      prevLinks.map((link) => (link.id === id ? { ...link, value } : link))
+  // Map dei tipi di link per coerenza
+  const linkTypesMap = {
+    DIRECT_CONSEQUENCE: "Direct consequence",
+    COLLATERAL_CONSEQUENCE: "Collateral consequence",
+    PREVISION: "Prevision",
+    UPDATE: "Update",
+  };
+
+  const linkTypes = Object.values(linkTypesMap);
+
+  useEffect(() => {
+    if (showModal) {
+      const selectedDocument = links.find(
+        (link) => link.document.id === selectedDocumentToLink.id
+      );
+      const alreadyPresentLinks = selectedDocument
+        ? selectedDocument.links.map((linkDetail) => ({
+            linkId: linkDetail.linkId,
+            linkType: linkTypesMap[linkDetail.linkType],
+          }))
+        : [];
+      setInitialSelectedLinks(alreadyPresentLinks);
+      setSelectedLinks(alreadyPresentLinks);
+    }
+  }, [showModal, links, document.id, selectedDocumentToLink.id]);
+
+  const handleChange = (e) => {
+    const { value, checked } = e.target;
+    const linkType = value;
+    const linkId = selectedDocumentToLink.id;
+
+    setSelectedLinks((prevSelectedLinks) =>
+      checked
+        ? [...prevSelectedLinks, { linkId, linkType }]
+        : prevSelectedLinks.filter((link) => link.linkType !== linkType)
     );
   };
 
-  const handleAddType = () => {
-    setSelectedLinks((prevLinks) => [
-      ...prevLinks,
-      { id: Date.now(), value: '' },
-    ]);
-  };
+  const handleSave = async () => {
+    const linksToCreate = selectedLinks.filter(
+      (link) =>
+        !initialSelectedLinks.some(
+          (initialLink) => initialLink.linkType === link.linkType
+        )
+    );
+    const linksToDelete = initialSelectedLinks.filter(
+      (initialLink) =>
+        !selectedLinks.some((link) => link.linkType === initialLink.linkType)
+    );
 
-  const handleConfirm = () => {
-    const invalidLinks = selectedLinks.filter((link) => !link.value);
-    if (invalidLinks.length > 0) {
-      setErrors({ type: 'Please select a link type for all fields.' });
-      return;
+    try {
+      await Promise.all([
+        ...linksToCreate.map((link) =>
+          API.createLink(document.id, {
+            type: link.linkType,
+            documentId: link.linkId,
+          })
+        ),
+        ...linksToDelete.map((link) => API.deleteLink(link.linkId)),
+      ]);
+
+      setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
+        ...prevSelectedLinkDocuments,
+        ...selectedLinks.map((link) => ({ document, linkType: link.linkType })),
+      ]);
+      setSelectedLinks([]);
+      handleClose();
+    } catch (error) {
+      console.error("Error updating links:", error);
+      setErrors({ type: "Failed to update links. Please try again." });
     }
-    setSelectedLinkDocuments((prevDocuments) => [
-      ...prevDocuments,
-      ...selectedLinks.map((link) => ({
-        document,
-        linkType: link.value,
-      })),
-    ]);
-    setSelectedLinks([{ id: Date.now(), value: '' }]);
-    handleClose();
-  };
-
-  const handleRemoveType = (id) => {
-    setSelectedLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
   };
 
   return (
-    <Modal show={showModal} onHide={handleClose} centered className="document-modal">
+    <Modal
+      show={showModal}
+      onHide={handleClose}
+      centered
+      className="document-modal"
+    >
       <Modal.Header closeButton>
-        <Modal.Title>Select a Link</Modal.Title>
+        <Modal.Title>Select Link Types</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form>
-          {selectedLinks.map((link) => (
-            <div className="d-flex mb-3 align-items-center" key={link.id}>
-              <Form.Control
-                as="select"
-                value={link.value}
-                onChange={(e) => handleChange(link.id, e.target.value)}
-                isInvalid={!!errors.type && !link.value}
-                required
-                className="me-2"
-              >
-                <option value="">Select type</option>
-                <option value="Direct consequence">Direct consequence</option>
-                <option value="Collateral consequence">Collateral consequence</option>
-                <option value="Prevision">Prevision</option>
-                <option value="Update">Update</option>
-              </Form.Control>
-              <Button
-                variant="danger"
-                onClick={() => handleRemoveType(link.id)}
-                title="Delete link"
-              >
-                <i className="bi bi-trash"></i>
-              </Button>
-            </div>
+        <Form.Group className="mb-3" controlId="formLinkTypes">
+          <Form.Label>Link Types</Form.Label>
+          {linkTypes.map((linkType) => (
+            <Form.Check
+              key={linkType}
+              type="checkbox"
+              label={linkType}
+              value={linkType}
+              checked={selectedLinks.some((link) => link.linkType === linkType)}
+              onChange={handleChange}
+              isInvalid={!!errors.type}
+            />
           ))}
-          <Button className="mt-2" variant="primary" onClick={handleAddType} title="Add type">
-            <i className="bi bi-plus-square"></i>
-          </Button>
-          {errors.type && (
-            <div className="text-danger mt-2">{errors.type}</div>
-          )}
-        </Form>
+          <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+            {errors.type}
+          </div>
+        </Form.Group>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
-          Close
+        <Button
+          variant="primary"
+          disabled={selectedLinks === initialSelectedLinks}
+          onClick={handleSave}
+        >
+          Save
         </Button>
-        <Button variant="primary" onClick={handleConfirm}>
-          Confirm
+        <Button variant="secondary" onClick={handleClose}>
+          Cancel
         </Button>
       </Modal.Footer>
     </Modal>
@@ -93,12 +134,12 @@ const LinkModal = ({ showModal, handleClose, document, setSelectedLinkDocuments 
 };
 
 LinkModal.propTypes = {
-  handleAddType: PropTypes.func.isRequired,
   showModal: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   document: PropTypes.object.isRequired,
   setSelectedLinkDocuments: PropTypes.func.isRequired,
-  selectedLinkDocuments: PropTypes.array.isRequired,
+  links: PropTypes.array.isRequired,
+  selectedDocumentToLink: PropTypes.object.isRequired,
 };
 
 export default LinkModal;
