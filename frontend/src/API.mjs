@@ -8,29 +8,25 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  * ************************** */
 
 const uploadFiles = async (id, files) => {
-    const formData = new FormData();
+  const formData = new FormData();
   files.forEach((file) => {
     formData.append("files", file);
   });
 
-
   const url = `${SERVER_URL}/documents/${id}/files`;
-    console.log("Uploading file to URL:", url);
+  console.log("Uploading file to URL:", url);
 
-    const response = await fetch(url, {
-      method: "POST",
-      body: formData,
-    })
-  .then(handleInvalidResponse)
+  const response = await fetch(url, {
+    method: "POST",
+    body: formData,
+  }).then(handleInvalidResponse);
 };
 
 const deleteFile = async (fileId) => {
-
   const response = await fetch(`${SERVER_URL}/files/${fileId}`, {
     method: "DELETE",
-  })
-      .then(handleInvalidResponse)
-}
+  }).then(handleInvalidResponse);
+};
 
 const downloadFile = async (fileId, fileName, fileExtension) => {
   try {
@@ -55,7 +51,6 @@ const downloadFile = async (fileId, fileName, fileExtension) => {
     // Clean up
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-
   } catch (error) {
     handleInvalidResponse(error);
   }
@@ -67,7 +62,7 @@ const getDocumentFiles = async (documentId) => {
     throw new Error(`Failed to get document resources: ${response.statusText}`);
   }
   return await response.json();
-}
+};
 
 /* ************************** *
  *       Link APIs      *
@@ -84,21 +79,29 @@ const createLink = async (document, linkedDocument) => {
 
   // ("REQUEST BODY: ", requestBody);
   requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  console.log(document.id)
+  console.log(document.id);
   try {
-    const response = await fetch(`${SERVER_URL}/documents/${document.id}/links`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody)
-    });
+    const response = await fetch(
+      `${SERVER_URL}/documents/${document.id}/links`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
 
     if (response.ok) {
-      const responseData = response.status !== 201 ? await response.json() : null;
+      const responseData =
+        response.status !== 201 ? await response.json() : null;
       console.log("Link creato con successo:", responseData);
     } else {
-      console.error("Errore nella creazione del link:", response.status, response.statusText);
+      console.error(
+        "Errore nella creazione del link:",
+        response.status,
+        response.statusText
+      );
     }
   } catch (error) {
     console.error("Errore nella richiesta:", error);
@@ -107,7 +110,9 @@ const createLink = async (document, linkedDocument) => {
 
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
-  const links = await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`)
+  const links = await fetch(
+    `${SERVER_URL}/api/v1/documents/${documentId}/links`
+  )
     .then(handleInvalidResponse)
     .then((response) => response.json());
   return links;
@@ -126,9 +131,12 @@ const updateLink = async (documentId, linkId, updatedLink) => {
 
 // Delete a link for a document
 const deleteLink = async (documentId, linkId) => {
-  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links/${linkId}`, {
-    method: "DELETE",
-  }).then(handleInvalidResponse);
+  return await fetch(
+    `${SERVER_URL}/api/v1/documents/${documentId}/links/${linkId}`,
+    {
+      method: "DELETE",
+    }
+  ).then(handleInvalidResponse);
 };
 
 /* ************************** *
@@ -153,7 +161,17 @@ const addDocument = async (document) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(document),
-  }).then(handleInvalidResponse);
+  })
+    .then(handleInvalidResponse)
+    .then((response) => {
+      // Log the URI of the newly created resource
+      const location = response.headers.get("Location");
+      if (location) {
+        console.log("Newly created resource URI: ", location);
+      } else {
+        console.log("Location header not found in the response.");
+      }
+    });
 };
 
 // Retrieve a document by id
