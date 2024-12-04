@@ -60,19 +60,18 @@ const getDocumentsByPageNumber = async (pageNo = 0) => {
   try {
     const response = await fetch(`${SERVER_URL}/documents?pageNo=${pageNo}`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch documents for page ${pageNo}: ${response.statusText}`);
+      console.error(response)
     }
     const documents = await response.json();
     return documents;
   } catch (error) {
-    console.error("Errore durante il recupero dei documenti per pagina:", error);
+    console.error(error);
     throw error;
   }
 };
 
 // Create a new document
 const addDocument = async (document) => {
-  console.log("ADD DOCUMENT: ", document);
   return await fetch(`${SERVER_URL}/documents`, {
     method: "POST",
     headers: {
@@ -93,7 +92,6 @@ const getDocumentById = async (documentId) => {
 
 // Update a document given its id
 const updateDocument = async (documentId, nextDocument) => {
-  console.log("UPDATE DOCUMENT: ", documentId, nextDocument);
   return await fetch(`${SERVER_URL}/documents`, {
     method: "PUT",
     headers: {

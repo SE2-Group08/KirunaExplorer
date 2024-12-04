@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import PropTypes from "prop-types";
 import API from "../API.mjs";
+import FeedbackContext from "../contexts/FeedbackContext.js";
 
 const LinkModal = ({
   showModal,
@@ -13,7 +14,7 @@ const LinkModal = ({
 }) => {
   const [selectedLinks, setSelectedLinks] = useState([]);
   const [initialSelectedLinks, setInitialSelectedLinks] = useState([]);
-  const [errors, setErrors] = useState({});
+  const { setFeedbackFromError, setFeedback } = useContext(FeedbackContext);
 
   // Map dei tipi di link per coerenza
   const linkTypesMap = {
@@ -72,8 +73,24 @@ const LinkModal = ({
             type: link.linkType,
             documentId: link.linkId,
           })
+            .then(() =>
+              setFeedback({
+                type: "success",
+                message: "Link created successfully",
+              })
+            )
+            .catch((error) => setFeedbackFromError(error))
         ),
-        ...linksToDelete.map((link) => API.deleteLink(link.linkId)),
+        ...linksToDelete.map((link) =>
+          API.deleteLink(link.linkId)
+            .then(() =>
+              setFeedback({
+                type: "success",
+                message: "Link deleted successfully",
+              })
+            )
+            .catch((error) => setFeedbackFromError(error))
+        ),
       ]);
 
       setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
@@ -83,8 +100,7 @@ const LinkModal = ({
       setSelectedLinks([]);
       handleClose();
     } catch (error) {
-      console.error("Error updating links:", error);
-      setErrors({ type: "Failed to update links. Please try again." });
+      setFeedbackFromError(error);
     }
   };
 
@@ -109,12 +125,8 @@ const LinkModal = ({
               value={linkType}
               checked={selectedLinks.some((link) => link.linkType === linkType)}
               onChange={handleChange}
-              isInvalid={!!errors.type}
             />
           ))}
-          <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-            {errors.type}
-          </div>
         </Form.Group>
       </Modal.Body>
       <Modal.Footer>

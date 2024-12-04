@@ -35,17 +35,16 @@ export default function ListDocuments({ shouldRefresh }) {
   const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
     []
   );
+  const { setFeedbackFromError, setShouldRefresh, setFeedback } =
+    useContext(FeedbackContext);
 
   useEffect(() => {
     if (linking) {
       API.getAllLinksOfDocument(selectedDocumentToLink.id)
         .then(setAllLinksOfSelectedDocument)
-        .catch((error) => console.error("Error fetching links:", error));
+        .catch((error) => setFeedbackFromError(error));
     }
   }, [linking, showLinkModal]);
-
-  const { setFeedbackFromError, setShouldRefresh, setFeedback } =
-    useContext(FeedbackContext);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -65,11 +64,15 @@ export default function ListDocuments({ shouldRefresh }) {
 
   const handleSelection = async (document) => {
     try {
-      const newDoc = await API.getDocumentById(document.id);
+      const newDoc = await API.getDocumentById(document.id).catch((error) =>
+        setFeedbackFromError(error)
+      );
       setSelectedDocument(newDoc);
 
       if (linking) {
-        const dLinks = await API.getAllLinksOfDocument(newDoc.id);
+        const dLinks = await API.getAllLinksOfDocument(newDoc.id).catch(
+          (error) => setFeedbackFromError(error)
+        );
         setLinks(dLinks);
         if (
           selectedDocumentToLink &&
@@ -82,18 +85,21 @@ export default function ListDocuments({ shouldRefresh }) {
         setShow(true);
       }
     } catch (error) {
-      console.error("Error fetching document details:", error);
+      setFeedbackFromError(error);
     }
   };
 
   const handleSave = async (document) => {
     try {
-      await API.updateDocument(document.id, document);
-      setFeedback({
-        type: "success",
-        message: "Document updated successfully",
-      });
-      setShouldRefresh(true);
+      await API.updateDocument(document.id, document)
+        .then(() => {
+          setFeedback({
+            type: "success",
+            message: "Document added successfully",
+          });
+          setShouldRefresh(true);
+        })
+        .catch((error) => setFeedbackFromError(error));
     } catch (error) {
       setFeedbackFromError(error);
     } finally {
@@ -103,12 +109,15 @@ export default function ListDocuments({ shouldRefresh }) {
 
   const handleAdd = async (document) => {
     try {
-      await API.addDocument(document);
-      setFeedback({
-        type: "success",
-        message: "Document added successfully",
-      });
-      setShouldRefresh(true);
+      await API.addDocument(document)
+        .then(() => {
+          setFeedback({
+            type: "success",
+            message: "Document added successfully",
+          });
+          setShouldRefresh(true);
+        })
+        .catch((error) => setFeedbackFromError(error));
     } catch (error) {
       setFeedbackFromError(error);
     } finally {

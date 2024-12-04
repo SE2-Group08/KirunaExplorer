@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Modal, Button, Row, Col } from "react-bootstrap";
+import { Modal, Row, Col } from "react-bootstrap";
 import { getIconUrlForDocument } from "../utils/iconMapping";
 import "../App.scss";
 

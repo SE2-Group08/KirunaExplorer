@@ -1,6 +1,13 @@
 import PropTypes from "prop-types";
 import { useEffect, useState, useRef, useContext } from "react";
-import { Button, Modal, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
+import {
+  Button,
+  Modal,
+  Form,
+  OverlayTrigger,
+  Tooltip,
+  Spinner,
+} from "react-bootstrap";
 import {
   MapContainer,
   TileLayer,
@@ -639,23 +646,29 @@ function DocumentFormComponent({
       {/* STAKEHOLDERS */}
       <Form.Group className="mb-3" controlId="formDocumentStakeholders">
         <Form.Label>Stakeholders *</Form.Label>
-        {allStakeholders.map((stakeholderOption) => (
-          <Form.Check
-            key={stakeholderOption.id}
-            type="checkbox"
-            label={stakeholderOption.name}
-            checked={document.stakeholders.includes(stakeholderOption.name)}
-            onChange={(e) => {
-              const newStakeholders = e.target.checked
-                ? [...document.stakeholders, stakeholderOption.name]
-                : document.stakeholders.filter(
-                    (s) => s !== stakeholderOption.name
-                  );
-              handleChange("stakeholders", newStakeholders);
-            }}
-            isInvalid={!!errors.stakeholders}
-          />
-        ))}
+        {allStakeholders.length ? (
+          allStakeholders.map((stakeholderOption) => (
+            <Form.Check
+              key={stakeholderOption.id}
+              type="checkbox"
+              label={stakeholderOption.name}
+              checked={document.stakeholders.includes(stakeholderOption.name)}
+              onChange={(e) => {
+                const newStakeholders = e.target.checked
+                  ? [...document.stakeholders, stakeholderOption.name]
+                  : document.stakeholders.filter(
+                      (s) => s !== stakeholderOption.name
+                    );
+                handleChange("stakeholders", newStakeholders);
+              }}
+              isInvalid={!!errors.stakeholders}
+            />
+          ))
+        ) : (
+          <Spinner animation="border" role="status" className="mx-auto">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        )}
         {document.stakeholders
           .filter(
             (stakeholder) =>
@@ -721,11 +734,17 @@ function DocumentFormComponent({
           required
         >
           <option value="">Select scale</option>
-          {allScales.map((scaleOption) => (
-            <option key={scaleOption.id} value={scaleOption.name}>
-              {scaleOption.name}
-            </option>
-          ))}
+          {allScales.length ? (
+            allScales.map((scaleOption) => (
+              <option key={scaleOption.id} value={scaleOption.name}>
+                {scaleOption.name}
+              </option>
+            ))
+          ) : (
+            <Spinner animation="border" role="status" className="mx-auto">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+          )}
           <option value="Other">Other</option>
         </Form.Control>
         {document.scale === "Other" && (
@@ -820,11 +839,17 @@ function DocumentFormComponent({
           required
         >
           <option value="">Select type</option>
-          {allDocumentTypes.map((typeOption) => (
-            <option key={typeOption.id} value={typeOption.name}>
-              {typeOption.name}
-            </option>
-          ))}
+          {allDocumentTypes.length ? (
+            allDocumentTypes.map((typeOption) => (
+              <option key={typeOption.id} value={typeOption.name}>
+                {typeOption.name}
+              </option>
+            ))
+          ) : (
+            <Spinner animation="border" role="status" className="mx-auto">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+          )}
           <option value="Other">Other</option>
         </Form.Control>
         {document.type === "Other" && (
