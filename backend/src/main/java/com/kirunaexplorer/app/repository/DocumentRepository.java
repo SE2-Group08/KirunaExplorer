@@ -11,7 +11,8 @@ import java.util.List;
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
-    @Query("SELECT d FROM Document d WHERE (LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(d.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND (:type IS NULL OR d.type = :type)")
+    @Query("SELECT d FROM Document d WHERE (:keyword IS NULL OR :keyword = '' " +
+            "OR LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(d.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND (:type IS NULL OR d.type = :type)")
     List<Document> searchDocuments(@Param("keyword") String keyword, @Param("type") String type);
 }
