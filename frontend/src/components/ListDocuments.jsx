@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
-import { Container, Row, Col, Card, Button, Table, Spinner } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Table,
+  Spinner,
+} from "react-bootstrap";
 import "../App.css";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
@@ -22,105 +30,106 @@ export default function ListDocuments({ shouldRefresh }) {
   const [compactView, setCompactView] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [links, setLinks] = useState([]);
+  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState([]);
+
+  useEffect(() => {
+    if (linking) {
+      API.getAllLinksOfDocument(selectedDocumentToLink.id)
+        .then(setAllLinksOfSelectedDocument)
+        .catch((error) => console.error("Error fetching links:", error));
+    }
+  }, [linking, showLinkModal]);
 
   const { setFeedbackFromError, setShouldRefresh, setFeedback } =
     useContext(FeedbackContext);
 
-    useEffect(() => {
-      console.log("ListDocuments: useEffect");
-      window.scrollTo(0, 0);
-      //if (shouldRefresh) {
-        API.getDocumentsByPageNumber(currentPage)
-          .then((response) => {
-            setDocuments(response[0].documentSnippets);
-            setTotalPages(response[0].totalPages);
-          })
-          .then(() => setShouldRefresh(false))
-          .catch((error) => setFeedbackFromError(error));
-      //}
-    }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
+  useEffect(() => {
+    console.log("ListDocuments: useEffect");
+    window.scrollTo(0, 0);
+    //if (shouldRefresh) {
+    API.getDocumentsByPageNumber(currentPage)
+      .then((response) => {
+        setDocuments(response[0].documentSnippets);
+        setTotalPages(response[0].totalPages);
+      })
+      .then(() => setShouldRefresh(false))
+      .catch((error) => setFeedbackFromError(error));
+    //}
+  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
 
-    const handlePageChange = (pageNumber) => {
-      setCurrentPage(pageNumber);
-      setShouldRefresh(true);
-    };
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    setShouldRefresh(true);
+  };
 
   const handleSelection = async (document) => {
-    const newDoc = await API.getDocumentById(document.id).catch((error) =>
-      setFeedbackFromError(error)
-    );
-    setSelectedDocument(newDoc);
-    if (linking) {
-      if (
-        selectedDocumentToLink &&
-        document.id === selectedDocumentToLink?.id
-      ) {
-        return;
-      }
-      const alreadySelected = selectedLinkDocuments.some(
-        (doc) => doc.document.id === document.id
-      );
-      if (alreadySelected) {
-        setSelectedLinkDocuments((prevDocuments) =>
-          prevDocuments.filter((doc) => doc.document.id !== document.id)
-        );
-      } else {
-        setShowLinkModal(true);
-        setSelectedDocument(newDoc);
-      }
-    } else {
+    try {
+      const newDoc = await API.getDocumentById(document.id);
       setSelectedDocument(newDoc);
-      setShow(true);
+
+      if (linking) {
+        const dLinks = await API.getAllLinksOfDocument(newDoc.id);
+        setLinks(dLinks);
+        if (
+          selectedDocumentToLink &&
+          document.id === selectedDocumentToLink.id
+        ) {
+          return;
+        }
+        setShowLinkModal(true);
+      } else {
+        setShow(true);
+      }
+    } catch (error) {
+      console.error("Error fetching document details:", error);
     }
   };
 
-  const handleSave = (document) => {
-    API.updateDocument(document.id, document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({
-          type: "success",
-          message: "Document updated successfully",
-        })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
-    setShow(false);
-    setShouldRefresh(true);
+  const handleSave = async (document) => {
+    try {
+      await API.updateDocument(document.id, document);
+      setFeedback({
+        type: "success",
+        message: "Document updated successfully",
+      });
+      setShouldRefresh(true);
+    } catch (error) {
+      setFeedbackFromError(error);
+    } finally {
+      setShow(false);
+    }
   };
 
-  const handleAdd = (document) => {
-    API.addDocument(document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({ type: "success", message: "Document added successfully" })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
-    setShow(false);
-    setShouldRefresh(true);
+  const handleAdd = async (document) => {
+    try {
+      await API.addDocument(document);
+      setFeedback({
+        type: "success",
+        message: "Document added successfully",
+      });
+      setShouldRefresh(true);
+    } catch (error) {
+      setFeedbackFromError(error);
+    } finally {
+      setShow(false);
+    }
   };
 
-  const handleDelete = (documentId) => {
-    API.deleteDocument(documentId)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
-      .then(() => setShouldRefresh(false))
-      .then(() =>
-        setFeedback({
-          type: "success",
-          message: "Document deleted successfully",
-        })
-      )
-      .catch((error) =>
-        setFeedbackFromError(error)
-      );
-    setShow(false);
-    setShouldRefresh(true);
-  };
+  // const handleDelete = (documentId) => {
+  //   API.deleteDocument(documentId)
+  //     .then(() => API.getAllDocumentSnippets().then(setDocuments))
+  //     .then(() => setShouldRefresh(false))
+  //     .then(() =>
+  //       setFeedback({
+  //         type: "success",
+  //         message: "Document deleted successfully",
+  //       })
+  //     )
+  //     .catch((error) => setFeedbackFromError(error));
+  //   setShow(false);
+  //   setShouldRefresh(true);
+  // };
 
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
@@ -133,19 +142,8 @@ export default function ListDocuments({ shouldRefresh }) {
   };
 
   const handleCompleteLink = async () => {
-    try {
-      await Promise.all(
-        selectedLinkDocuments.map((linkedDoc) =>
-          API.createLink(selectedDocumentToLink, linkedDoc)
-        )
-      );
-      setFeedback({ type: "success", message: "Document linked successfully" });
-      setShouldRefresh(true);
-      setLinking(false);
-      setSelectedLinkDocuments([]);
-    } catch (error) {
-      setFeedbackFromError(error);
-    }
+    setLinking(false);
+    setSelectedLinkDocuments([]);
   };
 
   const isLinkedDocument = (document) => {
@@ -168,14 +166,27 @@ export default function ListDocuments({ shouldRefresh }) {
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (
-          <p>Choose the document you want to link</p>
+          <p style={{
+            fontSize: "1.2rem",
+            marginBottom: "0.5rem",
+            marginTop: "0.5rem",
+            fontWeight: "500",
+          }}>Choose the document you want to link</p>
         ) : (
           <>
-            <p>
+            <p style={{
+              fontSize: "1.2rem",
+              marginBottom: "0.5rem",
+              marginTop: "0.5rem",
+              fontWeight: "500",
+            }}>
               Here you can find all the documents about Kiruna&apos;s relocation
               process.
             </p>
-            <p>Click on a document to see more details.</p>
+            <p style={{
+              fontSize: "1.2rem",
+              fontWeight: "500",
+            }}>Click on a document to see more details.</p>
           </>
         )}
       </Row>
@@ -184,21 +195,11 @@ export default function ListDocuments({ shouldRefresh }) {
           {linking ? (
             <>
               <Button
-                title="Confirm links"
-                variant="success"
+                title="Done"
+                variant="primary"
                 onClick={handleCompleteLink}
               >
                 <i className="bi bi-check-square"></i>
-              </Button>
-              <Button
-                title="Exit link mode"
-                variant="secondary"
-                onClick={() => {
-                  handleExitLinkMode();
-                }}
-                className="ms-2"
-              >
-                <i className="bi bi-box-arrow-left"></i>
               </Button>
             </>
           ) : (
@@ -249,6 +250,8 @@ export default function ListDocuments({ shouldRefresh }) {
                 document={document}
                 isLinkedDocument={isLinkedDocument}
                 onSelect={handleSelection}
+                allLinksOfSelectedDocument={allLinksOfSelectedDocument}
+                linking={linking}
               />
             ))}
           </Row>
@@ -271,7 +274,7 @@ export default function ListDocuments({ shouldRefresh }) {
             }}
             document={selectedDocument}
             handleSave={handleSave}
-            handleDelete={handleDelete}
+            // handleDelete={handleDelete}
             handleAdd={handleAdd}
             onSnippetClick={handleSelection}
           />
@@ -287,6 +290,8 @@ export default function ListDocuments({ shouldRefresh }) {
             selectedLinkDocuments={selectedLinkDocuments}
             document={selectedDocument}
             onLinkConfirm={handleLinkConfirm}
+            links={links}
+            selectedDocumentToLink={selectedDocumentToLink}
           />
         )}
       </Row>
@@ -305,7 +310,7 @@ function DocumentSnippetTableComponent({
   isLinkedDocument,
 }) {
   return (
-    <Table hover responsive>
+    <Table hover responsive style={{ backgroundColor: "#E6E8EA" }}>
       <thead>
         <tr>
           <th>Icon</th>
@@ -355,8 +360,8 @@ function DocumentSnippetTableComponent({
                 document.issuanceDate.length === 4
                   ? "YYYY"
                   : document.issuanceDate.length === 7
-                  ? "MM/YYYY"
-                  : "DD/MM/YYYY"
+                    ? "MM/YYYY"
+                    : "DD/MM/YYYY"
               )}
             </td>
             {/* <td>{document.type}</td> */}
@@ -377,7 +382,28 @@ const DocumentSnippetCardComponent = ({
   document,
   isLinkedDocument,
   onSelect,
+  allLinksOfSelectedDocument,
+  linking,
 }) => {
+  const documentLinks = allLinksOfSelectedDocument.find(
+    (doc) => doc.document.id === document.id
+  )?.links || [];
+
+  const linkInitials = documentLinks.map((link) => {
+    switch (link.linkType) {
+      case "PREVISION":
+        return "P";
+      case "DIRECT_CONSEQUENCE":
+        return "DC";
+      case "COLLATERAL_CONSEQUENCE":
+        return "CC";
+      case "UPDATE":
+        return "U";
+      default:
+        return "";
+    }
+  });
+
   return (
     <Col key={document.id}>
       <Card
@@ -405,14 +431,14 @@ const DocumentSnippetCardComponent = ({
         }}
       >
         <Card.Body>
-          <div className="d-flex align-items-center">            
+          <div className="d-flex align-items-center">
             <img
               src={getIconUrlForDocument(document.type, document.stakeholders)}
               alt={`${document.type} icon`}
               style={{ width: "70px", height: "70px", marginRight: "10px" }}
             />
             <Card.Title className="document-card-title"
-              style={{fontSize: "17px"}}>
+              style={{ fontSize: "17px" }}>
               {document.title}
             </Card.Title>
           </div>
@@ -423,13 +449,13 @@ const DocumentSnippetCardComponent = ({
           <Card.Text className="document-card-text">
             <strong>Issuance Date:</strong>{" "}
             {
-            dayjs(document.issuanceDate).format(
-              document.issuanceDate.length === 4
-                ? "YYYY"
-                : document.issuanceDate.length === 7
-                ? "MM/YYYY"
-                : "DD/MM/YYYY"
-            )}
+              dayjs(document.issuanceDate).format(
+                document.issuanceDate.length === 4
+                  ? "YYYY"
+                  : document.issuanceDate.length === 7
+                    ? "MM/YYYY"
+                    : "DD/MM/YYYY"
+              )}
           </Card.Text>
           {/* <Card.Text className="document-card-text">
             <strong>Type:</strong> {document.type}

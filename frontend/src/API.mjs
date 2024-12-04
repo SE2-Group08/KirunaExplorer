@@ -1,5 +1,8 @@
 import { Document, DocumentSnippet } from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
+import Link from "./model/Link.mjs";
+import { DocumentType } from "./model/DocumentType.mjs";
+import { Scale } from "./model/Scale.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
 
@@ -7,12 +10,10 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  *       Link APIs      *
  * ************************** */
 
-const createLink = async (document, linkedDocument) => {
-  console.log("CREATE LINK: ", document, linkedDocument);
+const createLink = async (documentId, link) => {
   const requestBody = {
-    type: linkedDocument.linkType.toUpperCase(),
-    linkId: null,
-    documentId: linkedDocument.document.id,
+    type: link.type.toUpperCase().replace(/ /g, "_"),
+    documentId: link.documentId,
   };
 
   // ("REQUEST BODY: ", requestBody);
@@ -24,7 +25,7 @@ const createLink = async (document, linkedDocument) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody)
-    });
+    }).then(handleInvalidResponse);
 
     if (response.ok) {
       const responseData = response.status !== 201 ? await response.json() : null;
@@ -39,26 +40,18 @@ const createLink = async (document, linkedDocument) => {
 
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
-  const links = await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`)
+  const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
     .then(handleInvalidResponse)
     .then((response) => response.json());
+  console.log("API GET ALL LINKS: ", links);
   return links;
 };
 
-// Update a link for a document
-const updateLink = async (documentId, linkId, updatedLink) => {
-  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(updatedLink),
-  }).then(handleInvalidResponse);
-};
 
 // Delete a link for a document
-const deleteLink = async (documentId, linkId) => {
-  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links/${linkId}`, {
+const deleteLink = async (linkId) => {
+  console.log("API DELETE LINK: ", linkId);
+  return await fetch(`${SERVER_URL}/links/${linkId}`, {
     method: "DELETE",
   }).then(handleInvalidResponse);
 };
@@ -114,6 +107,7 @@ const getDocumentById = async (documentId) => {
 
 // Update a document given its id
 const updateDocument = async (documentId, nextDocument) => {
+  console.log("UPDATE DOCUMENT: ", documentId, nextDocument);
   return await fetch(`${SERVER_URL}/documents`, {
     method: "PUT",
     headers: {
@@ -130,55 +124,91 @@ const deleteDocument = async (documentId) => {
   }).then(handleInvalidResponse);
 };
 
-// /* ************************** *
-//  *      Stakeholders APIs     *
-//  * ************************** */
+/* ************************** *
+ *      Stakeholders APIs     *
+ * ************************** */
 
 // // Retrieve all stakeholders
-// const getAllStakeholders = async () => {
-//   const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
-//     .then(handleInvalidResponse)
-//     .then((response) => response.json())
-//     .then(mapAPIStakeholdersToStakeholders);
-//   return stakeholders;
-// };
+const getAllStakeholders = async () => {
+  const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((stakeholders) =>
+      stakeholders.map((stakeholder) => Stakeholder.fromJSON(stakeholder))
+    );
+  return stakeholders;
+};
 
-// // Create a new stakeholder
-// const addStakeholder = async (stakeholder) => {
-//   return await fetch(`${SERVER_URL}/stakeholders`, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify(stakeholder),
-//   }).then(handleInvalidResponse);
-// };
+// Create a new stakeholder
+const addStakeholder = async (stakeholder) => {
+  return await fetch(`${SERVER_URL}/stakeholders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(stakeholder),
+  }).then(handleInvalidResponse);
+};
 
-// // Retrieve a stakeholder by id
-// const getStakeholderById = async (stakeholderId) => {
-//   const stakeholder = await fetch(`${SERVER_URL}/stakeholders/${stakeholderId}`)
-//     .then(handleInvalidResponse)
-//     .then((response) => response.json());
-//   return stakeholder;
-// };
+/* ************************** *
+ *     Document Type APIs     *
+ * ************************** */
 
-// // Update a stakeholder given its id
-// const updateStakeholder = async (stakeholderId, nextStakeholder) => {
-//   return await fetch(`${SERVER_URL}/stakeholders/`, {
-//     method: "PUT",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify(nextStakeholder),
-//   }).then(handleInvalidResponse);
-// };
+// Retrieve all document types
+const getAllDocumentTypes = async () => {
+  const documentTypes = await fetch(`${SERVER_URL}/document-types`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((documentTypes) =>
+      documentTypes.map((documentType) => DocumentType.fromJSON(documentType))
+    );
+  return documentTypes;
+};
 
-// // Delete a stakeholder given its id
-// const deleteStakeholder = async (stakeholderId) => {
-//   return await fetch(`${SERVER_URL}/stakeholders/${stakeholderId}`, {
-//     method: "DELETE",
-//   }).then(handleInvalidResponse);
-// };
+// Create a new document type
+const addDocumentType = async (documentType) => {
+  return await fetch(`${SERVER_URL}/document-types`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(documentType),
+  }).then(handleInvalidResponse);
+};
+
+/* ************************** *
+ *       Scale APIs      *
+ * ************************** */
+
+// Retrieve all scales
+const getAllScales = async () => {
+  const scales = await fetch(`${SERVER_URL}/scales`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((scales) => {
+      const textScales = scales.filter(scale => !scale.scale.includes(':')).sort();
+      const numericScales = scales.filter(scale => scale.scale.includes(':')).sort((a, b) => {
+        const numA = parseInt(a.scale.split(':')[1], 10);
+        const numB = parseInt(b.scale.split(':')[1], 10);
+        return numA - numB;
+      });
+      return [...textScales, ...numericScales];
+    })
+    .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));
+  console.log(scales);
+  return scales;
+};
+
+// Create a new scale
+const addScale = async (scale) => {
+  return await fetch(`${SERVER_URL}/scales`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(scale),
+  }).then(handleInvalidResponse);
+};
 
 /* ************************** *
  *       Helper functions      *
@@ -241,20 +271,26 @@ async function mapAPISnippetsToSnippet(apiSnippets) {
 }
 
 const API = {
+  /* Document */
   getAllDocumentSnippets,
   addDocument,
   getDocumentById,
   updateDocument,
   deleteDocument,
-  // getAllStakeholders,
-  // addStakeholder,
-  // getStakeholderById,
-  // updateStakeholder,
-  // deleteStakeholder,
+  /* Stakeholder */
+  getAllStakeholders,
+  addStakeholder,
+  /* Link */
   createLink,
   getAllLinksOfDocument,
-  updateLink,
+  // updateLink,
   deleteLink,
   getDocumentsByPageNumber,
+  /* Document Type */
+  getAllDocumentTypes,
+  addDocumentType,
+  /* Scale */
+  getAllScales,
+  addScale,
 };
 export default API;
