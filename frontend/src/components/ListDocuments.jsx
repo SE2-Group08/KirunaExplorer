@@ -275,7 +275,7 @@ export default function ListDocuments({ shouldRefresh }) {
 
 ListDocuments.propTypes = {
   thinCardLayout: PropTypes.bool,
-  shouldRefresh: PropTypes.bool.isRequired,
+  shouldRefresh: PropTypes.bool,
 };
 
 function DocumentSnippetTableComponent({

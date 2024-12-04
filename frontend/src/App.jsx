@@ -19,19 +19,25 @@ function App() {
   const handleLogin = async (credentials) => {
     console.log("App.handleLogin", credentials);
     const user = await API.logIn(credentials);
+    console.log(user);
     setUser(user);
     setLoggedIn(true);
   }
 
   const handleLogout = async () => {
-    await API.logOut();
-    setLoggedIn(false);
-    setUser(null);
+    console.log("App.handleLogout", user);
+    await API.logOut()
+    .then(() => {
+      setUser(null);
+      setLoggedIn(false);
+    })
+        .catch((error) => console.log(error));
+
   }
 
   return (
     <div>
-      <Header loggedIn={loggedIn} userInfo={user} logout={handleLogout}/>
+      <Header loggedIn={loggedIn} logout={handleLogout}/>
       <Container fluid className="d-flex flex-column min-vh-100 p-0 mt-5">
         <Routes>
           <Route
@@ -41,7 +47,7 @@ function App() {
               </>
             }
           >
-            <Route path="/documents" element={<ListDocuments/>}/>
+            <Route path="/documents" element={<ListDocuments />}/>
             <Route path="/map" element={<Map/>}/>
             <Route path="/login" element={<LoginComponent login={handleLogin}/>}/>
             <Route path="/" element={<SplashPage/>}/>

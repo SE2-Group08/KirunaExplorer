@@ -18,11 +18,10 @@ const logIn = async (credentials) => {
     body: JSON.stringify(credentials),
   }).then(handleInvalidResponse);
 
-  const data = await response.json(); // Parse the response body
-  const token = data.token; // Assuming the token is provided as `token`
+  const data = await response.json();
+  const token = data.token;
 
   if (token) {
-    // Store token securely (for demo purposes, storing in localStorage)
     localStorage.setItem("authToken", token);
   }
 
@@ -31,20 +30,8 @@ const logIn = async (credentials) => {
 
 // Verifies if user is still logged-in. It returns a JSON with the user info
 const getUserInfo = async () => {
-  const token = localStorage.getItem("authToken"); // Retrieve the token
+  return !!localStorage.getItem("authToken");
 
-  if (!token) {
-    throw new Error("User is not logged in or token is missing");
-  }
-
-  const response = await fetch(SERVER_URL + "/sessions/current", {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${token}`, // Include the token in Authorization header
-    },
-    credentials: "include", // Include cookies if necessary
-  }).then(handleInvalidResponse);
-  return response.json(); // Return user info as JSON
 };
 
 
@@ -57,16 +44,6 @@ const logOut = async () => {
   }
 
   try {
-    const response = await fetch(SERVER_URL + "/sessions/current", {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${token}`, // Include the token in Authorization header
-      },
-      credentials: "include", // Include cookies if necessary
-    });
-
-    await handleInvalidResponse(response); // Handle non-200 responses
-
     // Remove token from storage after successful logout
     localStorage.removeItem("authToken");
     console.log("User successfully logged out.");
