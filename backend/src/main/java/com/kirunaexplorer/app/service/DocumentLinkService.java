@@ -19,7 +19,7 @@ public class DocumentLinkService {
 
     private final DocumentRepository documentRepository;
     private final DocumentLinkRepository documentLinkRepository;
-    private static final String errMsgNFE = "Document not found with ID ";
+    private static final String ERROR_MESSAGE_NOT_FOUND = "Document not found with ID ";
 
     public DocumentLinkService(DocumentRepository documentRepository, DocumentLinkRepository documentLinkRepository) {
         this.documentRepository = documentRepository;
@@ -36,9 +36,9 @@ public class DocumentLinkService {
     @Transactional
     public LinkDocumentsResponseDTO linkDocuments(Long id, LinkDocumentsRequestDTO request) {
         Document document = documentRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException(errMsgNFE + id));
+            .orElseThrow(() -> new ResourceNotFoundException(ERROR_MESSAGE_NOT_FOUND + id));
         Document linkedDocument = documentRepository.findById(request.documentId())
-            .orElseThrow(() -> new ResourceNotFoundException(errMsgNFE + request.documentId()));
+            .orElseThrow(() -> new ResourceNotFoundException(ERROR_MESSAGE_NOT_FOUND + request.documentId()));
 
         // Check if the documents are the same
         if (document.equals(linkedDocument)) {
@@ -67,12 +67,13 @@ public class DocumentLinkService {
 
     /**
      * Update a document link
+     *
      * @param request LinkDocumentsRequestDTO
      */
     @Transactional
     public void updateLink(LinkDocumentsRequestDTO request) {
         DocumentLink documentLink = documentLinkRepository.findById(request.linkId())
-            .orElseThrow(() -> new ResourceNotFoundException(errMsgNFE + request.linkId()));
+            .orElseThrow(() -> new ResourceNotFoundException(ERROR_MESSAGE_NOT_FOUND + request.linkId()));
 
         documentLink.setType(request.type());
 
@@ -86,7 +87,7 @@ public class DocumentLinkService {
     @Transactional
     public void deleteLink(Long linkId) {
         DocumentLink documentLink = documentLinkRepository.findById(linkId)
-            .orElseThrow(() -> new ResourceNotFoundException(errMsgNFE + linkId));
+            .orElseThrow(() -> new ResourceNotFoundException(ERROR_MESSAGE_NOT_FOUND + linkId));
 
         documentLinkRepository.delete(documentLink);
     }
@@ -100,7 +101,7 @@ public class DocumentLinkService {
     public List<DocumentBriefLinksResponseDTO> getDocumentLinks(Long id) {
         // Fetch the document by id
         Document document = documentRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException(errMsgNFE+ id));
+            .orElseThrow(() -> new ResourceNotFoundException(ERROR_MESSAGE_NOT_FOUND + id));
 
         // Fetch all links for the document
         List<DocumentLink> documentLinks = documentLinkRepository.findByDocumentOrLinkedDocument(document, document);
