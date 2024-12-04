@@ -36,10 +36,11 @@ class DocumentServicePaginationTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(2, result.totalPages()); // Total pages = 32 / 16 = 2
-        assertEquals(0, result.currentPage()); // Current page is 0
-        assertEquals(16, result.totalItems()); // 16 items on the first page
-        assertEquals(16, result.documentSnippets().size()); // 16 documents
+        assertEquals(2, result.totalPages());
+        assertEquals(0, result.currentPage());
+        assertEquals(16, result.totalItems());
+        assertEquals(16, result.documentSnippets().size());
+        result.documentSnippets().forEach(doc -> assertNotNull(doc.title())); // Validate content
         verify(documentRepository, times(1)).findAll(PageRequest.of(pageNo, pageSize));
     }
 
@@ -57,10 +58,10 @@ class DocumentServicePaginationTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(0, result.totalPages()); // No pages available
-        assertEquals(10, result.currentPage()); // Requested page is 10
-        assertEquals(0, result.totalItems()); // No items
-        assertTrue(result.documentSnippets().isEmpty()); // No documents
+        assertEquals(0, result.totalPages());
+        assertEquals(10, result.currentPage());
+        assertEquals(0, result.totalItems());
+        assertTrue(result.documentSnippets().isEmpty());
         verify(documentRepository, times(1)).findAll(PageRequest.of(pageNo, pageSize));
     }
 
@@ -79,10 +80,11 @@ class DocumentServicePaginationTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(2, result.totalPages()); // Total pages = 26 / 16 = 2
-        assertEquals(1, result.currentPage()); // Current page is 1
-        assertEquals(10, result.totalItems()); // 10 items on the second (last) page
-        assertEquals(10, result.documentSnippets().size()); // 10 documents
+        assertEquals(2, result.totalPages());
+        assertEquals(1, result.currentPage());
+        assertEquals(10, result.totalItems());
+        assertEquals(10, result.documentSnippets().size());
+        result.documentSnippets().forEach(doc -> assertTrue(doc.title().startsWith("Document")));
         verify(documentRepository, times(1)).findAll(PageRequest.of(pageNo, pageSize));
     }
 
@@ -100,10 +102,56 @@ class DocumentServicePaginationTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(0, result.totalPages()); // No pages available
-        assertEquals(0, result.currentPage()); // Requested page is 0
-        assertEquals(0, result.totalItems()); // No items
-        assertTrue(result.documentSnippets().isEmpty()); // No documents
+        assertEquals(0, result.totalPages());
+        assertEquals(0, result.currentPage());
+        assertEquals(0, result.totalItems());
+        assertTrue(result.documentSnippets().isEmpty());
+        verify(documentRepository, times(1)).findAll(PageRequest.of(pageNo, pageSize));
+    }
+
+    @Test
+    void testGetDocumentsByPageNumber_NegativePageNumber() {
+        // Arrange
+        int pageNo = -1;
+        int pageSize = 16;
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            documentService.getDocumentsByPageNumber(pageNo);
+        });
+    }
+
+    @Test
+    void testGetDocumentsByPageNumber_InvalidPageSize() {
+        // Arrange
+        int pageNo = 0;
+        int pageSize = -5; // Invalid page size
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            PageRequest.of(pageNo, pageSize);
+        });
+    }
+
+    @Test
+    void testGetDocumentsByPageNumber_OneDocument() {
+        // Arrange
+        int pageNo = 0;
+        int pageSize = 16;
+        List<Document> documents = generateDocuments(1); // Only one document
+        Page<Document> page = new PageImpl<>(documents, PageRequest.of(pageNo, pageSize), 1);
+
+        when(documentRepository.findAll(PageRequest.of(pageNo, pageSize))).thenReturn(page);
+
+        // Act
+        DocumentBriefPageResponseDTO result = documentService.getDocumentsByPageNumber(pageNo).get(0);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.totalPages());
+        assertEquals(0, result.currentPage());
+        assertEquals(1, result.totalItems());
+        assertEquals(1, result.documentSnippets().size());
         verify(documentRepository, times(1)).findAll(PageRequest.of(pageNo, pageSize));
     }
 
