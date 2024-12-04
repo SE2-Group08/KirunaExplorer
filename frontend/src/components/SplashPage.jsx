@@ -52,6 +52,7 @@ export default function HomePage() {
                   to the urban transformation of Kiruna.
                 </Card.Text>
               </Card.Body>
+              <a href="/documents" className="stretched-link"></a>
             </Card>
           </Col>
           <Col md={4}>
@@ -64,6 +65,7 @@ export default function HomePage() {
                   map tools.
                 </Card.Text>
               </Card.Body>
+              <a href="/map" className="stretched-link"></a>
             </Card>
           </Col>
           <Col md={4}>
