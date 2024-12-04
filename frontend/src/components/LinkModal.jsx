@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
-const LinkModal = ({ showModal, handleClose, document, setSelectedLinkDocuments, selectedLinkDocuments }) => {
+const LinkModal = ({ showModal, handleClose, document, setSelectedLinkDocuments }) => {
   const [selectedLinks, setSelectedLinks] = useState([{ id: Date.now(), value: '' }]);
   const [errors, setErrors] = useState({});
 

@@ -338,7 +338,7 @@ export default function DocumentModal(props) {
           <Button title="Save" variant="success" onClick={handleSubmit}>
             <i className="bi bi-check-square"></i>
           </Button>
-        ) : (
+        ) : props.loggedIn && props.user.role === "Urban Planner" &&(
           <div className="d-flex align-items-center">
             {/* <Button
               variant="primary"
@@ -381,8 +381,11 @@ DocumentModal.propTypes = {
   document: PropTypes.object.isRequired,
   handleSave: PropTypes.func.isRequired,
   handleAdd: PropTypes.func.isRequired,
-  onLinkToClick: PropTypes.func.isRequired,
-  onLinksClick: PropTypes.func.isRequired,
+  onLinkToClick: PropTypes.func,
+  onLinksClick: PropTypes.func,
+  onSnippetClick: PropTypes.func,
+  loggedIn: PropTypes.bool,
+  user: PropTypes.object
 };
 
 function ModalBodyComponent({ document }) {
@@ -939,7 +942,6 @@ function DocumentFormComponent({
           max={23.28669305841499}
           step={0.00001}
           value={document.geolocation.longitude}
-          isInvalid={!!errors.longitude}
           onChange={handleLongitudeChange}
           disabled={document.geolocation.municipality === "Entire municipality"}
         />

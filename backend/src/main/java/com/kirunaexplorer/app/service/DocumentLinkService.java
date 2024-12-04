@@ -23,9 +23,10 @@ public class DocumentLinkService {
         this.documentLinkRepository = documentLinkRepository;
     }
 
-    /***
+    /**
      * Link two documents
-     * @param id Document id
+     *
+     * @param id      Document id
      * @param request LinkDocumentsRequestDTO
      * @return LinkDocumentsResponse
      */
@@ -49,9 +50,10 @@ public class DocumentLinkService {
         return new LinkDocumentsResponseDTO(documentLink.getId());
     }
 
-    /***
+    /**
      * Update a document link
-     * @param id Document link id
+     *
+     * @param id      Document link id
      * @param request LinkDocumentsRequestDTO
      */
     @Transactional

@@ -1,7 +1,8 @@
 import { Button, Col, Container, Row } from "react-bootstrap";
 import "../App.css";
+import PropTypes from "prop-types";
 
-export default function SplashPage() {
+export default function SplashPage({loggedIn, user}) {
   return (
     <div className="splash-background">
       <Container className="d-flex flex-column justify-content-center">
@@ -10,14 +11,19 @@ export default function SplashPage() {
             <h1 className="splash-title">Kiruna eXplorer</h1>
           </Col>
         </Row>
-        <Row className="text-center">
+        { loggedIn && user.Role === "Urban Planner" &&<Row className="text-center">
           <Col>
             <Button href="/documents" variant="light">
               Explore Documents
             </Button>
           </Col>
-        </Row>
+        </Row>}
       </Container>
     </div>
   );
+}
+
+SplashPage.propTypes = {
+  loggedIn: PropTypes.bool,
+  user: PropTypes.object
 }

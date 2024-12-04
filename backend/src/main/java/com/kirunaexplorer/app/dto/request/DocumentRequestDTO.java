@@ -59,8 +59,9 @@ public record DocumentRequestDTO(
         return Objects.requireNonNullElseGet(this.geolocation, () -> new GeoReferenceDTO(null, null, null));    // some idiomatic shit right here, I like it
     }
 
-    /***
+    /**
      * Converts the DocumentRequestDTO to a Document object.
+     *
      * @return Document object
      */
     public Document toDocument() {
@@ -83,8 +84,9 @@ public record DocumentRequestDTO(
         );
     }
 
-    /***
+    /**
      * Returns the DatePrecision of the date.
+     *
      * @param date date
      * @return DatePrecision
      */

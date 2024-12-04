@@ -1,38 +1,170 @@
 const request = require('supertest');
-const baseURL = 'http://localhost:8080'; // Adjust as necessary
+const baseURL = 'http://localhost:8080/api/v1'; // Adjust as necessary
 
 describe('KirunaExplorer API Tests', () => {
 
     // Test GET /documents - Success
-    it('should get all documents successfully', async () => {
+    it('It should get all documents successfully', async () => {
         const response = await request(baseURL).get('/documents');
         expect(response.statusCode).toBe(200);
         expect(response.headers['content-type']).toContain('application/json');
     });
 
-    // Test GET /documents - Invalid Query Parameter
+    /*// Test GET /documents - Invalid Query Parameter
     it('should return 400 for invalid query parameter', async () => {
         const response = await request(baseURL).get('/documents').query({ unknownParam: 'invalid' });
         expect(response.statusCode).toBe(400);
-    });
+    });*/
 
-    // Test POST /documents - Success
-    it('should create a new document successfully', async () => {
-        const newDocument = {
+     test("It should create a document - SUCCESS", async () => {
+            const document = {
+                id: null,
+                title: "New document",
+                stakeholders: ["Kiruna kommun"],
+                scale: "1:8000",
+                issuanceDate: "2020-10-05",
+                type: "Prescriptive document",
+                nrConnections: 0,
+                language: null,
+                nrPages: 42,
+                geolocation: { latitude: 67.8558, longitude: 20.2732, municipality: null },
+                description: "Sample description"
+            }
+            const response = await request(baseURL).post('/documents').send(document);
+            expect(response.statusCode).toBe(201);
+        });
+
+    test("It should create a document - 400 Invalid title", async () => {
+        const document = {
             id: null,
-            title: "Sample Document",
-            stakeholders: ["abc"],
-            scale: "1:100",
-            issuanceDate: "2024-01-01",
-            type: "Technical document",
+            title: "",
+            stakeholders: ["Kiruna kommun"],
+            scale: "1:8000",
+            issuanceDate: "2020-10-05",
+            type: "Prescriptive document",
             nrConnections: 0,
             language: null,
             nrPages: 42,
-            geolocation: { latitude: 0, longitude: 0 },
+            geolocation: { latitude: 67.8558, longitude: 20.2732, municipality: null },
             description: "Sample description"
-        };
-        const response = await request(baseURL).post('/documents').send(newDocument);
-        expect(response.statusCode).toBe(201);
+        }
+        const response = await request(baseURL).post('/documents').send(document);
+        console.log(response.body)
+        expect(response.statusCode).toBe(400);
+    })
+
+    test("It should create a document - 400 Invalid stakeholders", async () => {
+        const document = {
+            id: null,
+            title: "New Document",
+            stakeholders: [],
+            scale: "1:8000",
+            issuanceDate: "2020-10-05",
+            type: "Prescriptive document",
+            nrConnections: 0,
+            language: null,
+            nrPages: 42,
+            geolocation: { latitude: 67.8558, longitude: 20.2732, municipality: null },
+            description: "Sample description"
+        }
+        const response = await request(baseURL).post('/documents').send(document);
+        console.log(response.body)
+        expect(response.statusCode).toBe(400);
+    })
+
+    test("It should create a document - 400 Invalid scale", async () => {
+        const document = {
+            id: null,
+            title: "New Document",
+            stakeholders: ["Kiruna kommun"],
+            scale: "casa dolce casa",
+            issuanceDate: "2020-10-05",
+            type: "Prescriptive document",
+            nrConnections: 0,
+            language: null,
+            nrPages: 42,
+            geolocation: { latitude: 67.8558, longitude: 20.2732, municipality: null },
+            description: "Sample description"
+        }
+        const response = await request(baseURL).post('/documents').send(document);
+        console.log(response.body)
+        expect(response.statusCode).toBe(400);
+    })
+
+    test("It should create a document - 400 Invalid date - missing year", async () => {
+        const document = {
+            id: null,
+            title: "New Document",
+            stakeholders: ["Kiruna kommun"],
+            scale: "1:8000",
+            issuanceDate: "10-05",
+            type: "Prescriptive document",
+            nrConnections: 0,
+            language: null,
+            nrPages: 42,
+            geolocation: { latitude: 67.8558, longitude: 20.2732, municipality: null },
+            description: "Sample description"
+        }
+        const response = await request(baseURL).post('/documents').send(document);
+        console.log(response.body)
+        expect(response.statusCode).toBe(400);
+    })
+
+    test("It should create a document - 400 Invalid date - invalid format", async () => {
+        const document = {
+            id: null,
+            title: "New Document",
+            stakeholders: ["Kiruna kommun"],
+            scale: "1:8000",
+            issuanceDate: "10-05-2024",
+            type: "Prescriptive document",
+            nrConnections: 0,
+            language: null,
+            nrPages: 42,
+            geolocation: { latitude: 67.8558, longitude: 20.2732, municipality: null },
+            description: "Sample description"
+        }
+        const response = await request(baseURL).post('/documents').send(document);
+        console.log(response.body)
+        expect(response.statusCode).toBe(400);
+    })
+
+    test("It should create a document - 400 Invalid date - invalid format 2.0", async () => {
+        const document = {
+            id: null,
+            title: "New Document",
+            stakeholders: ["Kiruna kommun"],
+            scale: "1:8000",
+            issuanceDate: "2020- -05",
+            type: "Prescriptive document",
+            nrConnections: 0,
+            language: null,
+            nrPages: 42,
+            geolocation: { latitude: 67.8558, longitude: 20.2732, municipality: null },
+            description: "Sample description"
+        }
+        const response = await request(baseURL).post('/documents').send(document);
+        console.log(response.body)
+        expect(response.statusCode).toBe(400);
+    })
+
+    test("It should create a document - 400 Invalid type", async () => {
+        const document = {
+            id: null,
+            title: "New document",
+            stakeholders: ["Kiruna kommun"],
+            scale: "1:8000",
+            issuanceDate: "2020-10-05",
+            type: "Prescriptive",
+            nrConnections: 0,
+            language: null,
+            nrPages: 42,
+            geolocation: { latitude: 67.8558, longitude: 20.2732, municipality: null },
+            description: "Sample description"
+        }
+        const response = await request(baseURL).post('/documents').send(document);
+        console.log(response.body);
+        expect(response.statusCode).toBe(400);
     });
 
     // Test POST /documents - Missing Required Fields

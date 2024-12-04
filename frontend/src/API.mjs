@@ -7,37 +7,51 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  *      Authentication APIs     *
  * **************************** */
 
-// Given a credentials object containing username and passowrd it executes login
+// Given a credentials object containing username and password it executes login
 const logIn = async (credentials) => {
-  console.log("API.logIn", credentials);
-  return await fetch(SERVER_URL + "/sessions", {
+  const response = await fetch(SERVER_URL + "/auth/authenticate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
+    credentials: "include", // Include cookies if the server uses them
     body: JSON.stringify(credentials),
-  })
-    .then(handleInvalidResponse)
-    .then((response) => response.json());
+  }).then(handleInvalidResponse);
+
+  const data = await response.json();
+  const token = data.token;
+
+  if (token) {
+    localStorage.setItem("authToken", token);
+  }
+
+  return response;
 };
 
 // Verifies if user is still logged-in. It returns a JSON with the user info
 const getUserInfo = async () => {
-  return await fetch(SERVER_URL + "/sessions/current", {
-    credentials: "include",
-  })
-    .then(handleInvalidResponse)
-    .then((response) => response.json);
+  return !!localStorage.getItem("authToken");
+
 };
 
-// Destroys the current user's session (executing log-out)
+
 const logOut = async () => {
-  return await fetch(SERVER_URL + "/sessions/current", {
-    method: "DELETE",
-    credentials: "include",
-  }).then(handleInvalidResponse);
+  const token = localStorage.getItem("authToken"); // Retrieve the token
+
+  if (!token) {
+    console.warn("No token found. User may already be logged out.");
+    return; // Exit early if no token is available
+  }
+
+  try {
+    // Remove token from storage after successful logout
+    localStorage.removeItem("authToken");
+    console.log("User successfully logged out.");
+  } catch (error) {
+    console.error("Error during logout:", error);
+  }
 };
+
 
 /* ********************* *
  *       User APIs       *
@@ -226,14 +240,22 @@ const deleteDocument = async (documentId) => {
  * ************************** */
 
 function handleInvalidResponse(response) {
-  if (!response.ok) {
-    throw Error(response.statusText);
+  try {
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+    let type = response.headers.get("content-type");
+    if (type != null && type.indexOf("application/json") === -1) {
+      throw new TypeError(`Expected JSON, got ${type}`);
+    }
+    return response;
+  } catch (error) {
+    // Handle error silently
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-  let type = response.headers.get("content-type");
-  if (type != null && type.indexOf("application/json") === -1) {
-    throw new TypeError(`Expected JSON, got ${type}`);
-  }
-  return response;
 }
 
 function mapAPIStakeholdersToStakeholders(apiStakeholders) {

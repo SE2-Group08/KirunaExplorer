@@ -40,8 +40,9 @@ public class GeoReference {
         this.location = location;
     }
 
-    /***
+    /**
      * Converts the GeoReference object to a GeoReferenceDTO object.
+     *
      * @return GeoReferenceDTO object
      */
     public GeoReferenceDTO toGeolocationDTO() {
