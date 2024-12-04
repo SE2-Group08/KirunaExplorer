@@ -287,7 +287,7 @@ function DocumentSnippetTableComponent({
     <Table hover responsive>
       <thead>
         <tr>
-          <th>Icon</th>
+          <th>Type</th>
           <th>Title</th>
           <th>Scale</th>
           <th>Issuance Date</th>
