@@ -1,7 +1,6 @@
-import React from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
-import "../App.css"; 
-import BackgroundImage from "../public/KX_BckG.webp"; 
+import "../App.scss";
+import BackgroundImage from "../public/KX_BckG.webp";
 import { FaFileAlt, FaMapMarkedAlt, FaUsers } from "react-icons/fa";
 
 export default function HomePage() {
@@ -29,19 +28,33 @@ export default function HomePage() {
         ></div>
 
         <div>
-          <h1 style={{ fontSize: "50px", zIndex: 2, position: "relative", color:"white" }}>
+          <h1
+            style={{
+              fontSize: "50px",
+              zIndex: 2,
+              position: "relative",
+              color: "white",
+            }}
+          >
             Welcome to Kiruna Explorer
           </h1>
-          <p style={{ fontSize: "25px", zIndex: 2, position: "relative", color:"white" }}>
+          <p
+            style={{
+              fontSize: "25px",
+              zIndex: 2,
+              position: "relative",
+              color: "white",
+            }}
+          >
             Discover, explore, and manage all the tools you need to navigate
-            Kiruna's transformation.
+            Kiruna&apos;s transformation.
           </p>
         </div>
       </div>
 
       {/* Sezione Card */}
-      <Container className="py-5">
-        <Row className="text-center">
+      <Container className="py-4">
+        <Row className="text-center d-flex justify-content-center">
           <Col md={4}>
             <Card className="h-100">
               <Card.Body>
@@ -68,7 +81,7 @@ export default function HomePage() {
               <a href="/map" className="stretched-link"></a>
             </Card>
           </Col>
-          <Col md={4}>
+          {/* <Col md={4}>
             <Card className="h-100">
               <Card.Body>
                 <FaUsers size={40} className="mb-3" />
@@ -79,7 +92,7 @@ export default function HomePage() {
                 </Card.Text>
               </Card.Body>
             </Card>
-          </Col>
+          </Col> */}
         </Row>
       </Container>
     </div>

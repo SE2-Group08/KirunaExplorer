@@ -5,9 +5,9 @@ export default function Footer() {
     const currentYear = dayjs().year();
 
     return (
-        <Navbar style={{ backgroundColor: "#b1b0aa" }} fixed="bottom">
+        <Navbar bg='secondary' fixed="bottom">
             <Container fluid className="px-3">
-                <Navbar.Text style={{ color: "black" }}>
+                <Navbar.Text>
                     {currentYear} - Kiruna Explorer licensed under CC BY SA.
                 </Navbar.Text>
             </Container>

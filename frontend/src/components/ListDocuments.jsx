@@ -10,7 +10,7 @@ import {
   Table,
   Spinner,
 } from "react-bootstrap";
-import "../App.css";
+import "../App.scss";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
 import LinkModal from "./LinkModal";
@@ -31,7 +31,9 @@ export default function ListDocuments({ shouldRefresh }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [links, setLinks] = useState([]);
-  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState([]);
+  const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
+    []
+  );
 
   useEffect(() => {
     if (linking) {
@@ -150,42 +152,6 @@ export default function ListDocuments({ shouldRefresh }) {
     <Container fluid className="scrollable-list-documents">
       <Row>
         <h1>{linking ? "Link a Document" : "Documents"}</h1>
-      </Row>
-      <Row className="d-flex justify-content-between align-items-center mb-3">
-        {linking ? (
-          <p
-            style={{
-              fontSize: "1.2rem",
-              marginBottom: "0.5rem",
-              marginTop: "0.5rem",
-              fontWeight: "500",
-            }}
-          >
-            Choose the document you want to link
-          </p>
-        ) : (
-          <>
-            <p
-              style={{
-                fontSize: "1.2rem",
-                marginBottom: "0.5rem",
-                marginTop: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Here you can find all the documents about Kiruna&apos;s relocation
-              process.
-            </p>
-            <p
-              style={{
-                fontSize: "1.2rem",
-                fontWeight: "500",
-              }}
-            >
-              Click on a document to see more details.
-            </p>
-          </>
-        )}
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         <Col xs="auto">
@@ -307,7 +273,7 @@ function DocumentSnippetTableComponent({
   isLinkedDocument,
 }) {
   return (
-    <Table hover responsive style={{ backgroundColor: "#E6E8EA" }}>
+    <Table hover responsive>
       <thead>
         <tr>
           <th>Icon</th>
@@ -327,8 +293,11 @@ function DocumentSnippetTableComponent({
               }
             }}
             style={{
-              cursor: "pointer",
-              transition: "transform 0.2s",
+              cursor: !isLinkedDocument(document)? "pointer" : "default",
+              transition: !isLinkedDocument(document)? "transform 0.2s" : "none",
+              backgroundColor: isLinkedDocument(document)
+              ? "#AAA598"
+              : "transparent",
             }}
             onMouseEnter={(e) => {
               if (!isLinkedDocument(document)) {
@@ -343,7 +312,10 @@ function DocumentSnippetTableComponent({
           >
             <td>
               <img
-                src={getIconUrlForDocument(document.type, document.stakeholders)}
+                src={getIconUrlForDocument(
+                  document.type,
+                  document.stakeholders
+                )}
                 alt={`${document.type} icon`}
                 style={{ width: "40px", height: "40px" }}
               />
@@ -357,8 +329,8 @@ function DocumentSnippetTableComponent({
                 document.issuanceDate.length === 4
                   ? "YYYY"
                   : document.issuanceDate.length === 7
-                    ? "MM/YYYY"
-                    : "DD/MM/YYYY"
+                  ? "MM/YYYY"
+                  : "DD/MM/YYYY"
               )}
             </td>
             {/* <td>{document.type}</td> */}
@@ -407,7 +379,7 @@ const DocumentSnippetCardComponent = ({
         className="document-card h-100"
         style={{
           backgroundColor: isLinkedDocument(document)
-            ? "#b1b1aa"
+            ? "#AAA598"
             : "transparent",
         }}
         onClick={() => {
@@ -445,6 +417,11 @@ const DocumentSnippetCardComponent = ({
             </div>
           )}
           <Card.Title className="document-card-title">
+            <img
+              src={getIconUrlForDocument(document.type, document.stakeholders)}
+              alt={`${document.type} icon`}
+              style={{ width: "40px", height: "40px" }}
+            />
             {document.title}
           </Card.Title>
           <div className="divider" />
@@ -453,14 +430,13 @@ const DocumentSnippetCardComponent = ({
           </Card.Text>
           <Card.Text className="document-card-text">
             <strong>Issuance Date:</strong>{" "}
-            {
-              dayjs(document.issuanceDate).format(
-                document.issuanceDate.length === 4
-                  ? "YYYY"
-                  : document.issuanceDate.length === 7
-                    ? "MM/YYYY"
-                    : "DD/MM/YYYY"
-              )}
+            {dayjs(document.issuanceDate).format(
+              document.issuanceDate.length === 4
+                ? "YYYY"
+                : document.issuanceDate.length === 7
+                ? "MM/YYYY"
+                : "DD/MM/YYYY"
+            )}
           </Card.Text>
           {/* <Card.Text className="document-card-text">
             <strong>Type:</strong> {document.type}

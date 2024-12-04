@@ -5,7 +5,7 @@ import Navbar from 'react-bootstrap/Navbar';
 
 function Header() {
   return (
-    <Navbar className="header-navbar" style={{ backgroundColor: "#3f4043" }} fixed="top">
+    <Navbar className="header-navbar" bg='dark' fixed="top">
       <Container fluid className="px-3">
         <Navbar.Brand href="/" className="align-middle">Kiruna Explorer</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
