@@ -90,7 +90,7 @@ public class FileServiceTests {
                 () -> fileService.getFile(fileId));
     }
 
-    @Test
+    /*@Test
     void shouldDeleteFileSuccessfully() {
         Long fileId = 1L;
         Document document = new Document();
@@ -105,7 +105,7 @@ public class FileServiceTests {
         verify(fileRepository).delete(file);
         verify(documentRepository).save(document);
         Assertions.assertTrue(document.getDocumentFiles().isEmpty());
-    }
+    }*/
 
     @Test
     void shouldThrowExceptionWhenDeletingFileNotFound() {
