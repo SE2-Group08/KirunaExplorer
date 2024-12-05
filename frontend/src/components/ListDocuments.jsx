@@ -18,6 +18,7 @@ import FeedbackContext from "../contexts/FeedbackContext";
 import SearchBar from "./SearchBar.jsx";
 import Pagination from "./Pagination";
 import { getIconUrlForDocument } from "../utils/iconMapping";
+import LegendModal from "./Legend";
 
 export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
@@ -231,6 +232,7 @@ export default function ListDocuments({ shouldRefresh }) {
         <Col xs={6}>
           <SearchBar onSearch={handleSearch}/>
         </Col>
+        <LegendModal show={showLegend} onHide={() => setShowLegend(false)} />
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (
