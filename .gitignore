@@ -1,0 +1,116 @@
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# JetBrains IDEs (IntelliJ, PyCharm, WebStorm, etc.)
+.idea/
+*.iml
+*.iws
+out/
+# log and cache files for JetBrains
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/libraries/
+.idea/.idea_modules/
+.idea/assetWizard.xml
+.idea/cssLibraries.xml
+.idea/javaLib.xml
+.idea/xmlLibraries.xml
+.idea/httpRequests/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+!.vscode/extensions.json
+*.ntvs*
+*.njsproj
+*.sw?
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.user
+*.filters
+
+# Eclipse
+.project
+.classpath
+.cproject
+.settings/
+*.launch
+target/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+build/
+
+# Android Studio
+.gradle/
+local.properties
+.idea/
+*.iml
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+libs/
+
+# Rider
+.idea/
+*.sln
+*.suo
+*.user
+*.cache
+*.Rider
+
+# General IDE Configurations
+*~backup*
+*.swp
+*.bak
+*.tmp
+*.log
+
+# environment variables
+.env
+
+# vite cache
+*/.vite/
+
+# Docker
+*/Dockerfile
