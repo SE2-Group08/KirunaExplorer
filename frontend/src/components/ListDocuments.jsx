@@ -14,7 +14,6 @@ import "../App.scss";
 import DocumentModal from "./DocumentModal";
 import API from "../API";
 import LinkModal from "./LinkModal";
-import { useContext } from "react";
 import FeedbackContext from "../contexts/FeedbackContext";
 import SearchBar from "./SearchBar.jsx";
 import Pagination from "./Pagination";
@@ -68,6 +67,7 @@ export default function ListDocuments({ shouldRefresh }) {
         API.getDocumentsByPageNumber(currentPage)
             .then((response) => {
                 setDocuments(response[0].documentSnippets);
+                setFilteredDocuments(response[0].documentSnippets);
                 setTotalPages(response[0].totalPages);
             })
             .then(() => setShouldRefresh(false))
@@ -108,7 +108,7 @@ export default function ListDocuments({ shouldRefresh }) {
 
   const handleSave = (document) => {
     API.updateDocument(document.id, document)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
+      .then(() => API.getAllDocumentSnippets().then(setFilteredDocuments))
       .then(() => setShouldRefresh(false))
       .then(() =>
         setFeedback({
@@ -134,6 +134,7 @@ export default function ListDocuments({ shouldRefresh }) {
       // Aggiorna la lista dei documenti
       const updatedDocuments = await API.getAllDocumentSnippets();
       setDocuments(updatedDocuments);
+      setFilteredDocuments(updatedDocuments);
 
       // Aggiorna lo stato e fornisci feedback
       setShouldRefresh(false);
@@ -151,7 +152,7 @@ export default function ListDocuments({ shouldRefresh }) {
 
   const handleDelete = (documentId) => {
     API.deleteDocument(documentId)
-      .then(() => API.getAllDocumentSnippets().then(setDocuments))
+      .then(() => API.getAllDocumentSnippets().then(setFilteredDocuments))
       .then(() => setShouldRefresh(false))
       .then(() =>
         setFeedback({
@@ -335,17 +336,13 @@ export default function ListDocuments({ shouldRefresh }) {
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
                 filteredDocuments={filteredDocuments}
-                // TODO : check
-                //  documents={documents}
               onSelect={handleSelection}
               isLinkedDocument={isLinkedDocument}
             />
           </Row>
         ) : (
           <Row xs={1} sm={2} md={3} lg={4} className="g-4 mx-auto">
-              // TODO : check
               {filteredDocuments.map((document) => (
-            /*{documents.map((document) => (*/
               <DocumentSnippetCardComponent
                 key={document.id}
                 document={document}
@@ -406,8 +403,6 @@ ListDocuments.propTypes = {
 };
 
 function DocumentSnippetTableComponent({
-    // TODO: check
-   // documents,
 filteredDocuments,
   onSelect,
   isLinkedDocument,
@@ -424,9 +419,7 @@ filteredDocuments,
         </tr>
       </thead>
       <tbody>
-      // TODO: check
       {filteredDocuments.map((document) => (
-        // {documents.map((document) => (
           <tr
             key={document.id}
             onClick={() => {
@@ -486,8 +479,6 @@ filteredDocuments,
 }
 
 DocumentSnippetTableComponent.propTypes = {
-    // TODO: check
-  // documents: PropTypes.array.isRequired,
     filteredDocuments: PropTypes.array.isRequired,
   onSelect: PropTypes.func.isRequired,
   isLinkedDocument: PropTypes.func.isRequired,
