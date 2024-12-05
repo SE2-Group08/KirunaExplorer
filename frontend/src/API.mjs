@@ -77,56 +77,13 @@ const createLink = async (documentId, link) => {
     documentId: link.documentId,
   };
 
-  // ("REQUEST BODY: ", requestBody);
-  requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  console.log(document.id)
-  try {
-    const response = await fetch(`${SERVER_URL}/documents/${document.id}/links`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (response.ok) {
-      const responseData = response.status !== 201 ? await response.json() : null;
-      console.log("Link creato con successo:", responseData);
-    } else {
-      console.error("Errore nella creazione del link:", response.status, response.statusText);
-    }
-  } catch (error) {
-    console.error("Errore nella richiesta:", error);
-  }
-  // ("REQUEST BODY: ", requestBody);
-  requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  console.log(document.id);
-  try {
-    const response = await fetch(
-      `${SERVER_URL}/documents/${document.id}/links`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      }
-    );
-
-    if (response.ok) {
-      const responseData =
-        response.status !== 201 ? await response.json() : null;
-      console.log("Link creato con successo:", responseData);
-    } else {
-      console.error(
-        "Errore nella creazione del link:",
-        response.status,
-        response.statusText
-      );
-    }
-  } catch (error) {
-    console.error("Errore nella richiesta:", error);
-  }
+  return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  }).then(handleInvalidResponse);
 };
 
 // Retrieve all links of a document
@@ -176,39 +133,14 @@ const getDocumentsByPageNumber = async (pageNo = 0) => {
 
 // Create a new document
 const addDocument = async (document) => {
-  try {
-    console.log("ADD DOCUMENT: ", document);
-
-    const response = await fetch(`${SERVER_URL}/documents`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(document),
-    });
-
-    if (!response.ok) {
-      console.error("Failed to add document:", response.status, response.statusText);
-      return null;
-    }
-
-    const location = response.headers.get("location");
-    if (!location) {
-      console.error("Location header not found in response.");
-      return null;
-    }
-
-    console.log("Location header:", location);
-    const newDocId = location.split("/").pop(); // Estrarre l'ID dal percorso
-    console.log("Extracted ID:", newDocId);
-
-    return newDocId;
-  } catch (error) {
-    console.error("Error while adding document:", error);
-    return null;
-  }
+  return await fetch(`${SERVER_URL}/documents`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(document),
+  }).then(handleInvalidResponse);
 };
-
 
 // Retrieve a document by id
 const getDocumentById = async (documentId) => {
@@ -228,18 +160,6 @@ const updateDocument = async (documentId, nextDocument) => {
     },
     body: JSON.stringify(nextDocument),
   }).then(handleInvalidResponse);
-
-  console.log("Response Status:", response.status);
-  console.log("Response Headers:", [...response.headers.entries()]);
-
-  const location = response.headers.get("location");
-  if (location) {
-    console.log("Location header:", location);
-  } else {
-    console.error("Location header is missing.");
-  }
-
-  return await response.json();
 };
 
 // Delete a document given its id
