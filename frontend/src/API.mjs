@@ -11,18 +11,20 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  * ************************** */
 
 const uploadFiles = async (id, files) => {
-  const formData = new FormData();
+    const formData = new FormData();
   files.forEach((file) => {
     formData.append("files", file);
   });
 
-  const url = `${SERVER_URL}/documents/${id}/files`;
-  console.log("Uploading file to URL:", url);
 
-  const response = await fetch(url, {
-    method: "POST",
-    body: formData,
-  }).then(handleInvalidResponse);
+  const url = `${SERVER_URL}/documents/${id}/files`;
+    console.log("Uploading file to URL:", url);
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    })
+  .then(handleInvalidResponse)
 };
 
 const deleteFile = async (fileId) => {
@@ -89,11 +91,21 @@ const createLink = async (documentId, link) => {
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
   const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
-    .then(handleInvalidResponse)
-    .then((response) => response.json());
+      .then(handleInvalidResponse)
+      .then((response) => response.json());
   return links;
 };
 
+// Update a link for a document
+const updateLink = async (documentId, linkId, updatedLink) => {
+  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updatedLink),
+  }).then(handleInvalidResponse);
+};
 
 // Delete a link for a document
 const deleteLink = async (linkId) => {
@@ -108,7 +120,7 @@ const deleteLink = async (linkId) => {
  * ************************** */
 
 // Retrieve all documents snippets
-const getAllDocumentSnippets = async (filter) => {
+const getAllDocumentSnippets = async () => {
   const documents = await fetch(`${SERVER_URL}/documents/map`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
@@ -131,7 +143,6 @@ const getDocumentsByPageNumber = async (pageNo = 0) => {
   }
 };
 
-// Create a new document
 const addDocument = async (document) => {
   try {
     console.log("ADD DOCUMENT: ", document);
@@ -167,6 +178,7 @@ const addDocument = async (document) => {
 };
 
 
+
 // Retrieve a document by id
 const getDocumentById = async (documentId) => {
   const document = await fetch(`${SERVER_URL}/documents/${documentId}`)
@@ -176,7 +188,6 @@ const getDocumentById = async (documentId) => {
   return document;
 };
 
-// Update a document given its id
 const updateDocument = async (documentId, nextDocument) => {
   return await fetch(`${SERVER_URL}/documents`, {
     method: "PUT",
@@ -206,9 +217,28 @@ const deleteDocument = async (documentId) => {
   }).then(handleInvalidResponse);
 };
 
-/* ************************** *
- *      Stakeholders APIs     *
- * ************************** */
+const searchDocuments = async (keyword) => {
+    const params = new URLSearchParams();
+    if (keyword) {
+        params.append('keyword', keyword);
+    }
+
+    const queryString = params.toString(); // Automatically encodes spaces as '+'
+
+    const response =  await fetch(`${SERVER_URL}/documents/search?${queryString}`, {
+        method: 'GET',
+        // Removed 'Content-Type' header as it's not needed for GET requests
+    })
+        .then(handleInvalidResponse)
+        .then((response) => response.json())
+        .then(mapAPISnippetsToSnippet);
+
+    return response;
+}
+
+// /* ************************** *
+//  *      Stakeholders APIs     *
+//  * ************************** */
 
 // // Retrieve all stakeholders
 const getAllStakeholders = async () => {
@@ -370,6 +400,7 @@ const API = {
   getAllDocumentTypes,
   addDocumentType,
   /* Scale */
+  searchDocuments,
   getAllScales,
   addScale,
   getDocumentsByPageNumber,

@@ -5,16 +5,9 @@ import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
-import com.kirunaexplorer.app.model.Document;
-import com.kirunaexplorer.app.model.DocumentScale;
-import com.kirunaexplorer.app.model.DocumentType;
-import com.kirunaexplorer.app.model.GeoReference;
-import com.kirunaexplorer.app.model.Stakeholder;
+import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.repository.*;
 import com.kirunaexplorer.app.util.DocumentFieldsChecker;
-import com.kirunaexplorer.app.repository.DocumentLinkRepository;
-import com.kirunaexplorer.app.repository.DocumentRepository;
-import com.kirunaexplorer.app.repository.GeoReferenceRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -47,6 +40,17 @@ public class DocumentService {
         this.stakeholderRepository = stakeholderRepository;
         this.documentTypeRepository = documentTypeRepository;
         this.documentScaleRepository = documentScaleRepository;
+    }
+
+    /**
+     * Get all documents in brief format
+     *
+     * @return List of DocumentBriefResponseDTO
+     */
+    public List<DocumentBriefResponseDTO> getAllDocuments() {
+        return documentRepository.findAll().stream()
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
     }
 
     /**
@@ -171,15 +175,14 @@ public class DocumentService {
         geoReferenceRepository.save(geoReference);
     }
 
-    /**
-     * Get all documents in brief format
-     *
-     * @return List of DocumentBriefResponseDTO
-     */
-    public List<DocumentBriefResponseDTO> getAllDocuments() {
-        return documentRepository.findAll().stream()
-            .map(Document::toDocumentBriefResponseDTO)
-            .toList();
+    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
+        List<Document> documents = documentRepository.searchDocuments(keyword, type);
+        if (documents == null) {
+            return List.of();
+        }
+        return documents.stream()
+                .map(Document::toDocumentBriefResponseDTO)
+                .toList();
     }
 }
 
