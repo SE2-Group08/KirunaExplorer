@@ -63,14 +63,6 @@ const MapKiruna = () => {
             .catch((error) => setFeedbackFromError(error));
     }, [setFeedbackFromError]);
 
-    useEffect(() => {
-        API.getDocumentsByPageNumber()
-            .then((response) => {
-                setFilteredDocuments(response[0].documentSnippets);
-            })
-            .then(() => setShouldRefresh(false))
-            .catch((error) => setFeedbackFromError(error));
-    }, [setFeedbackFromError, setShouldRefresh]);
 
   const handleDocumentClick = (document) => {
     API.getDocumentById(document.id)
@@ -99,7 +91,6 @@ const MapKiruna = () => {
     API.searchDocuments(keyword)
         .then((data) => {
           setFilteredDocuments(data);
-          console.log("Filtered documents: ", data);
         })
         .catch((error) => {
           setFeedbackFromError(error);
