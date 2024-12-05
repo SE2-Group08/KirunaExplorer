@@ -27,7 +27,7 @@ public record DocumentRequestDTO(
     List<@Size(min = 2, max = 64) String> stakeholders,
 
     @NotNull
-    @Pattern(regexp = "Text|Blueprint/Material effects|^[1-9]:[1-9][0-9]*$")
+    @Size(min = 2, max = 64)
     String scale,
 
     @NotNull
@@ -35,7 +35,7 @@ public record DocumentRequestDTO(
     String issuanceDate,
 
     @NotNull
-    @Pattern(regexp = "Design document|Material effect|Technical document|Prescriptive document|Informative document")
+    @Size(min = 2, max = 64)
     String type,
 
     @Min(0)

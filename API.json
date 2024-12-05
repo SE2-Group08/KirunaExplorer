@@ -4,7 +4,7 @@
     "title": "Kiruna eXplorer",
     "description": "REST APIs for the interaction with the Kiruna eXplorer service.",
     "termsOfService": "http://swagger.io/terms/",
-    "version": "0.4"
+    "version": "0.5"
   },
   "components": {
     "schemas": {
@@ -246,6 +246,41 @@
           "type"
         ]
       },
+      "documentSnippets": {
+        "title": "documentSnippets",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "description": "path to the JSON schema to use for the validation of the JSON file describing a document"
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The total number of pages"
+          },
+          "currentPage": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The total number of items in the current page"
+          },
+          "documentSnippets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/documentSnippet"
+            }
+          }
+        },
+        "required": [
+          "totalPages"
+        ]
+      },
       "link": {
         "title": "Link",
         "description": "JSON schema for a link data structure",
@@ -276,56 +311,67 @@
           "documentId"
         ]
       },
-      "FileSnippet": {
-        "title": "FileSnippet",
+      "Stakeholder": {
+        "title": "Stakeholder",
+        "description": "JSON schema for a stakeholder data structure",
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "$schema": {
-            "type": "string",
-            "format": "uri",
-            "description": "path to the JSON schema to use for the validation of the JSON file describing a file snippet"
-          },
           "id": {
             "type": "integer",
-            "description": "The unique identifier of the file"
+            "description": "The unique identifier of the stakeholder"
           },
           "name": {
             "type": "string",
-            "description": "The name of the file",
+            "description": "The name of the stakeholder",
             "minLength": 2,
             "maxLength": 64
-          },
-          "extension": {
-            "type": "string",
-            "description": "The MIME type of the file",
-            "minLength": 2,
-            "maxLength": 64
-          },
-          "size": {
-            "type": "integer",
-            "description": "The size of the file in bytes",
-            "minimum": 0
           }
         },
         "required": [
-          "name",
-          "extension"
+          "name"
         ]
       },
-      "File": {
-        "title": "File",
+      "Scale": {
+        "title": "Scale",
+        "description": "JSON schema for a scale data structure",
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "file": {
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the scale"
+          },
+          "scale": {
             "type": "string",
-            "format": "binary",
-            "description": "The file"
+            "description": "The name of the scale",
+            "minLength": 2,
+            "maxLength": 64
           }
         },
         "required": [
-          "file"
+          "scale"
+        ]
+      },
+      "DocumentType": {
+        "title": "DocumentType",
+        "description": "JSON schema for a document type data structure",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the document type"
+          },
+          "type_name": {
+            "type": "string",
+            "description": "The name of the document type",
+            "minLength": 2,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "value"
         ]
       }
     }
@@ -337,7 +383,17 @@
         "tags": [
           "document"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pageNo",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The page number"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -346,7 +402,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/documentSnippet"
+                    "$ref": "#/components/schemas/documentSnippets"
                   }
                 }
               }
@@ -804,6 +860,232 @@
           },
           "404": {
             "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/links/{linkId}": {
+      "delete": {
+        "summary": "Delete the {linkId} link for a document",
+        "tags": [
+          "link"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "linkId",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/stakeholders": {
+      "get": {
+        "summary": "Get all stakeholders",
+        "tags": [
+          "stakeholder"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Stakeholder"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new stakeholder",
+        "tags": [
+          "stakeholder"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Stakeholder"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/scales": {
+      "get": {
+        "summary": "Get all scales",
+        "tags": [
+          "scale"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Scale"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new scale",
+        "tags": [
+          "scale"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Scale"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/document-types": {
+      "get": {
+        "summary": "Get all document types",
+        "tags": [
+          "documentType"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new document type",
+        "tags": [
+          "documentType"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentType"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error"

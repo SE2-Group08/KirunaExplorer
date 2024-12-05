@@ -1,5 +1,8 @@
-import { Document, DocumentSnippet } from "./model/Document.mjs";
+import {Document, DocumentSnippet} from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
+import Link from "./model/Link.mjs";
+import { DocumentType } from "./model/DocumentType.mjs";
+import { Scale } from "./model/Scale.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
 
@@ -25,12 +28,10 @@ const uploadFiles = async (id, files) => {
 };
 
 const deleteFile = async (fileId) => {
-
   const response = await fetch(`${SERVER_URL}/files/${fileId}`, {
     method: "DELETE",
-  })
-      .then(handleInvalidResponse)
-}
+  }).then(handleInvalidResponse);
+};
 
 const downloadFile = async (fileId, fileName, fileExtension) => {
   try {
@@ -55,7 +56,6 @@ const downloadFile = async (fileId, fileName, fileExtension) => {
     // Clean up
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-
   } catch (error) {
     handleInvalidResponse(error);
   }
@@ -67,47 +67,30 @@ const getDocumentFiles = async (documentId) => {
     throw new Error(`Failed to get document resources: ${response.statusText}`);
   }
   return await response.json();
-}
+};
 
 /* ************************** *
  *       Link APIs      *
  * ************************** */
 
-const createLink = async (document, linkedDocument) => {
-  console.log("CREATE LINK: ", document, linkedDocument);
+const createLink = async (documentId, link) => {
   const requestBody = {
-    type: linkedDocument.linkType.toUpperCase(),
-    linkId: null,
-    documentId: linkedDocument.document.id,
+    type: link.type.toUpperCase().replace(/ /g, "_"),
+    documentId: link.documentId,
   };
-  console.log("REQUEST BODY: ", requestBody);
 
-  // ("REQUEST BODY: ", requestBody);
-  requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  console.log(document.id)
-  try {
-    const response = await fetch(`${SERVER_URL}/documents/${document.id}/links`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (response.ok) {
-      const responseData = response.status !== 201 ? await response.json() : null;
-      console.log("Link creato con successo:", responseData);
-    } else {
-      console.error("Errore nella creazione del link:", response.status, response.statusText);
-    }
-  } catch (error) {
-    console.error("Errore nella richiesta:", error);
-  }
+  return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  }).then(handleInvalidResponse);
 };
 
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
-  const links = await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links`)
+  const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
     .then(handleInvalidResponse)
     .then((response) => response.json());
   return links;
@@ -125,8 +108,9 @@ const updateLink = async (documentId, linkId, updatedLink) => {
 };
 
 // Delete a link for a document
-const deleteLink = async (documentId, linkId) => {
-  return await fetch(`${SERVER_URL}/api/v1/documents/${documentId}/links/${linkId}`, {
+const deleteLink = async (linkId) => {
+  console.log("API DELETE LINK: ", linkId);
+  return await fetch(`${SERVER_URL}/links/${linkId}`, {
     method: "DELETE",
   }).then(handleInvalidResponse);
 };
@@ -142,6 +126,21 @@ const getAllDocumentSnippets = async () => {
     .then((response) => response.json())
     .then(mapAPISnippetsToSnippet);
   return documents;
+};
+
+// Retrieve documents by page number
+const getDocumentsByPageNumber = async (pageNo = 0) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/documents?pageNo=${pageNo}`);
+    if (!response.ok) {
+      console.error(response)
+    }
+    const documents = await response.json();
+    return documents;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
 
 // Create a new document
@@ -184,72 +183,108 @@ const deleteDocument = async (documentId) => {
 };
 
 const searchDocuments = async (keyword) => {
-  const params = new URLSearchParams();
-  if (keyword) {
-    params.append('keyword', keyword);
-  }
+    const params = new URLSearchParams();
+    if (keyword) {
+        params.append('keyword', keyword);
+    }
 
-  const queryString = params.toString(); // Automatically encodes spaces as '+'
+    const queryString = params.toString(); // Automatically encodes spaces as '+'
 
-const response =  await fetch(`${SERVER_URL}/documents/search?${queryString}`, {
-    method: 'GET',
-    // Removed 'Content-Type' header as it's not needed for GET requests
-  })
-  .then(handleInvalidResponse)
-  .then((response) => response.json())
-  .then(mapAPISnippetsToSnippet);
+    const response =  await fetch(`${SERVER_URL}/documents/search?${queryString}`, {
+        method: 'GET',
+        // Removed 'Content-Type' header as it's not needed for GET requests
+    })
+        .then(handleInvalidResponse)
+        .then((response) => response.json())
+        .then(mapAPISnippetsToSnippet);
 
-  return response;
+    return response;
 }
+
 // /* ************************** *
 //  *      Stakeholders APIs     *
 //  * ************************** */
 
 // // Retrieve all stakeholders
-// const getAllStakeholders = async () => {
-//   const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
-//     .then(handleInvalidResponse)
-//     .then((response) => response.json())
-//     .then(mapAPIStakeholdersToStakeholders);
-//   return stakeholders;
-// };
+const getAllStakeholders = async () => {
+  const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((stakeholders) =>
+      stakeholders.map((stakeholder) => Stakeholder.fromJSON(stakeholder))
+    );
+  return stakeholders;
+};
 
-// // Create a new stakeholder
-// const addStakeholder = async (stakeholder) => {
-//   return await fetch(`${SERVER_URL}/stakeholders`, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify(stakeholder),
-//   }).then(handleInvalidResponse);
-// };
+// Create a new stakeholder
+const addStakeholder = async (stakeholder) => {
+  return await fetch(`${SERVER_URL}/stakeholders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(stakeholder),
+  }).then(handleInvalidResponse);
+};
 
-// // Retrieve a stakeholder by id
-// const getStakeholderById = async (stakeholderId) => {
-//   const stakeholder = await fetch(`${SERVER_URL}/stakeholders/${stakeholderId}`)
-//     .then(handleInvalidResponse)
-//     .then((response) => response.json());
-//   return stakeholder;
-// };
+/* ************************** *
+ *     Document Type APIs     *
+ * ************************** */
 
-// // Update a stakeholder given its id
-// const updateStakeholder = async (stakeholderId, nextStakeholder) => {
-//   return await fetch(`${SERVER_URL}/stakeholders/`, {
-//     method: "PUT",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify(nextStakeholder),
-//   }).then(handleInvalidResponse);
-// };
+// Retrieve all document types
+const getAllDocumentTypes = async () => {
+  const documentTypes = await fetch(`${SERVER_URL}/document-types`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((documentTypes) =>
+      documentTypes.map((documentType) => DocumentType.fromJSON(documentType))
+    );
+  return documentTypes;
+};
 
-// // Delete a stakeholder given its id
-// const deleteStakeholder = async (stakeholderId) => {
-//   return await fetch(`${SERVER_URL}/stakeholders/${stakeholderId}`, {
-//     method: "DELETE",
-//   }).then(handleInvalidResponse);
-// };
+// Create a new document type
+const addDocumentType = async (documentType) => {
+  return await fetch(`${SERVER_URL}/document-types`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(documentType),
+  }).then(handleInvalidResponse);
+};
+
+/* ************************** *
+ *       Scale APIs      *
+ * ************************** */
+
+// Retrieve all scales
+const getAllScales = async () => {
+  const scales = await fetch(`${SERVER_URL}/scales`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((scales) => {
+      const textScales = scales.filter(scale => !scale.scale.includes(':')).sort();
+      const numericScales = scales.filter(scale => scale.scale.includes(':')).sort((a, b) => {
+        const numA = parseInt(a.scale.split(':')[1], 10);
+        const numB = parseInt(b.scale.split(':')[1], 10);
+        return numA - numB;
+      });
+      return [...textScales, ...numericScales];
+    })
+    .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));
+  return scales;
+};
+
+// Create a new scale
+const addScale = async (scale) => {
+  return await fetch(`${SERVER_URL}/scales`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(scale),
+  }).then(handleInvalidResponse);
+};
 
 /* ************************** *
  *       Helper functions      *
@@ -312,21 +347,28 @@ async function mapAPISnippetsToSnippet(apiSnippets) {
 }
 
 const API = {
+  /* Document */
   getAllDocumentSnippets,
   addDocument,
   getDocumentById,
   updateDocument,
   deleteDocument,
-  searchDocuments,
-  // getAllStakeholders,
-  // addStakeholder,
-  // getStakeholderById,
-  // updateStakeholder,
-  // deleteStakeholder,
+    searchDocuments,
+  /* Stakeholder */
+  getAllStakeholders,
+  addStakeholder,
+  /* Link */
   createLink,
   getAllLinksOfDocument,
-  updateLink,
+  //updateLink,
   deleteLink,
+  /* Document Type */
+  getAllDocumentTypes,
+  addDocumentType,
+  /* Scale */
+  getAllScales,
+  addScale,
+  getDocumentsByPageNumber,
   uploadFiles,
   deleteFile,
   getDocumentFiles,
