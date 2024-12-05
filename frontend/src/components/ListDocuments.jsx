@@ -160,19 +160,8 @@ export default function ListDocuments({ shouldRefresh }) {
   };
 
   const handleCompleteLink = async () => {
-    try {
-      await Promise.all(
-        selectedLinkDocuments.map((linkedDoc) =>
-          API.createLink(selectedDocumentToLink, linkedDoc)
-        )
-      );
-      setFeedback({ type: "success", message: "Document linked successfully" });
-      setShouldRefresh(true);
-      setLinking(false);
-      setSelectedLinkDocuments([]);
-    } catch (error) {
-      setFeedbackFromError(error);
-    }
+    setLinking(false);
+    setSelectedLinkDocuments([]);
   };
 
   const isLinkedDocument = (document) => {
@@ -192,6 +181,7 @@ export default function ListDocuments({ shouldRefresh }) {
     <Container fluid className="scrollable-list-documents">
       <Row>
         <h1>{linking ? "Link a Document" : "Documents"}</h1>
+        <LegendModal show={showLegend} onHide={() => setShowLegend(false)} />
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (

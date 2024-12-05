@@ -47,9 +47,9 @@ const MapKiruna = () => {
   const kirunaPolygonRef = useRef(null);
 
   useEffect(() => {
-    API.getDocumentsByPageNumber()
+    API.getAllDocumentSnippets()
       .then((response) => {
-        setDocuments(response[0].documentSnippets);
+        setDocuments(response);
       })
       .then(() => setShouldRefresh(false))
       .catch((error) => setFeedbackFromError(error));

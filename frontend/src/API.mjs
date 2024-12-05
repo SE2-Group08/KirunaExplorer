@@ -77,56 +77,13 @@ const createLink = async (documentId, link) => {
     documentId: link.documentId,
   };
 
-  // ("REQUEST BODY: ", requestBody);
-  requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  console.log(document.id)
-  try {
-    const response = await fetch(`${SERVER_URL}/documents/${document.id}/links`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (response.ok) {
-      const responseData = response.status !== 201 ? await response.json() : null;
-      console.log("Link creato con successo:", responseData);
-    } else {
-      console.error("Errore nella creazione del link:", response.status, response.statusText);
-    }
-  } catch (error) {
-    console.error("Errore nella richiesta:", error);
-  }
-  // ("REQUEST BODY: ", requestBody);
-  requestBody.type = linkedDocument.linkType.toUpperCase().replace(/ /g, "_");
-  console.log(document.id);
-  try {
-    const response = await fetch(
-      `${SERVER_URL}/documents/${document.id}/links`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      }
-    );
-
-    if (response.ok) {
-      const responseData =
-        response.status !== 201 ? await response.json() : null;
-      console.log("Link creato con successo:", responseData);
-    } else {
-      console.error(
-        "Errore nella creazione del link:",
-        response.status,
-        response.statusText
-      );
-    }
-  } catch (error) {
-    console.error("Errore nella richiesta:", error);
-  }
+  return await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  }).then(handleInvalidResponse);
 };
 
 // Retrieve all links of a document
@@ -152,7 +109,7 @@ const deleteLink = async (linkId) => {
 
 // Retrieve all documents snippets
 const getAllDocumentSnippets = async (filter) => {
-  const documents = await fetch(`${SERVER_URL}/documents`)
+  const documents = await fetch(`${SERVER_URL}/documents/map`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
     .then(mapAPISnippetsToSnippet);
