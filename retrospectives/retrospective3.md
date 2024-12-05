@@ -1,4 +1,4 @@
-TEMPLATE FOR RETROSPECTIVE (Team ##)
+TEMPLATE FOR RETROSPECTIVE (Team 08)
 =====================================
 
 The retrospective should include _at least_ the following
@@ -53,8 +53,8 @@ sections:
   - 6 hours estimated
   - 5 hours spent
 - Code review 
-  - 5 hours estimated 
-  - 6 hours spent
+  - 7 hours estimated 
+  - 9 hours spent
 - Technical Debt management:
   - Solve all issues with severity high or blocker after each commit in dev or in a Pull Request
   - 5 hours estimated at sprint planning
