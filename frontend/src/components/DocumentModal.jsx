@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import {useEffect, useState, useRef, useContext} from "react";
-import {Spinner, Button, Modal, Form, OverlayTrigger, Tooltip, Row, Col, ListGroup} from "react-bootstrap";
+import { Spinner,Button, Modal, Form, OverlayTrigger, Tooltip, Row, Col, ListGroup } from "react-bootstrap";
 import {
     MapContainer,
     TileLayer,
@@ -10,18 +10,17 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import {Document} from "../model/Document.mjs";
+import { Document } from "../model/Document.mjs";
 import ListDocumentLinks from "./ListDocumentLinks.jsx";
 import dayjs from "dayjs";
 import "../App.scss";
 import API from "../API.mjs";
 import FeedbackContext from "../contexts/FeedbackContext.js";
-import {getIconUrlForDocument} from "../utils/iconMapping";
+import { getIconUrlForDocument } from "../utils/iconMapping";
 
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
 import DocumentResources from "./DocumentResources.jsx";
-
 dayjs.extend(customParseFormat);
 
 export default function DocumentModal(props) {
@@ -39,8 +38,6 @@ export default function DocumentModal(props) {
     const kirunaBorderCoordinates = getKirunaArea();
     const [isEditable, setIsEditable] = useState(false);
     const [isSliderOpen, setSliderOpen] = useState(false);
-    const {setFeedback, setFeedbackFromError} = useContext(FeedbackContext);
-
     const [document, setDocument] = useState({
         title: "",
         stakeholders: [],
@@ -158,25 +155,22 @@ export default function DocumentModal(props) {
             newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
         }
 
-        // Scale validation
-        // if (typeof document.scale !== "string" || !document.scale.trim()) {
-        //   newErrors.scale = "Scale must be present.";
-        // } else if (document.scale.includes(":")) {
-        //   const [first, second] = document.scale.split(":").map(Number);
-        //   if (first > second) {
-        //     newErrors.scale =
-        //       "The first number of the scale must be smaller than the second one.";
-        //   }
-        // }
+        const scalePatterns = [
+            "Text",
+            "Blueprint/Material effects",
+            /^[1-9]:[1-9][0-9]*$/,
+        ];
         if (
-            !document.scale ||
-            (document.scale === "Other" && !document.customScale)
+            typeof document.scale !== "string" ||
+            !document.scale.trim() ||
+            !scalePatterns.some((pattern) =>
+                typeof pattern === "string"
+                    ? pattern === document.scale
+                    : pattern.test(document.scale)
+            )
         ) {
-            newErrors.scale = "Scale is required.";
-        } else if (document.scale === "Other") {
-            newErrors.scale = "Scale cannot be 'Other'.";
-        } else if (document.scale.length > 64 && document.scale.length < 2) {
-            newErrors.scale = "Scale must be between 2 and 64 characters.";
+            newErrors.scale =
+                "Scale is required and must match one of the defined patterns.";
         } else if (document.scale.includes(":")) {
             const [first, second] = document.scale.split(":").map(Number);
             if (first > second) {
@@ -409,7 +403,7 @@ export default function DocumentModal(props) {
                     <img
                         src={getIconUrlForDocument(document.type, document.stakeholders)}
                         alt={`${document.type} icon`}
-                        style={{width: "40px", height: "40px", marginRight: "10px"}}
+                        style={{ width: "40px", height: "40px", marginRight: "10px" }}
                     />
                     {isEditable
                         ? "Enter the values in the following fields"
@@ -431,10 +425,10 @@ export default function DocumentModal(props) {
                         handleDeleteExistingFile={handleDeleteExistingFile}
                     />
                 ) : (
-                    <ModalBodyComponent document={document}
-                                        existingFiles={existingFiles}
-                                        handleDownload={handleDownload}
-                                        isEditable={isEditable}/>
+                    <ModalBodyComponent  document={document}
+                                         existingFiles={existingFiles}
+                                         handleDownload={handleDownload}
+                                         isEditable={isEditable} />
                 )}
             </Modal.Body>
             <Modal.Footer className="mt-3">
@@ -491,7 +485,7 @@ DocumentModal.propTypes = {
     onSnippetClick: PropTypes.func,
 };
 
-function ModalBodyComponent({document, existingFiles, handleDownload, isEditable}) {
+function ModalBodyComponent({ document, existingFiles, handleDownload, isEditable }) {
     const [viewMode, setViewMode] = useState("list");
 
     return (
@@ -597,7 +591,7 @@ function ModalBodyComponent({document, existingFiles, handleDownload, isEditable
                     <div className="document-resources-section">
                         <div className="info-item d-flex justify-content-between align-items-center mb-3">
                             <label>Resources: </label>
-                            {existingFiles.length > 0 ? (<Button
+                            {existingFiles.length>0 ? (<Button
                                     onClick={() => setViewMode((prev) => (prev === "list" ? "grid" : "list"))}
                                     title={`Switch to ${viewMode === "list" ? "grid" : "list"} view`}
                                 >
@@ -618,8 +612,7 @@ function ModalBodyComponent({document, existingFiles, handleDownload, isEditable
                         </div>
                         <DocumentResources
                             resources={existingFiles}
-                            onDelete={() => {
-                            }} // Deleting files is not allowed in view mode
+                            onDelete={() => {}} // Deleting files is not allowed in view mode
                             onDownload={handleDownload}
                             viewMode={viewMode}
                             isEditable={isEditable}
@@ -669,7 +662,7 @@ function DocumentFormComponent({
     const [allStakeholders, setAllStakeholders] = useState([]);
     const [allDocumentTypes, setAllDocumentTypes] = useState([]);
     const [allScales, setAllScales] = useState([]);
-    const {setFeedbackFromError} = useContext(FeedbackContext);
+    const { setFeedbackFromError } = useContext(FeedbackContext);
 
     const dayRef = useRef(null);
     const monthRef = useRef(null);
@@ -723,7 +716,7 @@ function DocumentFormComponent({
         const validFiles = newFiles.filter((file) => file.size <= MAX_FILE_SIZE);
 
         setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-        setFilePreviews((prevPreviews) => ({...prevPreviews, ...newFilePreviews}));
+        setFilePreviews((prevPreviews) => ({ ...prevPreviews, ...newFilePreviews }));
         updateFilesToUpload([...files, ...validFiles]);
     };
 
@@ -769,7 +762,7 @@ function DocumentFormComponent({
             return newFiles;
         });
         setFilePreviews((prevPreviews) => {
-            const newPreviews = {...prevPreviews};
+            const newPreviews = { ...prevPreviews };
             delete newPreviews[files[index].name];
             return newPreviews;
         });
@@ -790,7 +783,7 @@ function DocumentFormComponent({
     }, [document.geolocation.latitude, document.geolocation.longitude]);
 
     const handleMapClick = (e) => {
-        const {lat, lng} = e.latlng;
+        const { lat, lng } = e.latlng;
         setMarkerPosition([lat, lng]);
         handleChange("geolocation", {
             latitude: lat,
@@ -833,13 +826,13 @@ function DocumentFormComponent({
     };
 
     return (
-        <Form style={{width: "100%"}} className="mx-auto">
-            {/* TITLE AND TYPE */}
+        <Form style={{ width: "100%" }} className="mx-auto">
+            {/* TITLE*/}
             <Row className="mb-4">
-                <Col md={6}>
+                <Col md={12}>
                     <Form.Group controlId="formDocumentTitle">
                         <Form.Label>Title *</Form.Label>
-                        <div className="form-divider"/>
+                        <div className="divider"/>
                         <Form.Control
                             type="text"
                             value={document.title}
@@ -853,62 +846,6 @@ function DocumentFormComponent({
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
-                <Col md={6}>
-                    <Form.Group className="mb-3" controlId="formDocumentType">
-                        <Form.Label>Type *</Form.Label>
-                        <Form.Control
-                            as="select"
-                            value={document.type}
-                            onChange={(e) => handleChange("type", e.target.value)}
-                            isInvalid={!!errors.type}
-                            required
-                        >
-                            <option value="">Select type</option>
-                            {allDocumentTypes.length ? (
-                                allDocumentTypes.map((typeOption) => (
-                                    <option key={typeOption.id} value={typeOption.name}>
-                                        {typeOption.name}
-                                    </option>
-                                ))
-                            ) : (
-                                <Spinner animation="border" role="status" className="mx-auto">
-                                    <span className="visually-hidden">Loading...</span>
-                                </Spinner>
-                            )}
-                            <option value="Other">Other</option>
-                        </Form.Control>
-                        {document.type === "Other" && (
-                            <div className="d-flex mt-2">
-                                <Form.Control
-                                    type="text"
-                                    placeholder="Enter custom type"
-                                    value={document.customType || ""}
-                                    onChange={(e) => handleChange("customType", e.target.value)}
-                                    isInvalid={!!errors.type}
-                                    className="me-2"
-                                />
-                                <Button
-                                    variant="primary"
-                                    onClick={() => {
-                                        if (
-                                            document.customType &&
-                                            !allDocumentTypes.some((t) => t.name === document.customType)
-                                        ) {
-                                            allDocumentTypes.push({
-                                                id: Date.now(),
-                                                name: document.customType,
-                                            });
-                                            handleChange("type", document.customType);
-                                        }
-                                    }}
-                                    title="Add custom type"
-                                >
-                                    <i className="bi bi-plus-square"></i>
-                                </Button>
-                            </div>
-                        )}
-                    </Form.Group>
-                </Col>
             </Row>
 
             {/* STAKEHOLDERS AND SCALE */}
@@ -916,7 +853,7 @@ function DocumentFormComponent({
                 <Col md={6}>
                     <Form.Group controlId="formDocumentStakeholders">
                         <Form.Label>Stakeholders *</Form.Label>
-                        <div className="form-divider"/>
+                        <div className="divider"/>
                         {allStakeholders.length ? (
                             allStakeholders.map((stakeholderOption) => (
                                 <Form.Check
@@ -992,12 +929,11 @@ function DocumentFormComponent({
                         </div>
                     </Form.Group>
                 </Col>
+                {/* SCALE */}
                 <Col md={6}>
-
-                    {/* SCALE */}
                     <Form.Group className="mb-3" controlId="formDocumentScale">
                         <Form.Label>Scale *</Form.Label>
-                        <div className="form-divider"/>
+                        <div className="divider"/>
                         <Form.Control
                             as="select"
                             value={document.scale}
@@ -1056,12 +992,12 @@ function DocumentFormComponent({
                 </Col>
             </Row>
 
-            {/* ISSUANCE DATE */}
-            <Row className="mb-4">
+            <Row className={"mb-4"}>
                 <Col md={6}>
-                    <Form.Group controlId="formDocumentIssuanceDate">
+                    {/* ISSUANCE DATE */}
+                    <Form.Group className="mb-3" controlId="formDocumentIssuanceDate">
                         <Form.Label>Issuance Date *</Form.Label>
-                        <div className="form-divider"/>
+                        <div className="divider" />
                         <div className="d-flex">
                             <Form.Control
                                 type="text"
@@ -1071,7 +1007,7 @@ function DocumentFormComponent({
                                 placeholder="DD"
                                 className="me-1"
                                 ref={dayRef}
-                                style={{width: "80px"}}
+                                style={{ width: "80px" }}
                             />
                             <span>/</span>
                             <Form.Control
@@ -1082,7 +1018,7 @@ function DocumentFormComponent({
                                 placeholder="MM"
                                 className="mx-1"
                                 ref={monthRef}
-                                style={{width: "80px"}}
+                                style={{ width: "80px" }}
                             />
                             <span>/</span>
                             <Form.Control
@@ -1093,29 +1029,86 @@ function DocumentFormComponent({
                                 placeholder="YYYY"
                                 className="ms-1"
                                 ref={yearRef}
-                                style={{width: "100px"}}
+                                style={{ width: "100px" }}
                             />
                         </div>
-                        <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
+                        <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
                             {errors.issuanceDate}
                         </div>
                     </Form.Group>
                 </Col>
+
+                <Col md={6}>
+                    {/* TYPE */}
+                    <Form.Group className="mb-3" controlId="formDocumentType">
+                        <Form.Label>Type *</Form.Label>
+                        <div className="divider"/>
+                        <Form.Control
+                            as="select"
+                            value={document.type}
+                            onChange={(e) => handleChange("type", e.target.value)}
+                            isInvalid={!!errors.type}
+                            required
+                        >
+                            <option value="">Select type</option>
+                            {allDocumentTypes.length ? (
+                                allDocumentTypes.map((typeOption) => (
+                                    <option key={typeOption.id} value={typeOption.name}>
+                                        {typeOption.name}
+                                    </option>
+                                ))
+                            ) : (
+                                <Spinner animation="border" role="status" className="mx-auto">
+                                    <span className="visually-hidden">Loading...</span>
+                                </Spinner>
+                            )}
+                            <option value="Other">Other</option>
+                        </Form.Control>
+                        {document.type === "Other" && (
+                            <div className="d-flex mt-2">
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Enter custom type"
+                                    value={document.customType || ""}
+                                    onChange={(e) => handleChange("customType", e.target.value)}
+                                    isInvalid={!!errors.type}
+                                    className="me-2"
+                                />
+                                <Button
+                                    variant="primary"
+                                    onClick={() => {
+                                        if (
+                                            document.customType &&
+                                            !allDocumentTypes.some((t) => t.name === document.customType)
+                                        ) {
+                                            allDocumentTypes.push({
+                                                id: Date.now(),
+                                                name: document.customType,
+                                            });
+                                            handleChange("type", document.customType);
+                                        }
+                                    }}
+                                    title="Add custom type"
+                                >
+                                    <i className="bi bi-plus-square"></i>
+                                </Button>
+                            </div>
+                        )}
+                    </Form.Group>
+                    <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+                        {errors.type}
+                    </div>
+                </Col>
             </Row>
 
-            <div className="divider"/>
 
-
-            <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
-                {errors.type}
-            </div>
-
-            {/* LANGUAGE AND PAGES */}
-            <Row className="mb-4">
+            {/* LANGUAGE  AND PAGES */}
+            <Row className={"mb-4"}>
                 <Col md={6}>
-                    <Form.Group controlId="formDocumentLanguage">
+                    {/* LANGUAGE */}
+                    <Form.Group className="mb-3" controlId="formDocumentLanguage">
                         <Form.Label>Language</Form.Label>
-                        <div className="form-divider"/>
+                        <div className="divider" />
                         <Form.Control
                             type="text"
                             value={document.language}
@@ -1129,9 +1122,10 @@ function DocumentFormComponent({
                     </Form.Group>
                 </Col>
                 <Col md={6}>
-                    <Form.Group controlId="formDocumentNrPages">
+                    {/* PAGES */}
+                    <Form.Group className="mb-3" controlId="formDocumentNrPages">
                         <Form.Label>Pages</Form.Label>
-                        <div className="form-divider"/>
+                        <div className="divider" />
                         <Form.Control
                             type="number"
                             value={document.nrPages}
@@ -1146,116 +1140,106 @@ function DocumentFormComponent({
                 </Col>
             </Row>
 
-
-            {/* GEOLOCATION */}
-            <Row className="mb-4">
-                <Col md={12}>
-                    <Form.Group controlId="formDocumentGeolocation">
-                        <Row>
-                            <Col md={6}>
-                                <Form.Label>Latitude</Form.Label>
-                                <div className="form-divider"/>
-                                <Form.Control
-                                    type="number"
-                                    min={67.3564329180828}
-                                    max={69.05958911620179}
-                                    step={0.00001}
-                                    value={document.geolocation.latitude}
-                                    onChange={handleLatitudeChange}
-                                    id="formDocumentGeolocationLatitude"
-                                    disabled={document.geolocation.municipality === "Entire municipality"}
-                                    isInvalid={!!errors.latitude}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.latitude}
-                                </Form.Control.Feedback>
-
-                                <Form.Range
-                                    min={67.3564329180828}
-                                    max={69.05958911620179}
-                                    step={0.00001}
-                                    value={document.geolocation.latitude}
-                                    onChange={handleLatitudeChange}
-                                    disabled={document.geolocation.municipality === "Entire municipality"}
-                                />
-                            </Col>
-                            <Col md={6}>
-
-                                <Form.Label>Longitude</Form.Label>
-                                <div className="form-divider"/>
-                                <Form.Control
-                                    type="number"
-                                    value={document.geolocation.longitude || ""}
-                                    min={17.89900836116174}
-                                    max={23.28669305841499}
-                                    step={0.00001}
-                                    isInvalid={!!errors.longitude}
-                                    onChange={handleLongitudeChange}
-                                    id="formDocumentGeolocationLongitude"
-                                    disabled={document.geolocation.municipality === "Entire municipality"}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.longitude}
-                                </Form.Control.Feedback>
-                                <Form.Range
-                                    min={17.89900836116174}
-                                    max={23.28669305841499}
-                                    step={0.00001}
-                                    value={document.geolocation.longitude}
-                                    onChange={handleLongitudeChange}
-                                    disabled={document.geolocation.municipality === "Entire municipality"}
-                                />
-                            </Col>
-                        </Row>
-                        <Row>
-
-                            <div style={{height: "300px", marginBottom: "15px"}}>
-                                <MapContainer
-                                    center={markerPosition}
-                                    zoom={13}
-                                    style={{height: "100%", width: "100%"}}
-                                >
-                                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
-                                    <Marker position={markerPosition}/>
-                                    {document.geolocation.municipality === "Entire municipality" ? (
-                                        <Polygon positions={kirunaBorderCoordinates}/>
-                                    ) : null}
-                                    <MapClickHandler/>
-                                </MapContainer>
-                            </div>
-                            <Form.Text className="text-muted">
-                                Click on the map to set the location. Latitude and Longitude fields
-                                will update automatically.
-                                <Form.Check
-                                    type="checkbox"
-                                    label="Entire municipality"
-                                    checked={document.geolocation.municipality === "Entire municipality"}
-                                    onChange={(e) => {
-                                        const isChecked = e.target.checked;
-                                        setMarkerPosition(defaultPosition);
-                                        handleChange("geolocation", {
-                                            latitude: isChecked ? "" : document.geolocation.latitude,
-                                            longitude: isChecked ? "" : document.geolocation.longitude,
-                                            municipality: isChecked ? "Entire municipality" : "",
-                                        });
-                                    }}
-                                    className="mt-2"
-                                    feedback={errors.municipality}
-                                    feedbackType="invalid"
-                                />
-                            </Form.Text>
-                        </Row>
-                    </Form.Group>
-                </Col>
+            <Row className={"mb-4"}>
+                <Form.Group className="mb-3">
+                    <Col md={12}>
+                        <Form.Label>Latitude</Form.Label>
+                        <div className="divider" />
+                        <Form.Control
+                            type="number"
+                            min={67.3564329180828}
+                            max={69.05958911620179}
+                            step={0.00001}
+                            value={document.geolocation.latitude}
+                            onChange={handleLatitudeChange}
+                            id="formDocumentGeolocationLatitude"
+                            disabled={document.geolocation.municipality === "Entire municipality"}
+                            isInvalid={!!errors.latitude}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.latitude}
+                        </Form.Control.Feedback>
+                        <Form.Range
+                            min={67.3564329180828}
+                            max={69.05958911620179}
+                            step={0.00001}
+                            value={document.geolocation.latitude}
+                            onChange={handleLatitudeChange}
+                            disabled={document.geolocation.municipality === "Entire municipality"}
+                        />
+                    </Col>
+                    <Col md={12}>
+                        <Form.Label>Longitude</Form.Label>
+                        <div className="divider" />
+                        <Form.Control
+                            type="number"
+                            value={document.geolocation.longitude || ""}
+                            min={17.89900836116174}
+                            max={23.28669305841499}
+                            step={0.00001}
+                            isInvalid={!!errors.longitude}
+                            onChange={handleLongitudeChange}
+                            id="formDocumentGeolocationLongitude"
+                            disabled={document.geolocation.municipality === "Entire municipality"}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.longitude}
+                        </Form.Control.Feedback>
+                        <Form.Range
+                            min={17.89900836116174}
+                            max={23.28669305841499}
+                            step={0.00001}
+                            value={document.geolocation.longitude}
+                            onChange={handleLongitudeChange}
+                            disabled={document.geolocation.municipality === "Entire municipality"}
+                        />
+                    </Col>
+                    <Col md={12}>
+                        <div style={{ height: "300px", marginBottom: "15px" }}>
+                            <MapContainer
+                                center={markerPosition}
+                                zoom={13}
+                                style={{ height: "100%", width: "100%" }}
+                            >
+                                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                <Marker position={markerPosition} />
+                                {document.geolocation.municipality === "Entire municipality" ? (
+                                    <Polygon positions={kirunaBorderCoordinates} />
+                                ) : null}
+                                <MapClickHandler />
+                            </MapContainer>
+                        </div>
+                        <Form.Text className="text-muted">
+                            Click on the map to set the location. Latitude and Longitude fields
+                            will update automatically.
+                        </Form.Text>
+                        <Form.Check
+                            type="checkbox"
+                            label="Entire municipality"
+                            checked={document.geolocation.municipality === "Entire municipality"}
+                            onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                setMarkerPosition(defaultPosition);
+                                handleChange("geolocation", {
+                                    latitude: isChecked ? "" : document.geolocation.latitude,
+                                    longitude: isChecked ? "" : document.geolocation.longitude,
+                                    municipality: isChecked ? "Entire municipality" : "",
+                                });
+                            }}
+                            className="mt-2"
+                            feedback={errors.municipality}
+                            feedbackType="invalid"
+                        />
+                    </Col>
+                </Form.Group>
             </Row>
 
-
             {/* DESCRIPTION */}
-            <Row className="mb-4">
+            <Row className={"mb-4"}>
                 <Col md={12}>
-                    <Form.Group controlId="formDocumentDescription">
+                    <Form.Group className="mb-3" controlId="formDocumentDescription">
                         <Form.Label>Description</Form.Label>
-                        <div className="form-divider"/>
+                        <div className="form-divider" />
                         <Form.Control
                             as="textarea"
                             rows={3}
@@ -1276,7 +1260,7 @@ function DocumentFormComponent({
                 <Col md={12}>
                     <Form.Group controlId="formDocumentFiles">
                         <Form.Label>Upload files</Form.Label>
-                        <div className="form-divider"/>
+                        <div className="form-divider" />
                         <div className="d-flex align-items-center">
                             <Form.Control
                                 type="file"

@@ -91,8 +91,8 @@ const createLink = async (documentId, link) => {
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
   const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
-    .then(handleInvalidResponse)
-    .then((response) => response.json());
+      .then(handleInvalidResponse)
+      .then((response) => response.json());
   return links;
 };
 
@@ -143,17 +143,41 @@ const getDocumentsByPageNumber = async (pageNo = 0) => {
   }
 };
 
-// Create a new document
 const addDocument = async (document) => {
-  console.log("ADD DOCUMENT: ", document);
-  return await fetch(`${SERVER_URL}/documents`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(document),
-  }).then(handleInvalidResponse);
+  try {
+    console.log("ADD DOCUMENT: ", document);
+
+    const response = await fetch(`${SERVER_URL}/documents`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(document),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to add document:", response.status, response.statusText);
+      return null;
+    }
+
+    const location = response.headers.get("location");
+    if (!location) {
+      console.error("Location header not found in response.");
+      return null;
+    }
+
+    console.log("Location header:", location);
+    const newDocId = location.split("/").pop(); // Estrarre l'ID dal percorso
+    console.log("Extracted ID:", newDocId);
+
+    return newDocId;
+  } catch (error) {
+    console.error("Error while adding document:", error);
+    return null;
+  }
 };
+
+
 
 // Retrieve a document by id
 const getDocumentById = async (documentId) => {
@@ -164,7 +188,6 @@ const getDocumentById = async (documentId) => {
   return document;
 };
 
-// Update a document given its id
 const updateDocument = async (documentId, nextDocument) => {
   return await fetch(`${SERVER_URL}/documents`, {
     method: "PUT",
@@ -173,6 +196,18 @@ const updateDocument = async (documentId, nextDocument) => {
     },
     body: JSON.stringify(nextDocument),
   }).then(handleInvalidResponse);
+
+  console.log("Response Status:", response.status);
+  console.log("Response Headers:", [...response.headers.entries()]);
+
+  const location = response.headers.get("location");
+  if (location) {
+    console.log("Location header:", location);
+  } else {
+    console.error("Location header is missing.");
+  }
+
+  return await response.json();
 };
 
 // Delete a document given its id
@@ -353,7 +388,6 @@ const API = {
   getDocumentById,
   updateDocument,
   deleteDocument,
-    searchDocuments,
   /* Stakeholder */
   getAllStakeholders,
   addStakeholder,
@@ -366,6 +400,7 @@ const API = {
   getAllDocumentTypes,
   addDocumentType,
   /* Scale */
+  searchDocuments,
   getAllScales,
   addScale,
   getDocumentsByPageNumber,
