@@ -1,4 +1,4 @@
-package com.kiruna.explorer.app.service;
+package com.kirunaexplorer.app.service;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -7,7 +7,6 @@ import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.model.Document;
 import com.kirunaexplorer.app.model.GeoReference;
 import com.kirunaexplorer.app.repository.DocumentRepository;
-import com.kirunaexplorer.app.service.DocumentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -16,7 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
-class DocumentServiceTest {
+class DocumentSearchTest {
 
     @Mock
     private DocumentRepository documentRepository;
