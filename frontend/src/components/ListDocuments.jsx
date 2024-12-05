@@ -17,7 +17,6 @@ import LinkModal from "./LinkModal";
 import FeedbackContext from "../contexts/FeedbackContext";
 import Pagination from "./Pagination";
 import { getIconUrlForDocument } from "../utils/iconMapping";
-import LegendModal from "./Legend";
 
 export default function ListDocuments({ shouldRefresh }) {
   const [documents, setDocuments] = useState([]);
@@ -45,6 +44,9 @@ export default function ListDocuments({ shouldRefresh }) {
         .catch((error) => setFeedbackFromError(error));
     }
   }, [linking, showLinkModal]);
+
+  // const { setFeedbackFromError, setShouldRefresh, setFeedback } =
+  //   useContext(FeedbackContext);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -195,14 +197,37 @@ export default function ListDocuments({ shouldRefresh }) {
       </Row>
       <Row className="d-flex justify-content-between align-items-center mb-3">
         {linking ? (
-          <p>Choose the document you want to link</p>
+          <p
+            style={{
+              fontSize: "1.2rem",
+              marginBottom: "0.5rem",
+              marginTop: "0.5rem",
+              fontWeight: "500",
+            }}
+          >
+            Choose the document you want to link
+          </p>
         ) : (
           <>
-            <p>
+            <p
+              style={{
+                fontSize: "1.2rem",
+                marginBottom: "0.5rem",
+                marginTop: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Here you can find all the documents about Kiruna&apos;s relocation
               process.
             </p>
-            <p>Click on a document to see more details.</p>
+            <p
+              style={{
+                fontSize: "1.2rem",
+                fontWeight: "500",
+              }}
+            >
+              Click on a document to see more details.
+            </p>
           </>
         )}
       </Row>
@@ -211,8 +236,8 @@ export default function ListDocuments({ shouldRefresh }) {
           {linking ? (
             <>
               <Button
-                title="Confirm links"
-                variant="success"
+                title="Done"
+                variant="primary"
                 onClick={handleCompleteLink}
               >
                 <i className="bi bi-check-square"></i>
