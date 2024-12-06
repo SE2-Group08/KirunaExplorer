@@ -98,7 +98,7 @@ const MapKiruna = () => {
   };
 
   return (
-      <div style={{display: "flex", height: "100vh", position: "relative"}}>
+      <div style={{display: "flex", height: "90vh", position: "relative"}}>
           <div style={{position: 'absolute', top: '10px', left: '30px', zIndex: 1000, marginBottom: "5rem",
               marginLeft: '5rem'
 
