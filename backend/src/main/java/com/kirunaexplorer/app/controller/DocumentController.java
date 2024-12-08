@@ -1,11 +1,13 @@
 package com.kirunaexplorer.app.controller;
 
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.service.DocumentService;
 import com.kirunaexplorer.app.validation.groups.document.PostDocument;
 import com.kirunaexplorer.app.validation.groups.document.PutDocument;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.groups.Default;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -25,13 +27,14 @@ public class DocumentController {
     }
 
     /**
-     * Endpoint to get all documents in brief format
+     * Endpoint to get all documents in brief format of a given page
      *
-     * @return List of DocumentBriefResponseDTO
+     * @param pageNo Page number
+     * @return List of DocumentBriefPageResponseDTO
      */
     @GetMapping
-    public ResponseEntity<List<DocumentBriefResponseDTO>> getAllDocuments() {
-        return ResponseEntity.ok(documentService.getAllDocuments());
+    public ResponseEntity<List<DocumentBriefPageResponseDTO>> getDocumentsByPageNumber(@RequestParam(value = "pageNo", required = false, defaultValue = "0") @Min(0) int pageNo) {
+        return ResponseEntity.ok(documentService.getDocumentsByPageNumber(pageNo));
     }
 
     /**
@@ -43,6 +46,16 @@ public class DocumentController {
     @GetMapping("/{id}")
     public ResponseEntity<DocumentResponseDTO> getDocumentById(@PathVariable Long id) {
         return ResponseEntity.ok(documentService.getDocumentById(id));
+    }
+
+    /**
+     * Endpoint to get all documents in brief format
+     *
+     * @return List of DocumentBriefResponseDTO
+     */
+    @GetMapping("/map")
+    public ResponseEntity<List<DocumentBriefResponseDTO>> getAllDocuments() {
+        return ResponseEntity.ok(documentService.getAllDocuments());
     }
 
     /**
@@ -71,6 +84,11 @@ public class DocumentController {
     public ResponseEntity<Void> updateDocument(@RequestBody @Validated({Default.class, PutDocument.class}) DocumentRequestDTO document) {
         documentService.updateDocument(document);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam(required = false) String keyword, @RequestParam(required = false) String type) {
+        return documentService.searchDocuments(keyword, type);
     }
 }
 

@@ -1,15 +1,57 @@
+@import './styles/custom.scss';
+
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
+  /* background-color: #E6E8EA; */
+}
+
+.header-navbar {
+  color: map-get($theme-colors, "white" );
+}
+
+.header-navbar a {
+  color: map-get($theme-colors, "white" );
+}
+
+.header-navbar a:hover {
+  color: #ddd; /* Cambia colore al passaggio del mouse */
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  border: none;
+}
+
+.card:hover {
+  transform: scale(1.05); 
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); 
+}
+
+
+.splash-background {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  width: 100vw;
+  height: 80vh;
+}
+
+.splash-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #343a40;
 }
 
 .scrollable-list-documents{
-  height: calc(100vh - 100px - 40px);
+  height: calc(100vh - 90px - 40px);
   overflow-y: auto; 
   padding: 1rem;
   margin-top: 15px;
+  background-color: light;
 }
 
 .container-fluid {
@@ -22,7 +64,7 @@ html, body, #root {
 
 .document-card-linked {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  background-color: #f8f9fa;
+  background-color: map-get($theme-colors, "info" );
 }
 
 .document-card:hover {
@@ -45,12 +87,12 @@ html, body, #root {
 }
 
 .brick-button {
-  background-color: #2f354b !important;
-  border-color: #2f354b !important;
-  color: white !important;
+  background-color: map-get($theme-colors, "dark" ) !important;
+  border-color: map-get($theme-colors, "dark" ) !important;
+  color: map-get($theme-colors, "light" )!important;
 }
 .divider {
-  border-bottom: 2px solid #e7ebda; 
+  border-bottom: 2px solid map-get($theme-colors, "light" ); 
   margin: 0; 
 }
 .brick-button:hover {
@@ -64,17 +106,15 @@ html, body, #root {
 }
 
 .modal-header {
-  background-color: #f8f9fa; 
   border-bottom: none; 
 }
 
 .modal-title {
   font-weight: 600; 
-  color: #333; 
+  color: map-get($theme-colors, "dark"); 
 }
 
 .modal-body {
-  display: flex; 
   padding: 1.5rem;
   max-height: 65vh; /* Adjust as needed */
   overflow-y: auto;
@@ -96,7 +136,7 @@ html, body, #root {
 
 .description-area label {
   font-weight: 500; 
-  color: #555; 
+  color: map-get($theme-colors, "primary"); 
   width: 40%; 
 }
 
@@ -108,7 +148,7 @@ html, body, #root {
 
 .info-item label {
   font-weight: 500; 
-  color: #555; 
+  color: map-get($theme-colors, "primary");
   width: 40%; 
 }
 
@@ -118,19 +158,19 @@ html, body, #root {
 }
 
 .divider {
-  border-bottom: 1px solid #e7ebda; 
+  border-bottom: 1px solid map-get($theme-colors, "secondary"); 
   margin: 0.5rem 0; 
 }
 
 .divider-vertical {
   width: 1px; 
-  background-color: #e7ebda; 
+  background-color: map-get($theme-colors, "secondary"); 
   margin: 0 1rem; 
 }
 
 .description-textarea {
   width: 100%; 
-  border: 1px solid #ced4da;
+  border: 1px solid map-get($theme-colors, "secondary");
   border-radius: 4px;
   padding: 0.5rem; 
   resize: none; 
@@ -138,7 +178,7 @@ html, body, #root {
 
 .description-textarea label {
   font-weight: 500; /* Medium weight for labels */
-  color: #555; /* Subtle gray for labels */
+  color: map-get($theme-colors, "secondary"); /* Subtle gray for labels */
   width: 40%; /* Fixed width for labels */
 }
 
@@ -151,9 +191,6 @@ button {
   transition: background-color 0.2s ease; 
 }
 
-button:hover {
-  background-color: #0056b3; 
-}
 .mb-5 {
   margin-bottom: 3rem !important;
 }
@@ -166,34 +203,13 @@ button:hover {
 
 .document-card-text {
   font-size: 0.9rem;
-  color: black;
+  color: map-get($theme-colors, "dark" );
   margin-bottom: 0.5rem; 
 }
 
-.splash-background {
-  background-image: url('./public/KX_BckG.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.splash-title {
-  color: white;
-  font-size: 8rem;
-  text-align: center;
-}
-
-
 .bg-linked-document {
-  background-color: black;
-  color: #333;
+  background-color: map-get($theme-colors, "dark" );
+  color: map-get($theme-colors, "secondary");
 }
 
 .slider {
@@ -202,7 +218,7 @@ button:hover {
   top: 20px;
   width: 300px;
   height: calc(100% - 40px);
-  background: white;
+  background: #ffffff;
   box-shadow: -2px 0 5px rgba(0,0,0,0.5);
   transition: right 0.3s ease, opacity 0.3s ease;
   border-radius: 8px;
@@ -240,7 +256,7 @@ button:hover {
 }
 
 .snippet-item {
-  border-bottom: 1px solid #e7ebda;
+  border-bottom: 1px solid map-get($theme-colors, "white" );
 }
 
 .snippet-title {
@@ -252,20 +268,25 @@ button:hover {
 .snippet-scale,
 .snippet-issuance-date {
   font-size: 0.9rem;
-  color: #555;
+  color: map-get($theme-colors, "dark" );
 }
 
 .snippet-list {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-height: calc(100% - 40px); /* Adjust based on header and padding */
+  max-height: calc(100% - 60px); /* Increase max-height */
   overflow-y: auto;
   scrollbar-width: none; /* For Firefox */
   -ms-overflow-style: none;  /* For Internet Explorer and Edge */
   padding-top: 20px; /* Add this line to add padding to the top */
+  padding-bottom: 20px; /* Add padding to the bottom */
+  margin-bottom: 0; /* Remove margin from bottom */
 }
 
-.snippet-list::-webkit-scrollbar {
-  display: none; /* For Chrome, Safari, and Opera */
+.modal-content {
+  background: map-get($theme-colors, "white");
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  border-radius: 8px;
+  padding: 20px;
 }

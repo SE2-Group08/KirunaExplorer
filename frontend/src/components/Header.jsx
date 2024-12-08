@@ -6,9 +6,9 @@ import PropTypes from "prop-types";
 
 function Header({loggedIn, logout}) {
   return (
-    <Navbar style={{ backgroundColor: "#e7ebda" }} fixed="top">
+    <Navbar className="header-navbar" bg='dark' fixed="top">
       <Container fluid className="px-3">
-        <Navbar.Brand href="/" className='align-middle'>Kiruna Explorer</Navbar.Brand>
+        <Navbar.Brand href="/" className="align-middle">Kiruna Explorer</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
