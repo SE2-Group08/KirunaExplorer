@@ -391,99 +391,101 @@ export default function DocumentModal(props) {
         setSliderOpen(false);
     };
 
-    return (
-        <Modal
-            show={props.show}
-            onHide={props.onHide}
-            centered
-            className="document-modal"
-            size="lg"
-        >
-            <Modal.Header closeButton className="modal-header">
-                <Modal.Title>
-                    <img
-                        src={getIconUrlForDocument(document.type, document.stakeholders)}
-                        alt={`${document.type} icon`}
-                        style={{ width: "40px", height: "40px", marginRight: "10px" }}
-                    />
-                    {isEditable
-                        ? "Enter the values in the following fields"
-                        : document.title}
-                </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="modal-body">
-                {isEditable ? (
-                    <DocumentFormComponent
-                        document={document}
-                        setDocument={setDocument}
-                        errors={errors}
-                        setErrors={setErrors}
-                        handleSubmit={handleSubmit}
-                        handleChange={handleChange}
-                        kirunaBorderCoordinates={kirunaBorderCoordinates}
-                        updateFilesToUpload={updateFilesToUpload}
-                        existingFiles={existingFiles}
-                        handleDeleteExistingFile={handleDeleteExistingFile}
-                    />
-                ) : (
-                    <ModalBodyComponent  document={document}
-                                         existingFiles={existingFiles}
-                                         handleDownload={handleDownload}
-                                         isEditable={isEditable} />
-                )}
-            </Modal.Body>
-            <Modal.Footer className="mt-3">
-                {isEditable ? (
-                    <Button title="Save" variant="success" onClick={handleSubmit}>
-                        <i className="bi bi-check-square"></i>
-                    </Button>
-                ) : (
-                    <div className="d-flex align-items-center">
-                        <Button
-                            variant="primary"
-                            onClick={handleLinksClick}
-                            className="me-2"
-                        >
-                            Links
-                        </Button>
-                        <Button
-                            variant="primary"
-                            onClick={handleLinkToClick}
-                            className="me-2"
-                        >
-                            <i className="bi bi-box-arrow-up-right"></i>
-                        </Button>
-                        <Button
-                            title="Edit"
-                            variant="primary"
-                            onClick={() => setIsEditable(true)}
-                            className="me-2"
-                        >
-                            <i className="bi bi-pencil-square"></i>
-                        </Button>
-                    </div>
-                )}
-            </Modal.Footer>
-            <ListDocumentLinks
-                documentId={props.document.id}
-                isOpen={isSliderOpen}
-                onClose={handleCloseSlider}
-                onSnippetClick={handleSnippetClick}
-                document={props.document}
+  return (
+    <Modal
+      show={props.show}
+      onHide={props.onHide}
+      centered
+      className="document-modal"
+      size="lg"
+    >
+      <Modal.Header closeButton className="modal-header">
+        <Modal.Title>
+            <img
+                src={getIconUrlForDocument(document.type, document.stakeholders)}
+                alt={`${document.type} icon`}
+                style={{ width: "40px", height: "40px", marginRight: "10px" }}
             />
-        </Modal>
-    );
+          {isEditable
+            ? "Enter the values in the following fields"
+            : document.title}
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="modal-body">
+        {isEditable ? (
+          <DocumentFormComponent
+            document={document}
+            setDocument={setDocument}
+            errors={errors}
+            setErrors={setErrors}
+            handleSubmit={handleSubmit}
+            handleChange={handleChange}
+            kirunaBorderCoordinates={kirunaBorderCoordinates}
+            updateFilesToUpload={updateFilesToUpload}
+            existingFiles={existingFiles}
+            handleDeleteExistingFile={handleDeleteExistingFile}
+          />
+        ) : (
+          <ModalBodyComponent document={document}
+                              existingFiles={existingFiles}
+                              handleDownload={handleDownload}
+                              isEditable={isEditable} />
+        )}
+      </Modal.Body>
+      <Modal.Footer className="mt-3">
+        {isEditable ? (
+          <Button title="Save" variant="success" onClick={handleSubmit}>
+            <i className="bi bi-check-square"></i>
+          </Button>
+        ) : props.loggedIn && props.user.role === "Urban Planner" &&(
+          <div className="d-flex align-items-center">
+          <Button
+              variant="primary"
+              onClick={handleLinksClick}
+              className="me-2"
+          >
+              Links
+          </Button>
+          <Button
+              variant="primary"
+              onClick={handleLinkToClick}
+              className="me-2"
+          >
+              <i className="bi bi-box-arrow-up-right"></i>
+          </Button>
+          <Button
+              title="Edit"
+              variant="primary"
+              onClick={() => setIsEditable(true)}
+              className="me-2"
+          >
+              <i className="bi bi-pencil-square"></i>
+          </Button>
+          </div>
+        )}
+      </Modal.Footer>
+      <ListDocumentLinks
+        documentId={props.document.id}
+        isOpen={isSliderOpen}
+        onClose={handleCloseSlider}
+        onSnippetClick={handleSnippetClick}
+        document={props.document}
+      />
+    </Modal>
+  );
 }
 
 DocumentModal.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onHide: PropTypes.func.isRequired,
-    document: PropTypes.object.isRequired,
-    handleSave: PropTypes.func.isRequired,
-    handleAdd: PropTypes.func.isRequired,
-    onLinkToClick: PropTypes.func,
-    onLinksClick: PropTypes.func,
-    onSnippetClick: PropTypes.func,
+  show: PropTypes.bool.isRequired,
+  onHide: PropTypes.func.isRequired,
+  document: PropTypes.object.isRequired,
+  handleSave: PropTypes.func.isRequired,
+  handleAdd: PropTypes.func.isRequired,
+  onLinkToClick: PropTypes.func,
+  onLinksClick: PropTypes.func,
+  onSnippetClick: PropTypes.func,
+  loggedIn: PropTypes.bool,
+  user: PropTypes.object
 };
 
 function ModalBodyComponent({ document, existingFiles, handleDownload, isEditable }) {
