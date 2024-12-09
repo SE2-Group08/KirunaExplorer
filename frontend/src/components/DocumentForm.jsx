@@ -22,6 +22,83 @@ export default function DocumentFormComponent({
   handleDeleteExistingFile,
   handleSubmit,
 }) {
+  const [allStakeholders, setAllStakeholders] = useState([]);
+  const [allDocumentTypes, setAllDocumentTypes] = useState([]);
+  const [allScales, setAllScales] = useState([]);
+
+  const { setFeedbackFromError } = useContext(FeedbackContext);
+
+  useEffect(() => {
+    // Fetch all stakeholders
+    API.getAllStakeholders()
+      .then((stakeholders) => {
+        setAllStakeholders(stakeholders);
+      })
+      .catch((e) => setFeedbackFromError(e));
+
+    // Fetch all document types
+    API.getAllDocumentTypes()
+      .then((documentTypes) => {
+        setAllDocumentTypes(documentTypes);
+      })
+      .catch((e) => setFeedbackFromError(e));
+
+    // Fetch all scales
+    API.getAllScales()
+      .then((scales) => {
+        setAllScales(scales);
+      })
+      .catch((e) => setFeedbackFromError(e));
+  }, [setFeedbackFromError]);
+
+  return (
+    <Form style={{ width: "100%" }} className="mx-auto">
+      <DocumentFormFields
+        document={document}
+        errors={errors}
+        handleChange={handleChange}
+        allStakeholders={allStakeholders}
+        allDocumentTypes={allDocumentTypes}
+        allScales={allScales}
+        kirunaBorderCoordinates={kirunaBorderCoordinates}
+      />
+      <UploadFilesComponent
+        updateFilesToUpload={updateFilesToUpload}
+        existingFiles={existingFiles}
+        handleDeleteExistingFile={handleDeleteExistingFile}
+      />
+      <Button
+        className="mt-4"
+        title="save"
+        variant="success"
+        onClick={handleSubmit}
+      >
+        <i className="bi bi-check2"></i>
+      </Button>
+    </Form>
+  );
+}
+
+DocumentFormComponent.propTypes = {
+  document: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired,
+  handleChange: PropTypes.func.isRequired,
+  kirunaBorderCoordinates: PropTypes.array.isRequired,
+  updateFilesToUpload: PropTypes.func.isRequired,
+  existingFiles: PropTypes.array.isRequired,
+  handleDeleteExistingFile: PropTypes.func.isRequired,
+  handleSubmit: PropTypes.func.isRequired,
+};
+
+function DocumentFormFields({
+  document,
+  errors,
+  handleChange,
+  allStakeholders,
+  allDocumentTypes,
+  allScales,
+  kirunaBorderCoordinates,
+}) {
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const [markerPosition, setMarkerPosition] = useState([
     document.geolocation.latitude
@@ -31,75 +108,20 @@ export default function DocumentFormComponent({
       ? document.geolocation.longitude
       : defaultPosition[1],
   ]);
-  const [allStakeholders, setAllStakeholders] = useState([]);
-  const [allDocumentTypes, setAllDocumentTypes] = useState([]);
-  const [allScales, setAllScales] = useState([]);
-  const { setFeedbackFromError } = useContext(FeedbackContext);
 
   const dayRef = useRef(null);
   const monthRef = useRef(null);
   const yearRef = useRef(null);
 
   useEffect(() => {
-    API.getAllStakeholders()
-      .catch((e) => setFeedbackFromError(e))
-      .then((stakeholders) => {
-        setAllStakeholders(stakeholders);
-      });
-    API.getAllDocumentTypes()
-      .catch((e) => setFeedbackFromError(e))
-      .then((documentTypes) => {
-        setAllDocumentTypes(documentTypes);
-      });
-    API.getAllScales()
-      .catch((e) => setFeedbackFromError(e))
-      .then((scales) => {
-        setAllScales(scales);
-      });
-  }, []);
-
-  const [files, setFiles] = useState([]);
-  const [filePreviews, setFilePreviews] = useState({});
-  const fileInputRef = useRef(null);
-
-  const handleFileChange = (e) => {
-    const newFiles = Array.from(e.target.files);
-    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
-    const newFilePreviews = {};
-    const oversizedFiles = [];
-
-    newFiles.forEach((file) => {
-      if (file.size > MAX_FILE_SIZE) {
-        oversizedFiles.push(file.name);
-      } else {
-        const url = URL.createObjectURL(file);
-        newFilePreviews[file.name] = url;
-      }
-    });
-
-    if (oversizedFiles.length > 0) {
-      alert(
-        `The following files exceed the maximum size of 25 MB and will not be uploaded:\n${oversizedFiles.join(
-          ", "
-        )}`
-      );
+    // Set marker position if geolocation is available
+    if (document.geolocation.latitude && document.geolocation.longitude) {
+      setMarkerPosition([
+        document.geolocation.latitude,
+        document.geolocation.longitude,
+      ]);
     }
-
-    const validFiles = newFiles.filter((file) => file.size <= MAX_FILE_SIZE);
-
-    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-    setFilePreviews((prevPreviews) => ({
-      ...prevPreviews,
-      ...newFilePreviews,
-    }));
-    updateFilesToUpload([...files, ...validFiles]);
-  };
-
-  useEffect(() => {
-    return () => {
-      Object.values(filePreviews).forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [filePreviews]);
+  }, [document.geolocation.latitude, document.geolocation.longitude]);
 
   const handleDayChange = (e) => {
     const value = e.target.value;
@@ -127,34 +149,6 @@ export default function DocumentFormComponent({
       handleChange("year", value);
     }
   };
-  const handleDeleteNewFile = (index) => {
-    setFiles((prevFiles) => {
-      const newFiles = [...prevFiles];
-      const [removedFile] = newFiles.splice(index, 1);
-      // Revoke object URL to avoid memory leaks
-      URL.revokeObjectURL(filePreviews[removedFile.name]);
-      return newFiles;
-    });
-    setFilePreviews((prevPreviews) => {
-      const newPreviews = { ...prevPreviews };
-      delete newPreviews[files[index].name];
-      return newPreviews;
-    });
-    updateFilesToUpload((prevFilesToUpload) => {
-      const newFilesToUpload = [...prevFilesToUpload];
-      newFilesToUpload.splice(index, 1);
-      return newFilesToUpload;
-    });
-  };
-
-  useEffect(() => {
-    if (document.geolocation.latitude && document.geolocation.longitude) {
-      setMarkerPosition([
-        document.geolocation.latitude,
-        document.geolocation.longitude,
-      ]);
-    }
-  }, [document.geolocation.latitude, document.geolocation.longitude]);
 
   const handleMapClick = (e) => {
     const { lat, lng } = e.latlng;
@@ -198,9 +192,8 @@ export default function DocumentFormComponent({
       setMarkerPosition([document.geolocation.latitude, lng]);
     }
   };
-
   return (
-    <Form style={{ width: "100%" }} className="mx-auto">
+    <>
       {/* TITLE*/}
       <Row className="mb-4">
         <Col md={12}>
@@ -637,7 +630,94 @@ export default function DocumentFormComponent({
           </Form.Group>
         </Col>
       </Row>
+    </>
+  );
+}
 
+DocumentFormFields.propTypes = {
+  document: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired,
+  handleChange: PropTypes.func.isRequired,
+  allStakeholders: PropTypes.array.isRequired,
+  allDocumentTypes: PropTypes.array.isRequired,
+  allScales: PropTypes.array.isRequired,
+  kirunaBorderCoordinates: PropTypes.array.isRequired,
+};
+
+function UploadFilesComponent({
+  updateFilesToUpload,
+  existingFiles,
+  handleDeleteExistingFile,
+}) {
+  const [files, setFiles] = useState([]);
+  const [filePreviews, setFilePreviews] = useState({});
+  const fileInputRef = useRef(null);
+  const { setFeedbackFromError } = useContext(FeedbackContext);
+
+  useEffect(() => {
+    // Cleanup function to revoke object URLs
+    return () => {
+      Object.values(filePreviews).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [filePreviews]);
+
+  const handleFileChange = (e) => {
+    const newFiles = Array.from(e.target.files);
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+    const newFilePreviews = {};
+    const oversizedFiles = [];
+
+    newFiles.forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(file.name);
+      } else {
+        const url = URL.createObjectURL(file);
+        newFilePreviews[file.name] = url;
+      }
+    });
+
+    if (oversizedFiles.length > 0) {
+      setFeedbackFromError(
+        new Error(
+          `The following files are too large (max 25 MB): ${oversizedFiles.join(
+            ", "
+          )}`
+        )
+      );
+      return;
+    }
+
+    const validFiles = newFiles.filter((file) => file.size <= MAX_FILE_SIZE);
+
+    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+    setFilePreviews((prevPreviews) => ({
+      ...prevPreviews,
+      ...newFilePreviews,
+    }));
+    updateFilesToUpload([...files, ...validFiles]);
+  };
+
+  const handleDeleteNewFile = (index) => {
+    setFiles((prevFiles) => {
+      const newFiles = [...prevFiles];
+      const [removedFile] = newFiles.splice(index, 1);
+      // Revoke object URL to avoid memory leaks
+      URL.revokeObjectURL(filePreviews[removedFile.name]);
+      return newFiles;
+    });
+    setFilePreviews((prevPreviews) => {
+      const newPreviews = { ...prevPreviews };
+      delete newPreviews[files[index].name];
+      return newPreviews;
+    });
+    updateFilesToUpload((prevFilesToUpload) => {
+      const newFilesToUpload = [...prevFilesToUpload];
+      newFilesToUpload.splice(index, 1);
+      return newFilesToUpload;
+    });
+  };
+  return (
+    <>
       {/* UPLOAD */}
       <Row className="mb-4">
         <Col md={12}>
@@ -701,27 +781,14 @@ export default function DocumentFormComponent({
               </div>
             )}
           </Form.Group>
-          <Button
-            className="mt-4"
-            title="save"
-            variant="success"
-            onClick={handleSubmit}
-          >
-            <i className="bi bi-check2"></i>
-          </Button>
         </Col>
       </Row>
-    </Form>
+    </>
   );
 }
 
-DocumentFormComponent.propTypes = {
-  document: PropTypes.object.isRequired,
-  errors: PropTypes.object.isRequired,
-  handleChange: PropTypes.func.isRequired,
-  kirunaBorderCoordinates: PropTypes.array.isRequired,
+UploadFilesComponent.propTypes = {
   updateFilesToUpload: PropTypes.func.isRequired,
   existingFiles: PropTypes.array.isRequired,
   handleDeleteExistingFile: PropTypes.func.isRequired,
-  handleSubmit: PropTypes.func.isRequired,
 };
