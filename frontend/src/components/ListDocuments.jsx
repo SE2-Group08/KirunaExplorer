@@ -132,22 +132,22 @@ export default function ListDocuments({ shouldRefresh }) {
     }
   };
 
-  const handleDelete = (documentId) => {
-    API.deleteDocument(documentId)
-        .then(() => API.getAllDocumentSnippets().then(setDocuments))
-        .then(() => setShouldRefresh(false))
-        .then(() =>
-            setFeedback({
-              type: "success",
-              message: "Document deleted successfully",
-            })
-        )
-        .catch((error) =>
-            setFeedbackFromError(error)
-        );
-    setShow(false);
-    setShouldRefresh(true);
-  };
+  // const handleDelete = (documentId) => {
+  //   API.deleteDocument(documentId)
+  //       .then(() => API.getAllDocumentSnippets().then(setDocuments))
+  //       .then(() => setShouldRefresh(false))
+  //       .then(() =>
+  //           setFeedback({
+  //             type: "success",
+  //             message: "Document deleted successfully",
+  //           })
+  //       )
+  //       .catch((error) =>
+  //           setFeedbackFromError(error)
+  //       );
+  //   setShow(false);
+  //   setShouldRefresh(true);
+  // };
 
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
