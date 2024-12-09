@@ -20,6 +20,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class SecurityConfiguration {
 
     private static final String[] WHITE_LIST_URL = {
+            "/api/v1/documents/map",
             "/api/v1/documents/{id}",
             "/api/v1/auth/authenticate",
             "/api/v1/auth/register",
@@ -35,16 +36,47 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(req -> req
+                .authorizeHttpRequests(auth -> auth
+                        // Allow all OPTIONS requests for preflight checks
+                        .requestMatchers(OPTIONS, "/**").permitAll()
 
                         .requestMatchers(WHITE_LIST_URL).permitAll()
 
-                        .requestMatchers(GET, "/api/v1/documents").permitAll()
+                        // Auth
+                        .requestMatchers(POST, "/api/v1/auth/authenticate").permitAll()
+                        .requestMatchers(POST, "/api/v1/auth/register").permitAll()
 
+                        // Documents (public GET)
+                        .requestMatchers(GET, "/api/v1/documents").permitAll()
+                        .requestMatchers(GET, "/api/v1/documents/search").permitAll()
+                        .requestMatchers(GET, "/api/v1/documents/{id}/files").permitAll()
+
+                        // Links (public GET)
+                        .requestMatchers(GET, "/api/v1/links").permitAll()
+                        .requestMatchers(GET, "/api/v1/links/{linkId}").permitAll()
+
+                        // Stakeholders (public GET)
+                        .requestMatchers(GET, "/api/v1/stakeholders").permitAll()
+
+                        // Files
+                        .requestMatchers(GET, "/api/v1/files/{fileId}").permitAll()  // Download files is public
+                        .requestMatchers(POST, "/api/v1/documents/{id}/files").permitAll()
+                        .requestMatchers(DELETE, "/api/v1/files/{fileId}").hasAuthority(Role.URBAN_PLANNER.name()) // Delete files requires URBAN_PLANNER
+
+                        // Document Types
+                        .requestMatchers(GET, "/api/v1/document-types").permitAll()
+
+                        // Scales
+                        .requestMatchers(GET, "/api/v1/scales").permitAll()
+
+                        // Protected endpoints (URBAN_PLANNER)
                         .requestMatchers(POST, "/api/v1/documents/{id}/links").hasAuthority(Role.URBAN_PLANNER.name())
                         .requestMatchers(PUT, "/api/v1/documents/{id}/links").hasAuthority(Role.URBAN_PLANNER.name())
                         .requestMatchers(POST, "/api/v1/documents").hasAuthority(Role.URBAN_PLANNER.name())
                         .requestMatchers(PUT, "/api/v1/documents").hasAuthority(Role.URBAN_PLANNER.name())
+                        .requestMatchers(POST, "/api/v1/stakeholders").hasAuthority(Role.URBAN_PLANNER.name())
+                        .requestMatchers(POST, "/api/v1/document-types").hasAuthority(Role.URBAN_PLANNER.name())
+                        .requestMatchers(POST, "/api/v1/scales").hasAuthority(Role.URBAN_PLANNER.name())
 
                         .anyRequest().authenticated()
                 )

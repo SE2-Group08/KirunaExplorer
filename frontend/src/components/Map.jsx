@@ -160,13 +160,6 @@ const MapKiruna = () => {
                               ? [doc.geolocation.latitude, doc.geolocation.longitude]
                               : kirunaPosition;
 
-                          {
-                              console.log(
-                                  "Icon Path Map:",
-                                  getIconForDocument(doc.type, doc.stakeholders)
-                              );
-                          }
-
                           return (
                               <Marker
                                   key={index}

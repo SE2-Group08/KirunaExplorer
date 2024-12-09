@@ -85,7 +85,7 @@ LoginComponent.propTypes = {
 
 function LogoutButton(props) {
   return (
-      <Button variant="outline-dark" onClick={props.logout}>Logout</Button>
+      <Button variant="outline-light" onClick={props.logout}>Logout</Button>
   );
 }
 
@@ -96,7 +96,7 @@ LogoutButton.propTypes = {
 function LoginButton() {
   const navigate = useNavigate();
   return (
-      <Button variant="outline-dark" onClick={() => navigate('/login')}>Login</Button>
+      <Button variant="outline-light" onClick={() => navigate('/login')}>Login</Button>
   );
 }
 

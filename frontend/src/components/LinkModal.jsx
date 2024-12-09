@@ -11,6 +11,7 @@ const LinkModal = ({
                      setSelectedLinkDocuments,
                      links,
                      selectedDocumentToLink,
+                    authToken,
                    }) => {
   const [selectedLinks, setSelectedLinks] = useState([]);
   const [initialSelectedLinks, setInitialSelectedLinks] = useState([]);
@@ -67,33 +68,22 @@ const LinkModal = ({
     );
 
     try {
-      await Promise.all([
-        ...linksToCreate.map((link) =>
-            API.createLink(document.id, {
-              type: link.linkType,
-              documentId: link.linkId,
-            })
-                .then(() =>
-                    setFeedback({
-                      type: "success",
-                      message: "Link created successfully",
-                    })
-                )
-                .catch((error) => setFeedbackFromError(error))
-        ),
-        ...linksToDelete.map((link) =>
-            API.deleteLink(link.linkId)
-                .then(() =>
-                    setFeedback({
-                      type: "success",
-                      message: "Link deleted successfully",
-                    })
-                )
-                .catch((error) => setFeedbackFromError(error))
-        ),
-      ]);
+        // Inside handleSave
+        await Promise.all([
+            ...linksToCreate.map((link) =>
+                API.createLink(document.id, { type: link.linkType, documentId: link.linkId }, authToken)
+                    .then(() => setFeedback({ type: "success", message: "Link created successfully" }))
+                    .catch((error) => setFeedbackFromError(error))
+            ),
+            ...linksToDelete.map((link) =>
+                API.deleteLink(link.linkId, authToken)
+                    .then(() => setFeedback({ type: "success", message: "Link deleted successfully" }))
+                    .catch((error) => setFeedbackFromError(error))
+            ),
+        ]);
 
-      setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
+
+        setSelectedLinkDocuments((prevSelectedLinkDocuments) => [
         ...prevSelectedLinkDocuments,
         ...selectedLinks.map((link) => ({ document, linkType: link.linkType })),
       ]);
@@ -152,6 +142,7 @@ LinkModal.propTypes = {
   setSelectedLinkDocuments: PropTypes.func.isRequired,
   links: PropTypes.array.isRequired,
   selectedDocumentToLink: PropTypes.object.isRequired,
+    authToken: PropTypes.string.isRequired,
 };
 
 export default LinkModal;

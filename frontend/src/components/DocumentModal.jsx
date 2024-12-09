@@ -285,7 +285,7 @@ export default function DocumentModal(props) {
 
                 if (filesToUpload.length > 0) {
                     try {
-                        await API.uploadFiles(newDocId, filesToUpload);
+                        await API.uploadFiles(newDocId, filesToUpload, props.authToken);
                     } catch (error) {
                         console.error("Error uploading files:", error);
                         alert("An error occurred while uploading files. Please try again.");
@@ -311,7 +311,7 @@ export default function DocumentModal(props) {
 
                 if (filesToUpload.length > 0) {
                     try {
-                        await API.uploadFiles(props.document.id, filesToUpload);
+                        await API.uploadFiles(props.document.id, filesToUpload, props.authToken);
                     } catch (error) {
                         console.error("Error uploading files:", error);
                         alert("An error occurred while uploading files. Please try again.");
@@ -321,7 +321,7 @@ export default function DocumentModal(props) {
                 if (deletedExistingFiles.length > 0) {
                     try {
                         await Promise.all(
-                            deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+                            deletedExistingFiles.map((fileId) => API.deleteFile(fileId, props.authToken))
                         );
                     } catch (error) {
                         console.error("Error deleting files:", error);
@@ -333,7 +333,7 @@ export default function DocumentModal(props) {
             }
             setFilesToUpload([]);
             props.onHide();
-        } catch (error) {
+        } catch {
             alert(
                 "An error occurred while saving the document. Please check your input and try again."
             );
@@ -437,7 +437,7 @@ export default function DocumentModal(props) {
           <Button title="Save" variant="success" onClick={handleSubmit}>
             <i className="bi bi-check-square"></i>
           </Button>
-        ) : props.loggedIn && props.user.role === "Urban Planner" &&(
+        ) : (
           <div className="d-flex align-items-center">
           <Button
               variant="primary"
@@ -470,6 +470,7 @@ export default function DocumentModal(props) {
         onClose={handleCloseSlider}
         onSnippetClick={handleSnippetClick}
         document={props.document}
+        authToken={props.authToken}
       />
     </Modal>
   );
@@ -484,8 +485,7 @@ DocumentModal.propTypes = {
   onLinkToClick: PropTypes.func,
   onLinksClick: PropTypes.func,
   onSnippetClick: PropTypes.func,
-  loggedIn: PropTypes.bool,
-  user: PropTypes.object
+    authToken: PropTypes.string,
 };
 
 function ModalBodyComponent({ document, existingFiles, handleDownload, isEditable }) {
@@ -687,7 +687,7 @@ function DocumentFormComponent({
             .then((scales) => {
                 setAllScales(scales);
             });
-    }, []);
+    }, [document, setFeedbackFromError]);
 
     const [files, setFiles] = useState([]);
     const [filePreviews, setFilePreviews] = useState({});
@@ -952,9 +952,7 @@ function DocumentFormComponent({
                                     </option>
                                 ))
                             ) : (
-                                <Spinner animation="border" role="status" className="mx-auto">
-                                    <span className="visually-hidden">Loading...</span>
-                                </Spinner>
+                                <option disabled>Loading...</option>
                             )}
                             <option value="Other">Other</option>
                         </Form.Control>
@@ -992,6 +990,7 @@ function DocumentFormComponent({
                             {errors.scale}
                         </Form.Control.Feedback>
                     </Form.Group>
+
                 </Col>
             </Row>
 
@@ -1054,17 +1053,13 @@ function DocumentFormComponent({
                             required
                         >
                             <option value="">Select type</option>
-                            {allDocumentTypes.length ? (
+                            {allDocumentTypes.length &&
                                 allDocumentTypes.map((typeOption) => (
                                     <option key={typeOption.id} value={typeOption.name}>
                                         {typeOption.name}
                                     </option>
                                 ))
-                            ) : (
-                                <Spinner animation="border" role="status" className="mx-auto">
-                                    <span className="visually-hidden">Loading...</span>
-                                </Spinner>
-                            )}
+                            }
                             <option value="Other">Other</option>
                         </Form.Control>
                         {document.type === "Other" && (
@@ -1242,7 +1237,7 @@ function DocumentFormComponent({
                 <Col md={12}>
                     <Form.Group className="mb-3" controlId="formDocumentDescription">
                         <Form.Label>Description</Form.Label>
-                        <div className="form-divider" />
+                        <div className="divider" />
                         <Form.Control
                             as="textarea"
                             rows={3}
@@ -1263,7 +1258,7 @@ function DocumentFormComponent({
                 <Col md={12}>
                     <Form.Group controlId="formDocumentFiles">
                         <Form.Label>Upload files</Form.Label>
-                        <div className="form-divider" />
+                        <div className="divider" />
                         <div className="d-flex align-items-center">
                             <Form.Control
                                 type="file"

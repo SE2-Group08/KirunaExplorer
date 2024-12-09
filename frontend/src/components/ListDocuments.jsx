@@ -1,4 +1,5 @@
 import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
 import {
@@ -19,7 +20,7 @@ import Pagination from "./Pagination";
 import { getIconUrlForDocument } from "../utils/iconMapping";
 import LegendModal from "./Legend";
 
-export default function ListDocuments({ shouldRefresh }) {
+export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner, authToken }) {
   const [documents, setDocuments] = useState([]);
   const [show, setShow] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -35,27 +36,34 @@ export default function ListDocuments({ shouldRefresh }) {
   const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
       []
   );
+    const navigate = useNavigate();
   const { setFeedbackFromError, setShouldRefresh, setFeedback } =
       useContext(FeedbackContext);
 
+    useEffect(() => {
+        if (!loggedIn || !isUrbanPlanner) {
+            navigate("/login");
+        }
+    }, [loggedIn, isUrbanPlanner, navigate]);
+
   useEffect(() => {
-    if (linking) {
-      API.getAllLinksOfDocument(selectedDocumentToLink.id)
+    if (linking && selectedDocumentToLink) {
+      API.getAllLinksOfDocument(selectedDocumentToLink.id, authToken)
           .then(setAllLinksOfSelectedDocument)
           .catch((error) => setFeedbackFromError(error));
     }
-  }, [linking, showLinkModal]);
+  }, [linking, showLinkModal, selectedDocumentToLink, authToken, setFeedbackFromError]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    API.getDocumentsByPageNumber(currentPage)
+    API.getDocumentsByPageNumber(currentPage, authToken)
         .then((response) => {
           setDocuments(response[0].documentSnippets);
           setTotalPages(response[0].totalPages);
         })
         .then(() => setShouldRefresh(false))
         .catch((error) => setFeedbackFromError(error));
-  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError]);
+  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError, currentPage, authToken]);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -70,7 +78,7 @@ export default function ListDocuments({ shouldRefresh }) {
       setSelectedDocument(newDoc);
 
       if (linking) {
-        const dLinks = await API.getAllLinksOfDocument(newDoc.id).catch(
+        const dLinks = await API.getAllLinksOfDocument(newDoc.id, authToken).catch(
             (error) => setFeedbackFromError(error)
         );
         setLinks(dLinks);
@@ -90,8 +98,8 @@ export default function ListDocuments({ shouldRefresh }) {
   };
 
   const handleSave = (document) => {
-    API.updateDocument(document.id, document)
-        .then(() => API.getAllDocumentSnippets().then(setDocuments))
+    API.updateDocument(document.id, document, authToken)
+        .then(() => API.getAllDocumentSnippets(authToken).then(setDocuments))
         .then(() => setShouldRefresh(false))
         .then(() =>
             setFeedback({
@@ -108,17 +116,10 @@ export default function ListDocuments({ shouldRefresh }) {
 
   const handleAdd = async (document) => {
     try {
-      // Aggiungi il documento e ottieni la risposta
-      const newDocResponse = await API.addDocument(document);
-
-      /* Estrai l'ID dal documento creato
-      const newDocId = newDocResponse.id || newDocResponse.data?.id;*/
-
-      // Aggiorna la lista dei documenti
-      const updatedDocuments = await API.getAllDocumentSnippets();
+      const newDocResponse = await API.addDocument(document, authToken);
+      const updatedDocuments = await API.getAllDocumentSnippets(authToken);
       setDocuments(updatedDocuments);
 
-      // Aggiorna lo stato e fornisci feedback
       setShouldRefresh(false);
       setFeedback({ type: "success", message: "Document added successfully" });
       setShow(false);
@@ -126,14 +127,13 @@ export default function ListDocuments({ shouldRefresh }) {
 
       return newDocResponse;
     } catch (error) {
-      // Gestione errori
       setFeedbackFromError(error);
-      throw error; // Propaga l'errore se necessario
+      throw error;
     }
   };
 
-  const handleDelete = (documentId) => {
-    API.deleteDocument(documentId)
+  /*const handleDelete = (documentId) => {
+    API.deleteDocument(documentId, authToken)
         .then(() => API.getAllDocumentSnippets().then(setDocuments))
         .then(() => setShouldRefresh(false))
         .then(() =>
@@ -147,7 +147,7 @@ export default function ListDocuments({ shouldRefresh }) {
         );
     setShow(false);
     setShouldRefresh(true);
-  };
+  };*/
 
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
@@ -303,6 +303,7 @@ export default function ListDocuments({ shouldRefresh }) {
                   // handleDelete={handleDelete}
                   handleAdd={handleAdd}
                   onSnippetClick={handleSelection}
+                        authToken={authToken}
               />
           )}
           {selectedDocumentToLink && showLinkModal && (
@@ -318,6 +319,7 @@ export default function ListDocuments({ shouldRefresh }) {
                   onLinkConfirm={handleLinkConfirm}
                   links={links}
                   selectedDocumentToLink={selectedDocumentToLink}
+                  authToken={authToken}
               />
           )}
         </Row>
@@ -328,6 +330,9 @@ export default function ListDocuments({ shouldRefresh }) {
 ListDocuments.propTypes = {
   thinCardLayout: PropTypes.bool,
   shouldRefresh: PropTypes.bool.isRequired,
+  loggedIn: PropTypes.bool.isRequired,
+  isUrbanPlanner: PropTypes.bool.isRequired,
+  authToken: PropTypes.string,
 };
 
 function DocumentSnippetTableComponent({

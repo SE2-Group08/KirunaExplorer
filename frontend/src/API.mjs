@@ -1,6 +1,5 @@
 import {Document, DocumentSnippet} from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
-import Link from "./model/Link.mjs";
 import { DocumentType } from "./model/DocumentType.mjs";
 import { Scale } from "./model/Scale.mjs";
 
@@ -22,49 +21,26 @@ const logIn = async (credentials) => {
       body: JSON.stringify(credentials),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      const errorMessage = errorData.message || "Login failed. Please check your credentials.";
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-
-    const token = data.token;
-    if (token) {
-      localStorage.setItem("authToken", token);
-    }
-
-    return data;
+    return await response.json();
   } catch (error) {
     throw error;
   }
 };
 
+const getUserInfo = async (token) => {
+  // Since we are not making a user info request here in the snippet,
+  // we return true if we have a token; otherwise false.
+  return !!token;
+};
 
-
-const getUserInfo = async () => {
-  return !!localStorage.getItem("authToken");
-
+const logOut = async (token) => {
+  // If your back-end requires an API call to invalidate the session, do it here.
+  // In this snippet, we simply log the user out. The caller will handle removing the token from state.
+  console.log("User successfully logged out.");
 };
 
 
-const logOut = async () => {
-  const token = localStorage.getItem("authToken"); // Retrieve the token
 
-  if (!token) {
-    console.warn("No token found. User may already be logged out.");
-    return; // Exit early if no token is available
-  }
-
-  try {
-    // Remove token from storage after successful logout
-    localStorage.removeItem("authToken");
-    console.log("User successfully logged out.");
-  } catch (error) {
-    console.error("Error during logout:", error);
-  }
-};
 
 
 /* ********************* *
@@ -89,26 +65,33 @@ const getUserById = async (userId) => {
  *       Resources APIs       *
  * ************************** */
 
-const uploadFiles = async (id, files) => {
-    const formData = new FormData();
+const uploadFiles = async (id, files, token) => {
+
+  const formData = new FormData();
   files.forEach((file) => {
     formData.append("files", file);
   });
 
 
   const url = `${SERVER_URL}/documents/${id}/files`;
-    console.log("Uploading file to URL:", url);
-
     const response = await fetch(url, {
       method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
       body: formData,
     })
   .then(handleInvalidResponse)
+    .then((response) => response.json());
 };
 
-const deleteFile = async (fileId) => {
+const deleteFile = async (fileId, token) => {
   const response = await fetch(`${SERVER_URL}/files/${fileId}`, {
     method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
   }).then(handleInvalidResponse);
 };
 
@@ -152,7 +135,7 @@ const getDocumentFiles = async (documentId) => {
  *       Link APIs      *
  * ************************** */
 
-const createLink = async (documentId, link) => {
+const createLink = async (documentId, link, token) => {
   const requestBody = {
     type: link.type.toUpperCase().replace(/ /g, "_"),
     documentId: link.documentId,
@@ -162,14 +145,22 @@ const createLink = async (documentId, link) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
     },
+    credentials: "include",
     body: JSON.stringify(requestBody),
   }).then(handleInvalidResponse);
 };
 
 // Retrieve all links of a document
-const getAllLinksOfDocument = async (documentId) => {
-  const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
+const getAllLinksOfDocument = async (documentId, token) => {
+  const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+  })
       .then(handleInvalidResponse)
       .then((response) => response.json());
   return links;
@@ -187,10 +178,14 @@ const updateLink = async (documentId, linkId, updatedLink) => {
 };
 
 // Delete a link for a document
-const deleteLink = async (linkId) => {
+const deleteLink = async (linkId, token) => {
   console.log("API DELETE LINK: ", linkId);
   return await fetch(`${SERVER_URL}/links/${linkId}`, {
     method: "DELETE",
+    headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+    }
   }).then(handleInvalidResponse);
 };
 
@@ -208,9 +203,15 @@ const getAllDocumentSnippets = async () => {
 };
 
 // Retrieve documents by page number
-const getDocumentsByPageNumber = async (pageNo = 0) => {
+const getDocumentsByPageNumber = async (pageNo = 0, token) => {
   try {
-    const response = await fetch(`${SERVER_URL}/documents?pageNo=${pageNo}`);
+    const response = await fetch(`${SERVER_URL}/documents?pageNo=${pageNo}`, {
+        method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      }
+    });
     if (!response.ok) {
       console.error(response)
     }
@@ -222,14 +223,14 @@ const getDocumentsByPageNumber = async (pageNo = 0) => {
   }
 };
 
-const addDocument = async (document) => {
+const addDocument = async (document, token) => {
   try {
-    console.log("ADD DOCUMENT: ", document);
 
     const response = await fetch(`${SERVER_URL}/documents`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(document),
     });
@@ -254,49 +255,36 @@ const addDocument = async (document) => {
     console.error("Error while adding document:", error);
     return null;
   }
-  const token = localStorage.getItem("authToken");
-  return await fetch(`${SERVER_URL}/documents`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-    credentials: "include",
-    body: JSON.stringify(document),
-  }).then(handleInvalidResponse);
 };
 
 
 
 // Retrieve a document by id
 const getDocumentById = async (documentId) => {
-  const document = await fetch(`${SERVER_URL}/documents/${documentId}`)
+  const document = await fetch(`${SERVER_URL}/documents/${documentId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
     .then(handleInvalidResponse)
     .then((response) => response.json())
     .then(mapAPIDocumentToDocument);
   return document;
 };
 
-const updateDocument = async (documentId, nextDocument) => {
-    const token = localStorage.getItem("authToken");
-    // Ensure token exists before making the request
-    if (!token) {
-        throw new Error("Unauthorized: No auth token found. Please log in.");
-    }
+const updateDocument = async (documentId, nextDocument, token) => {
 
     try {
-    const response =await fetch(`${SERVER_URL}/documents`, {
+    const response = await fetch(`${SERVER_URL}/documents`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`,
-
     },
-        credentials: "include",
-        body: JSON.stringify(nextDocument),
+    credentials: "include",
+    body: JSON.stringify(nextDocument),
   }).then(handleInvalidResponse);
-
-  const location = response.headers.get("location");
 
   return await response.json();
     } catch (error) {
