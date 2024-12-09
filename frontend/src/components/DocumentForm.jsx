@@ -22,34 +22,7 @@ export default function DocumentFormComponent({
   handleDeleteExistingFile,
   handleSubmit,
 }) {
-  const [allStakeholders, setAllStakeholders] = useState([]);
-  const [allDocumentTypes, setAllDocumentTypes] = useState([]);
-  const [allScales, setAllScales] = useState([]);
-
-  const { setFeedbackFromError } = useContext(FeedbackContext);
-
-  useEffect(() => {
-    // Fetch all stakeholders
-    API.getAllStakeholders()
-      .then((stakeholders) => {
-        setAllStakeholders(stakeholders);
-      })
-      .catch((e) => setFeedbackFromError(e));
-
-    // Fetch all document types
-    API.getAllDocumentTypes()
-      .then((documentTypes) => {
-        setAllDocumentTypes(documentTypes);
-      })
-      .catch((e) => setFeedbackFromError(e));
-
-    // Fetch all scales
-    API.getAllScales()
-      .then((scales) => {
-        setAllScales(scales);
-      })
-      .catch((e) => setFeedbackFromError(e));
-  }, [setFeedbackFromError]);
+  //   const { setFeedbackFromError } = useContext(FeedbackContext);
 
   return (
     <Form style={{ width: "100%" }} className="mx-auto">
@@ -57,9 +30,6 @@ export default function DocumentFormComponent({
         document={document}
         errors={errors}
         handleChange={handleChange}
-        allStakeholders={allStakeholders}
-        allDocumentTypes={allDocumentTypes}
-        allScales={allScales}
         kirunaBorderCoordinates={kirunaBorderCoordinates}
       />
       <UploadFilesComponent
@@ -94,11 +64,11 @@ function DocumentFormFields({
   document,
   errors,
   handleChange,
-  allStakeholders,
-  allDocumentTypes,
-  allScales,
   kirunaBorderCoordinates,
 }) {
+  const [allStakeholders, setAllStakeholders] = useState([]);
+  const [allDocumentTypes, setAllDocumentTypes] = useState([]);
+  const [allScales, setAllScales] = useState([]);
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const [markerPosition, setMarkerPosition] = useState([
     document.geolocation.latitude
@@ -109,11 +79,33 @@ function DocumentFormFields({
       : defaultPosition[1],
   ]);
 
+  const { setFeedbackFromError } = useContext(FeedbackContext);
+
   const dayRef = useRef(null);
   const monthRef = useRef(null);
   const yearRef = useRef(null);
 
   useEffect(() => {
+    // Fetch all stakeholders
+    API.getAllStakeholders()
+      .then((stakeholders) => {
+        setAllStakeholders(stakeholders);
+      })
+      .catch((e) => setFeedbackFromError(e));
+
+    // Fetch all document types
+    API.getAllDocumentTypes()
+      .then((documentTypes) => {
+        setAllDocumentTypes(documentTypes);
+      })
+      .catch((e) => setFeedbackFromError(e));
+
+    // Fetch all scales
+    API.getAllScales()
+      .then((scales) => {
+        setAllScales(scales);
+      })
+      .catch((e) => setFeedbackFromError(e));
     // Set marker position if geolocation is available
     if (document.geolocation.latitude && document.geolocation.longitude) {
       setMarkerPosition([
@@ -121,7 +113,11 @@ function DocumentFormFields({
         document.geolocation.longitude,
       ]);
     }
-  }, [document.geolocation.latitude, document.geolocation.longitude]);
+  }, [
+    document.geolocation.latitude,
+    document.geolocation.longitude,
+    setFeedbackFromError,
+  ]);
 
   const handleDayChange = (e) => {
     const value = e.target.value;
