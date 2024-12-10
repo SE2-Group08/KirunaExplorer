@@ -38,7 +38,7 @@ export default function ListDocuments({ shouldRefresh }) {
   const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
     []
   );
-  const { setFeedbackFromError, setShouldRefresh, setFeedback } =
+  const { setFeedbackFromError, setShouldRefresh } =
     useContext(FeedbackContext);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function ListDocuments({ shouldRefresh }) {
       })
       .then(() => setShouldRefresh(false))
       .catch((error) => setFeedbackFromError(error));
-  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError,]);
+  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError, currentPage]);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -321,7 +321,7 @@ export default function ListDocuments({ shouldRefresh }) {
         )}
         {addDocument && (
           <DocumentFormComponent
-            document={null}
+            document={undefined}
             show={addDocument}
             onHide={() => setAddDocument(false)}
           />

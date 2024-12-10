@@ -132,12 +132,7 @@ const DocumentResources = ({
 };
 
 DocumentResources.propTypes = {
-  resources: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      url: PropTypes.string.isRequired,
-    })
-  ),
+  resources: PropTypes.array.isRequired,
   onDelete: PropTypes.func,
   onDownload: PropTypes.func,
   viewMode: PropTypes.oneOf(["grid", "list"]).isRequired,

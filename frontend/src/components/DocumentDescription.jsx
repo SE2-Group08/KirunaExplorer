@@ -44,6 +44,11 @@ export default function DocumentDescriptionComponent({
     setIsSliderOpened(false);
   };
 
+  const handleEditClick = () => {
+    setEditDocument(true);
+    // onHide();
+  };
+
   return (
     <Modal
       show={show}
@@ -86,7 +91,7 @@ export default function DocumentDescriptionComponent({
           <Button
             title="Edit"
             variant="primary"
-            onClick={() => setEditDocument(true)}
+            onClick={handleEditClick}
             className="me-2"
           >
             <i className="bi bi-pencil-square"></i>
@@ -103,7 +108,10 @@ export default function DocumentDescriptionComponent({
       <DocumentFormComponent
         document={document}
         show={editDocument}
-        onHide={() => setEditDocument(false)}
+        onHide={() => {
+          setEditDocument(false);
+          onHide();
+        }}
       />
     </Modal>
   );
@@ -243,7 +251,7 @@ function DocumentDescriptionFields({ document }) {
         <Col>
           <div className="document-resources-section">
             <div className="info-item d-flex justify-content-between align-items-center mb-3">
-              <label>Resources: </label>
+              <label>Original resources: </label>
               {existingFiles.length > 0 ? (
                 <Button
                   onClick={() =>

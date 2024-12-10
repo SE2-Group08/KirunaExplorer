@@ -24,6 +24,7 @@ import FeedbackContext from "../contexts/FeedbackContext";
 import DocumentResources from "./DocumentResources";
 import "../App.scss";
 import getKirunaArea from "./KirunaArea.jsx";
+import { Document } from "../model/Document.mjs";
 
 export default function DocumentFormComponent({ document, show, onHide }) {
   const kirunaBorderCoordinates = getKirunaArea();
@@ -146,20 +147,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
     }
 
-    const scalePatterns = [
-      "Text",
-      "Blueprint/Material effects",
-      /^[1-9]:[1-9][0-9]*$/,
-    ];
-    if (
-      typeof formDocument.scale !== "string" ||
-      !formDocument.scale.trim() ||
-      !scalePatterns.some((pattern) =>
-        typeof pattern === "string"
-          ? pattern === formDocument.scale
-          : pattern.test(formDocument.scale)
-      )
-    ) {
+    if (typeof formDocument.scale !== "string" || !formDocument.scale.trim()) {
       newErrors.scale =
         "Scale is required and must match one of the defined patterns.";
     } else if (formDocument.scale.includes(":")) {
@@ -261,10 +249,10 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       return;
     }
     try {
-      if (document.id === undefined) {
+      if (!document) {
         const newDocId = await handleAdd(
           new Document(
-            null,
+            undefined,
             formDocument.title,
             formDocument.stakeholders,
             formDocument.scale,
@@ -277,8 +265,6 @@ export default function DocumentFormComponent({ document, show, onHide }) {
             formDocument.description
           )
         );
-
-        console.log(newDocId);
 
         if (filesToUpload.length > 0) {
           try {
@@ -308,8 +294,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
           try {
             await API.uploadFiles(document.id, filesToUpload);
           } catch (error) {
-            console.error("Error uploading files:", error);
-            alert("An error occurred while uploading files. Please try again.");
+            setFeedbackFromError(error);
           }
         }
 
@@ -319,10 +304,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
               deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
             );
           } catch (error) {
-            console.error("Error deleting files:", error);
-            alert(
-              "An error occurred while deleting files. Some files may not have been removed."
-            );
+            setFeedbackFromError(error);
           }
         }
       }
@@ -355,8 +337,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     }));
   };
 
-  const handleSave = (document) => {
-    API.updateDocument(document.id, document)
+  const handleSave = async (d) => {
+    API.updateDocument(d.id, d)
       .then(() => setShouldRefresh(true))
       .then(() =>
         setFeedback({
@@ -368,13 +350,10 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     onHide();
   };
 
-  const handleAdd = async (document) => {
+  const handleAdd = async (d) => {
     try {
       // Aggiungi il documento e ottieni la risposta
-      const newDocResponse = await API.addDocument(document);
-
-      /* Estrai l'ID dal documento creato
-      const newDocId = newDocResponse.id || newDocResponse.data?.id;*/
+      const newDocResponse = await API.addDocument(d);
 
       // Aggiorna lo stato e fornisci feedback
       setShouldRefresh(true);
@@ -415,7 +394,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
           />
           <Button
             className="mt-4"
-            title="save"
+            title="submit"
             variant="success"
             onClick={handleSubmit}
           >
@@ -428,7 +407,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
 }
 
 DocumentFormComponent.propTypes = {
-  document: PropTypes.object.isRequired,
+  document: PropTypes.object,
   onHide: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
 };
@@ -1007,9 +986,6 @@ DocumentFormFields.propTypes = {
   document: PropTypes.object.isRequired,
   errors: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
-  allStakeholders: PropTypes.array.isRequired,
-  allDocumentTypes: PropTypes.array.isRequired,
-  allScales: PropTypes.array.isRequired,
   kirunaBorderCoordinates: PropTypes.array.isRequired,
 };
 
