@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import PropTypes from "prop-types";
-import { Form, Row, Col, Button, Spinner, ListGroup } from "react-bootstrap";
+import {
+  Modal,
+  Form,
+  Row,
+  Col,
+  Button,
+  Spinner,
+  ListGroup,
+} from "react-bootstrap";
 import {
   MapContainer,
   TileLayer,
@@ -8,56 +16,421 @@ import {
   Polygon,
   useMapEvents,
 } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import dayjs from "dayjs";
 import API from "../api";
 import FeedbackContext from "../contexts/FeedbackContext";
 import DocumentResources from "./DocumentResources";
+import "../App.scss";
+import getKirunaArea from "./KirunaArea.jsx";
 
-export default function DocumentFormComponent({
-  document,
-  errors,
-  handleChange,
-  kirunaBorderCoordinates,
-  updateFilesToUpload,
-  existingFiles,
-  handleDeleteExistingFile,
-  handleSubmit,
-}) {
-  //   const { setFeedbackFromError } = useContext(FeedbackContext);
+export default function DocumentFormComponent({ document, show, onHide }) {
+  const kirunaBorderCoordinates = getKirunaArea();
+  const [existingFiles, setExistingFiles] = useState([]);
+  const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
+  const [filesToUpload, setFilesToUpload] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [formDocument, setFormDocument] = useState(
+    document || {
+      title: "",
+      stakeholders: [],
+      scale: "",
+      issuanceDate: "",
+      day: "",
+      month: "",
+      year: "",
+      type: "",
+      nrConnections: 0,
+      language: "",
+      nrPages: 0,
+      geolocation: {
+        latitude: "",
+        longitude: "",
+        municipality: "Entire municipality",
+      },
+      description: "",
+    }
+  );
+  const { setFeedbackFromError, setShouldRefresh, setFeedback } =
+    useContext(FeedbackContext);
+
+  useEffect(() => {
+    if (document && document.id) {
+      setFormDocument({
+        title: document.title || "",
+        stakeholders: document.stakeholders || [],
+        scale: document.scale || "",
+        issuanceDate: document.issuanceDate || "",
+        day: document.issuanceDate
+          ? document.issuanceDate.split("-")[2] || ""
+          : "",
+        month: document.issuanceDate
+          ? document.issuanceDate.split("-")[1] || ""
+          : "",
+        year: document.issuanceDate
+          ? document.issuanceDate.split("-")[0] || ""
+          : "",
+        type: document.type || "",
+        nrConnections: document.nrConnections || 0,
+        language: document.language || "",
+        nrPages: document.nrPages || 0,
+        geolocation: {
+          latitude: document.geolocation ? document.geolocation.latitude : "",
+          longitude: document.geolocation ? document.geolocation.longitude : "",
+          municipality: document.geolocation
+            ? document.geolocation.municipality
+            : "Entire municipality",
+        },
+        description: document.description || "",
+      });
+
+      API.getDocumentFiles(document.id)
+        .then((files) => {
+          setExistingFiles(files);
+          setDeletedExistingFiles([]);
+        })
+        .catch((error) => setFeedbackFromError(error));
+    }
+  }, [document, setFeedbackFromError]);
+
+  // Initialize Leaflet marker icon defaults
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+    iconUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const newErrors = {}; // Reset errors
+
+    const combinedIssuanceDate = `${formDocument.year}${
+      formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
+    }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
+
+    const sanitizedGeolocation = {
+      latitude: formDocument.geolocation.latitude || null,
+      longitude: formDocument.geolocation.longitude || null,
+      municipality: formDocument.geolocation.municipality || null,
+    };
+
+    // Title validation
+    if (typeof formDocument.title !== "string" || !formDocument.title.trim()) {
+      newErrors.title = "Title is required and must be a non-empty string.";
+    } else if (formDocument.title.length < 2) {
+      newErrors.title = "Title must be at least 2 characters.";
+    } else if (formDocument.title.length > 64) {
+      newErrors.title = "Title must be less than 64 characters.";
+    }
+
+    if (
+      !Array.isArray(formDocument.stakeholders) ||
+      formDocument.stakeholders.length === 0 ||
+      formDocument.stakeholders.some((s) => typeof s !== "string" || !s.trim())
+    ) {
+      newErrors.stakeholders =
+        "At least one stakeholder is required, and all must be non-empty strings.";
+    } else if (
+      new Set(formDocument.stakeholders.map((s) => s.trim().toLowerCase()))
+        .size !== formDocument.stakeholders.length
+    ) {
+      newErrors.stakeholders = "Stakeholders must not contain duplicates.";
+    } else if (
+      formDocument.stakeholders.some((s) => s.trim().toLowerCase() === "other")
+    ) {
+      newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
+    }
+
+    const scalePatterns = [
+      "Text",
+      "Blueprint/Material effects",
+      /^[1-9]:[1-9][0-9]*$/,
+    ];
+    if (
+      typeof formDocument.scale !== "string" ||
+      !formDocument.scale.trim() ||
+      !scalePatterns.some((pattern) =>
+        typeof pattern === "string"
+          ? pattern === formDocument.scale
+          : pattern.test(formDocument.scale)
+      )
+    ) {
+      newErrors.scale =
+        "Scale is required and must match one of the defined patterns.";
+    } else if (formDocument.scale.includes(":")) {
+      const [first, second] = formDocument.scale.split(":").map(Number);
+      if (first > second) {
+        newErrors.scale =
+          "The first number of the scale must be smaller than the second one.";
+      }
+    }
+
+    // Issuance date validation
+    if (
+      typeof combinedIssuanceDate !== "string" ||
+      !dayjs(
+        combinedIssuanceDate,
+        ["YYYY-MM-DD", "YYYY-MM", "YYYY"],
+        true
+      ).isValid()
+    ) {
+      newErrors.issuanceDate =
+        "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
+    }
+
+    // Type validation
+    if (
+      !formDocument.type ||
+      (formDocument.type === "Other" && !formDocument.customType)
+    ) {
+      newErrors.type = "Type is required.";
+    } else if (formDocument.type === "Other") {
+      newErrors.type = "Type cannot be 'Other'.";
+    } else if (formDocument.type.length > 64 && formDocument.type.length < 2) {
+      newErrors.type = "Type must be between 2 and 64 characters.";
+    }
+
+    // Language validation
+    if (
+      formDocument.language &&
+      (formDocument.language.length < 2 || formDocument.language.length > 64)
+    ) {
+      newErrors.language = "Language must be between 2 and 64 characters.";
+    }
+
+    // Number of pages validation
+    if (formDocument.nrPages && typeof formDocument.nrPages !== "number") {
+      newErrors.nrPages = "Number of pages must be an integer";
+    }
+
+    // Geolocation validation
+    if (
+      formDocument.geolocation.latitude &&
+      formDocument.geolocation.longitude
+    ) {
+      const point = {
+        lat: formDocument.geolocation.latitude,
+        lng: formDocument.geolocation.longitude,
+      };
+
+      const kirunaBorderCoordinatesLngLat = kirunaBorderCoordinates.map(
+        ([lat, lng]) => [lng, lat]
+      );
+      const polygon = [
+        ...kirunaBorderCoordinatesLngLat,
+        kirunaBorderCoordinatesLngLat[0], // Close the loop
+      ];
+      const [x, y] = [point.lng, point.lat]; // Ensure [lng, lat]
+      let inside = false;
+
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const [xi, yi] = polygon[i];
+        const [xj, yj] = polygon[j];
+
+        const intersect =
+          yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+        if (intersect) inside = !inside;
+      }
+
+      if (!inside) {
+        newErrors.latitude = "Geolocation must be within the Kiruna boundary.";
+        newErrors.longitude = "Geolocation must be within the Kiruna boundary.";
+      }
+    }
+    if (
+      (formDocument.geolocation.latitude ||
+        formDocument.geolocation.longitude) &&
+      formDocument.geolocation.municipality === "Entire municipality"
+    ) {
+      newErrors.municipality =
+        "Geolocation must be 'Entire municipality' or a valid coordinate.";
+    }
+
+    // Description validation
+    if (formDocument.description && formDocument.description.length > 1000) {
+      newErrors.description = "Description must not exceed 1000 characters.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    try {
+      if (document.id === undefined) {
+        const newDocId = await handleAdd(
+          new Document(
+            null,
+            formDocument.title,
+            formDocument.stakeholders,
+            formDocument.scale,
+            combinedIssuanceDate,
+            formDocument.type,
+            formDocument.nrConnections,
+            formDocument.language,
+            formDocument.nrPages,
+            sanitizedGeolocation,
+            formDocument.description
+          )
+        );
+
+        console.log(newDocId);
+
+        if (filesToUpload.length > 0) {
+          try {
+            await API.uploadFiles(newDocId, filesToUpload);
+          } catch (error) {
+            setFeedbackFromError(error);
+          }
+        }
+      } else {
+        await handleSave(
+          new Document(
+            document.id,
+            formDocument.title,
+            formDocument.stakeholders,
+            formDocument.scale,
+            combinedIssuanceDate,
+            formDocument.type,
+            formDocument.nrConnections,
+            formDocument.language,
+            formDocument.nrPages,
+            sanitizedGeolocation,
+            formDocument.description
+          )
+        );
+
+        if (filesToUpload.length > 0) {
+          try {
+            await API.uploadFiles(document.id, filesToUpload);
+          } catch (error) {
+            console.error("Error uploading files:", error);
+            alert("An error occurred while uploading files. Please try again.");
+          }
+        }
+
+        if (deletedExistingFiles.length > 0) {
+          try {
+            await Promise.all(
+              deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+            );
+          } catch (error) {
+            console.error("Error deleting files:", error);
+            alert(
+              "An error occurred while deleting files. Some files may not have been removed."
+            );
+          }
+        }
+      }
+      setFilesToUpload([]);
+      onHide();
+    } catch (error) {
+      setFeedbackFromError(error);
+    }
+  };
+
+  const handleDeleteExistingFile = (fileId) => {
+    setDeletedExistingFiles((prev) => {
+      const updatedList = [...prev, fileId];
+      return updatedList;
+    });
+    setExistingFiles((prevFiles) => {
+      const updatedFiles = prevFiles.filter((file) => file.id !== fileId);
+      return updatedFiles;
+    });
+  };
+
+  const updateFilesToUpload = (newFiles) => {
+    setFilesToUpload(newFiles);
+  };
+
+  const handleChange = (field, value) => {
+    setFormDocument((prevDocument) => ({
+      ...prevDocument,
+      [field]: value,
+    }));
+  };
+
+  const handleSave = (document) => {
+    API.updateDocument(document.id, document)
+      .then(() => setShouldRefresh(true))
+      .then(() =>
+        setFeedback({
+          type: "success",
+          message: "Document updated successfully",
+        })
+      )
+      .catch((error) => setFeedbackFromError(error));
+    onHide();
+  };
+
+  const handleAdd = async (document) => {
+    try {
+      // Aggiungi il documento e ottieni la risposta
+      const newDocResponse = await API.addDocument(document);
+
+      /* Estrai l'ID dal documento creato
+      const newDocId = newDocResponse.id || newDocResponse.data?.id;*/
+
+      // Aggiorna lo stato e fornisci feedback
+      setShouldRefresh(true);
+      setFeedback({ type: "success", message: "Document added successfully" });
+      onHide();
+
+      return newDocResponse;
+    } catch (error) {
+      // Gestione errori
+      setFeedbackFromError(error);
+      throw error; // Propaga l'errore se necessario
+    }
+  };
 
   return (
-    <Form style={{ width: "100%" }} className="mx-auto">
-      <DocumentFormFields
-        document={document}
-        errors={errors}
-        handleChange={handleChange}
-        kirunaBorderCoordinates={kirunaBorderCoordinates}
-      />
-      <UploadFilesComponent
-        updateFilesToUpload={updateFilesToUpload}
-        existingFiles={existingFiles}
-        handleDeleteExistingFile={handleDeleteExistingFile}
-      />
-      <Button
-        className="mt-4"
-        title="save"
-        variant="success"
-        onClick={handleSubmit}
-      >
-        <i className="bi bi-check2"></i>
-      </Button>
-    </Form>
+    <Modal
+      show={show}
+      onHide={onHide}
+      centered
+      className="document-modal"
+      size="xl"
+    >
+      <Modal.Header closeButton className="modal-header">
+        <Modal.Title>Enter the values in the following fields</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form style={{ width: "100%" }} className="mx-auto">
+          <DocumentFormFields
+            document={formDocument}
+            errors={errors}
+            handleChange={handleChange}
+            kirunaBorderCoordinates={kirunaBorderCoordinates}
+          />
+          <UploadFilesComponent
+            updateFilesToUpload={updateFilesToUpload}
+            existingFiles={existingFiles}
+            handleDeleteExistingFile={handleDeleteExistingFile}
+          />
+          <Button
+            className="mt-4"
+            title="save"
+            variant="success"
+            onClick={handleSubmit}
+          >
+            <i className="bi bi-check2"></i>
+          </Button>
+        </Form>
+      </Modal.Body>
+    </Modal>
   );
 }
 
 DocumentFormComponent.propTypes = {
   document: PropTypes.object.isRequired,
-  errors: PropTypes.object.isRequired,
-  handleChange: PropTypes.func.isRequired,
-  kirunaBorderCoordinates: PropTypes.array.isRequired,
-  updateFilesToUpload: PropTypes.func.isRequired,
-  existingFiles: PropTypes.array.isRequired,
-  handleDeleteExistingFile: PropTypes.func.isRequired,
-  handleSubmit: PropTypes.func.isRequired,
+  onHide: PropTypes.func.isRequired,
+  show: PropTypes.bool.isRequired,
 };
 
 function DocumentFormFields({
