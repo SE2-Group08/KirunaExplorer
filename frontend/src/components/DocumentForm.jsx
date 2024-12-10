@@ -19,7 +19,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import dayjs from "dayjs";
-import API from "../api";
+import API from "../API.mjs";
 import FeedbackContext from "../contexts/FeedbackContext";
 import DocumentResources from "./DocumentResources";
 import "../App.scss";
