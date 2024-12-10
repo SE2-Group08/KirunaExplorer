@@ -3,7 +3,7 @@ package com.kirunaexplorer.app.controller;
 import com.kirunaexplorer.app.dto.request.DocumentTypeRequestDTO;
 import com.kirunaexplorer.app.dto.response.DocumentTypeResponseDTO;
 import com.kirunaexplorer.app.service.DocumentTypeService;
-import com.kirunaexplorer.app.validation.groups.documentType.PostDocumentType;
+import com.kirunaexplorer.app.validation.groups.document_type.PostDocumentType;
 import jakarta.validation.groups.Default;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

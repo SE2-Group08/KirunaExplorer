@@ -5,15 +5,19 @@ import com.kirunaexplorer.app.dto.request.StakeholderRequestDTO;
 import com.kirunaexplorer.app.model.DocumentScale;
 import com.kirunaexplorer.app.model.DocumentType;
 import com.kirunaexplorer.app.model.Stakeholder;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class DocumentFieldsChecker {
+
+    /**
+     * Utility class, should not be instantiated
+     */
+    private DocumentFieldsChecker() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     /**
      * Remove duplicates from the list of stakeholders
@@ -39,9 +43,16 @@ public class DocumentFieldsChecker {
         return stakeholders.stream()
             .filter(stakeholder -> existingStakeholders.stream().noneMatch(existing -> existing.getName().equals(stakeholder)))
             .map(name -> new StakeholderRequestDTO(null, name).toStakeholder())
-            .collect(Collectors.toList());
+            .toList();
     }
 
+    /**
+     * Get new document type
+     *
+     * @param type                  Type to check
+     * @param existingDocumentTypes List of existing document types
+     * @return New document type
+     */
     public static DocumentType getNewDocumentType(String type, List<DocumentType> existingDocumentTypes) {
         if (existingDocumentTypes.stream().noneMatch(existing -> existing.getTypeName().equals(type))) {
             return new DocumentType(null, type);
@@ -51,10 +62,11 @@ public class DocumentFieldsChecker {
 
     /**
      * Get new document scale
-     * @param scale                     Scale to check
-     * @param existingDocumentScales    List of existing document scales
-     * @return                          New document scale
-      */
+     *
+     * @param scale                  Scale to check
+     * @param existingDocumentScales List of existing document scales
+     * @return New document scale
+     */
     public static DocumentScale getNewDocumentScale(String scale, List<DocumentScale> existingDocumentScales) {
         if (existingDocumentScales.stream().noneMatch(existing -> existing.getScale().equals(scale))) {
             return new DocumentScale(null, scale);
