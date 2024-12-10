@@ -22,7 +22,6 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import getKirunaArea from "./KirunaArea.jsx";
 import DocumentResources from "./DocumentResources.jsx";
 dayjs.extend(customParseFormat);
-// import { useMap } from "react-leaflet";
 
 export default function DocumentModal(props) {
     // Initialize Leaflet marker icon defaults
@@ -687,7 +686,7 @@ function DocumentFormComponent({
             .then((scales) => {
                 setAllScales(scales);
             });
-    }, [document, setFeedbackFromError]);
+    }, []);
 
     const [files, setFiles] = useState([]);
     const [filePreviews, setFilePreviews] = useState({});
@@ -937,25 +936,30 @@ function DocumentFormComponent({
                     <Form.Group className="mb-3" controlId="formDocumentScale">
                         <Form.Label>Scale *</Form.Label>
                         <div className="divider"/>
-                        <Form.Control
-                            as="select"
-                            value={document.scale}
-                            onChange={(e) => handleChange("scale", e.target.value)}
-                            isInvalid={!!errors.scale}
-                            required
-                        >
-                            <option value="">Select scale</option>
-                            {allScales.length ? (
-                                allScales.map((scaleOption) => (
-                                    <option key={scaleOption.id} value={scaleOption.name}>
-                                        {scaleOption.name}
-                                    </option>
-                                ))
-                            ) : (
-                                <option disabled>Loading...</option>
-                            )}
+                        {allScales.length ? (
+                                <Form.Control
+                                    as="select"
+                                    value={document.scale}
+                                    onChange={(e) => handleChange("scale", e.target.value)}
+                                    isInvalid={!!errors.scale}
+                                    required
+                                >
+                                    <option value="">Select scale</option>
+                                    {allScales.length &&(
+                                        allScales.map((scaleOption) => (
+                                            <option key={scaleOption.id} value={scaleOption.name}>
+                                                {scaleOption.name}
+                                            </option>
+                                        ))
+                                    )}
+
                             <option value="Other">Other</option>
                         </Form.Control>
+                        ) : (
+                            <Spinner animation="border" role="status" className="mx-auto">
+                                <span className="visually-hidden">Loading...</span>
+                            </Spinner>
+                        )}
                         {document.scale === "Other" && (
                             <div className="d-flex mt-2">
                                 <Form.Control
@@ -990,7 +994,6 @@ function DocumentFormComponent({
                             {errors.scale}
                         </Form.Control.Feedback>
                     </Form.Group>
-
                 </Col>
             </Row>
 
@@ -1045,23 +1048,31 @@ function DocumentFormComponent({
                     <Form.Group className="mb-3" controlId="formDocumentType">
                         <Form.Label>Type *</Form.Label>
                         <div className="divider"/>
-                        <Form.Control
-                            as="select"
-                            value={document.type}
-                            onChange={(e) => handleChange("type", e.target.value)}
-                            isInvalid={!!errors.type}
-                            required
-                        >
-                            <option value="">Select type</option>
-                            {allDocumentTypes.length &&
-                                allDocumentTypes.map((typeOption) => (
-                                    <option key={typeOption.id} value={typeOption.name}>
-                                        {typeOption.name}
-                                    </option>
-                                ))
-                            }
-                            <option value="Other">Other</option>
-                        </Form.Control>
+                        {allDocumentTypes.length ?
+                            (
+                                <Form.Control
+                                    as="select"
+                                    value={document.type}
+                                    onChange={(e) => handleChange("type", e.target.value)}
+                                    isInvalid={!!errors.type}
+                                    required
+                                >
+                                    <option value="">Select type</option>
+                                    {allDocumentTypes.length &&
+                                        allDocumentTypes.map((typeOption) => (
+                                            <option key={typeOption.id} value={typeOption.name}>
+                                                {typeOption.name}
+                                            </option>
+                                        ))
+                                    }
+                                    <option value="Other">Other</option>
+                                </Form.Control>
+                            ) : (
+                            <Spinner animation="border" role="status" className="mx-auto">
+                            <span className="visually-hidden">Loading...</span>
+                            </Spinner>
+                            )}
+
                         {document.type === "Other" && (
                             <div className="d-flex mt-2">
                                 <Form.Control
