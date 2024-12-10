@@ -161,8 +161,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     // Issuance date validation
     if (
       typeof combinedIssuanceDate !== "string" ||
-      !dayjs(combinedIssuanceDate, ["YYYY-MM-DD", "YYYY-MM", "YYYY"], true).isValid() ||
-      !dayjs(combinedIssuanceDate).isValid()
+      !dayjs(combinedIssuanceDate, ["YYYY-MM-DD", "YYYY-MM", "YYYY"], true).isValid()
     ) {
       newErrors.issuanceDate =
         "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
@@ -777,7 +776,7 @@ function DocumentFormFields({
                 isInvalid={!!errors.issuanceDate}
                 placeholder="DD"
                 className="me-1"
-                ref={dayRef}
+                ref={dayRef && refs.issuanceDateRef}
                 style={{ width: "80px" }}
               />
               <span>/</span>
@@ -788,7 +787,7 @@ function DocumentFormFields({
                 isInvalid={!!errors.issuanceDate}
                 placeholder="MM"
                 className="mx-1"
-                ref={monthRef}
+                ref={monthRef && refs.issuanceDateRef}
                 style={{ width: "80px" }}
               />
               <span>/</span>
@@ -799,7 +798,7 @@ function DocumentFormFields({
                 isInvalid={!!errors.issuanceDate}
                 placeholder="YYYY"
                 className="ms-1"
-                ref={yearRef}
+                ref={yearRef && refs.issuanceDateRef}
                 style={{ width: "100px" }}
               />
             </div>
