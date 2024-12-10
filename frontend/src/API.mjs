@@ -125,7 +125,6 @@ const getAllDocumentSnippets = async () => {
     .then(handleInvalidResponse)
     .then((response) => response.json())
     .then(mapAPISnippetsToSnippet);
-  console.log("API: ", documents);
   return documents;
 };
 

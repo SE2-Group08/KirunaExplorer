@@ -12,59 +12,30 @@ const FullPageChart = () => {
     const width = window.innerWidth - margin.left - margin.right;
     const height = window.innerHeight * 0.85 - margin.top - margin.bottom;
 
-    // Etichette non numeriche (ordine fisso)
-    const nonNumericLabels = ["Text", "Concept", "Blueprints/effects"];
-
-    // Ordine fisso per le scale numeriche
-    const numericLabelsOrder = [
-      "1:100.000",
-      "1:10.000",
-      "1:5.000",
-      "1:1.000",
-    ];
-
-    // Funzione per convertire la scala in un valore numerico
-    const parseScale = (scale) => {
-      if (scale === "Blueprint/Material effects") return "Blueprints/effects";
-      if (nonNumericLabels.includes(scale)) return scale;
-      
-      const match = scale.match(/^1:(\d+)$/);
-      if (match) {
-        return scale; // Restituisce la scala numerica
+    // Funzione per normalizzare le scale
+    const normalizeScale = (scale) => {
+      if (scale === "Blueprint/Material effects") {
+        return "Blueprints/effects";
       }
-      return null;
+      return scale;
     };
 
-    // Funzione per convertire le scale numeriche in numeri per confronto
-    const scaleToNumericValue = (scale) => {
-        // Gestisci le scale numeriche standard
-        if (scale === "1:100.000") return 100000;
-        if (scale === "1:10.000") return 10000;
-        if (scale === "1:5.000") return 5000;
-        if (scale === "1:1.000") return 1000;
-        // Gestisci le scale personalizzate come "1:8000"
-        const match = scale.match(/^1:(\d+)$/); // Cattura la parte numerica dopo "1:"
-        if (match) {
-          return parseInt(match[1]); // Restituisci il numero estratto dalla stringa
-        }
-        return 0; // Default per scale non numeriche
-      };
-      
+    // Funzione per estrarre e ordinare scale numeriche
+    const parseNumericScale = (scale) => {
+      const match = scale.match(/^1:(\d+)$/); // Riconosce formati come "1:1000"
+      return match ? parseInt(match[1]) : null; // Converte il valore dopo "1:"
+    };
 
-    // Funzione per ordinare le scale, numeriche prima e poi etichette
-    const yDomain = [
-      ...nonNumericLabels,
-      ...numericLabelsOrder,
-    ];
+    // Etichette predefinite e costruzione del dominio y
+    const nonNumericLabels = ["Text", "Concept"];
+    const blueprints = ["Blueprints/effects"];
+    const dynamicScales = documentsToShow
+      .map((doc) => normalizeScale(doc.scale)) // Normalizza le scale
+      .filter((scale) => scale !== null)
+      .sort((a, b) => parseNumericScale(b) - parseNumericScale(a)); // Ordina scale numeriche in ordine decrescente
 
-    // Scala delle Y
-    const yScale = d3
-      .scalePoint()
-      .domain(yDomain)
-      .range([0, height])
-      .padding(0.5);
-
-    // Scala delle X (anni)
+    const yDomain = [...nonNumericLabels, ...dynamicScales, ...blueprints];
+    const yScale = d3.scalePoint().domain(yDomain).range([0, height]).padding(0.5);
     const xScale = d3.scaleLinear().domain([2004, 2024]).range([0, width]);
 
     const svg = d3
@@ -75,7 +46,6 @@ const FullPageChart = () => {
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // Assi principali
     const xAxis = d3.axisBottom(xScale).tickFormat(d3.format("d"));
     const yAxis = d3.axisLeft(yScale);
 
@@ -86,89 +56,52 @@ const FullPageChart = () => {
       .attr("transform", `translate(0, ${height})`)
       .call(xAxis);
 
-    // Griglie orizzontali
+    // Linee orizzontali
     svg
       .append("g")
       .attr("class", "grid grid-horizontal")
       .call(
-        d3
-          .axisLeft(yScale)
-          .tickSize(-width)
-          .tickFormat("")
+        d3.axisLeft(yScale).tickSize(-width).tickFormat("")
       )
       .selectAll(".tick line")
       .attr("stroke", "#ddd")
       .attr("stroke-dasharray", "4,4");
 
-    // Griglie verticali
+    // Linee verticali
     svg
       .append("g")
       .attr("class", "grid grid-vertical")
-      .attr("transform", `translate(0, ${height})`)
       .call(
-        d3
-          .axisBottom(xScale)
-          .tickSize(-height)
+        d3.axisBottom(xScale)
+          .tickSize(height)
           .tickFormat("")
       )
       .selectAll(".tick line")
       .attr("stroke", "#ddd")
       .attr("stroke-dasharray", "4,4");
 
-    // Etichette per gli assi
+    // Aggiungi icone documento
     svg
-      .append("text")
-      .attr("x", -height / 2)
-      .attr("y", -margin.left + 20)
-      .attr("transform", "rotate(-90)")
-      .style("text-anchor", "middle")
-      .style("font-size", "14px")
-      .text("Scale");
-
-    svg
-      .append("text")
-      .attr("x", width / 2)
-      .attr("y", height + margin.bottom - 10)
-      .style("text-anchor", "middle")
-      .style("font-size", "14px")
-      .text("Years");
-
-    // Aggiunta delle icone dei documenti
-    if (documentsToShow.length > 0) {
-        svg
-        .selectAll(".document-icon")
-        .data(documentsToShow)
-        .enter()
-        .append("image")
-        .attr("class", "document-icon")
-        .attr("x", (d) => xScale(parseInt(d.issuanceDate)) - 12) // Centrare l'immagine
-        .attr("y", (d) => {
-          const scale = parseScale(d.scale);
-          if (scale === "Blueprints/effects") return yScale("Blueprints/effects");
-          if (scale === "Text") return yScale("Text");
-          if (scale === "Concept") return yScale("Concept");
-          
-          // Se la scala è numerica, usiamo scaleToNumericValue per determinare la posizione
-          const scaleValue = scaleToNumericValue(scale);
-          if (scaleValue > 0) {
-            // Troviamo la scala più vicina e restituiamo la sua posizione Y
-            return yScale(numericLabelsOrder.find((label) => scaleToNumericValue(label) >= scaleValue));
-          }
-          return yScale("Text"); // Posizione di fallback
-        }) // Posizionare correttamente sulla Y
-        
-        .attr("width", 30) // Larghezza dell'icona
-        .attr("height", 30) // Altezza dell'icona
-        .attr("xlink:href", (d) => getIconUrlForDocument(d.type, d.stakeholders)) // URL dell'icona
-        .attr("opacity", 0.8)
-        .on("mouseover", function () {
-          d3.select(this).attr("opacity", 1);
-        })
-        .on("mouseout", function () {
-          d3.select(this).attr("opacity", 0.8);
-        });
-      
-    }
+      .selectAll(".document-icon")
+      .data(documentsToShow)
+      .enter()
+      .append("image")
+      .attr("class", "document-icon")
+      .attr("x", (d) => xScale(parseInt(d.issuanceDate)) - 15) // Centra l'icona
+      .attr("y", (d) => {
+        const scale = yScale(normalizeScale(d.scale)) || yScale("Text");
+        return scale - 15;
+      })
+      .attr("width", 30)
+      .attr("height", 30)
+      .attr("xlink:href", (d) => getIconUrlForDocument(d.type, d.stakeholders))
+      .attr("opacity", 1)
+      .on("mouseover", function () {
+        d3.select(this).attr("opacity", 0.7);
+      })
+      .on("mouseout", function () {
+        d3.select(this).attr("opacity", 1);
+      });
 
     // Cleanup
     return () => {
