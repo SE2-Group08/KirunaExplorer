@@ -12,7 +12,7 @@ const FullPageChart = () => {
     const width = window.innerWidth - margin.left - margin.right;
     const height = window.innerHeight * 0.85 - margin.top - margin.bottom;
 
-    // Funzione per normalizzare le scale
+    // Normalize scale names
     const normalizeScale = (scale) => {
       if (scale === "Blueprint/Material effects") {
         return "Blueprints/effects";
@@ -20,19 +20,19 @@ const FullPageChart = () => {
       return scale;
     };
 
-    // Funzione per estrarre e ordinare scale numeriche
+    // Function to parse numeric scales
     const parseNumericScale = (scale) => {
-      const match = scale.match(/^1:(\d+)$/); // Riconosce formati come "1:1000"
-      return match ? parseInt(match[1]) : null; // Converte il valore dopo "1:"
+      const match = scale.match(/^1:(\d+)$/); 
+      return match ? parseInt(match[1]) : null; 
     };
 
-    // Etichette predefinite e costruzione del dominio y
+    // Predefinite labels
     const nonNumericLabels = ["Text", "Concept"];
     const blueprints = ["Blueprints/effects"];
     const dynamicScales = documentsToShow
-      .map((doc) => normalizeScale(doc.scale)) // Normalizza le scale
+      .map((doc) => normalizeScale(doc.scale)) 
       .filter((scale) => scale !== null)
-      .sort((a, b) => parseNumericScale(b) - parseNumericScale(a)); // Ordina scale numeriche in ordine decrescente
+      .sort((a, b) => parseNumericScale(b) - parseNumericScale(a)); 
 
     const yDomain = [...nonNumericLabels, ...dynamicScales, ...blueprints];
     const yScale = d3.scalePoint().domain(yDomain).range([0, height]).padding(0.5);
@@ -56,7 +56,7 @@ const FullPageChart = () => {
       .attr("transform", `translate(0, ${height})`)
       .call(xAxis);
 
-    // Linee orizzontali
+    // Horizontal grid lines
     svg
       .append("g")
       .attr("class", "grid grid-horizontal")
@@ -67,7 +67,7 @@ const FullPageChart = () => {
       .attr("stroke", "#ddd")
       .attr("stroke-dasharray", "4,4");
 
-    // Linee verticali
+    // Vertical grid lines
     svg
       .append("g")
       .attr("class", "grid grid-vertical")
@@ -80,14 +80,14 @@ const FullPageChart = () => {
       .attr("stroke", "#ddd")
       .attr("stroke-dasharray", "4,4");
 
-    // Aggiungi icone documento
+    // Draw documents
     svg
       .selectAll(".document-icon")
       .data(documentsToShow)
       .enter()
       .append("image")
       .attr("class", "document-icon")
-      .attr("x", (d) => xScale(parseInt(d.issuanceDate)) - 15) // Centra l'icona
+      .attr("x", (d) => xScale(parseInt(d.issuanceDate)) - 15) // Center the icon
       .attr("y", (d) => {
         const scale = yScale(normalizeScale(d.scale)) || yScale("Text");
         return scale - 15;
