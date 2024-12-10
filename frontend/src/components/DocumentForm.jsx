@@ -56,6 +56,18 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const { setFeedbackFromError, setShouldRefresh, setFeedback } =
     useContext(FeedbackContext);
 
+  const titleRef = useRef(null);
+  const stakeholdersRef = useRef(null);
+  const scaleRef = useRef(null);
+  const issuanceDateRef = useRef(null);
+  const typeRef = useRef(null);
+  const languageRef = useRef(null);
+  const nrPagesRef = useRef(null);
+  const latitudeRef = useRef(null);
+  const longitudeRef = useRef(null);
+  const municipalityRef = useRef(null);
+  const descriptionRef = useRef(null);
+
   useEffect(() => {
     if (document && document.id) {
       setFormDocument({
@@ -106,20 +118,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const validateForm = (combinedIssuanceDate) => {
     const newErrors = {}; // Reset errors
-
-    const combinedIssuanceDate = `${formDocument.year}${
-      formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
-    }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
-
-    const sanitizedGeolocation = {
-      latitude: formDocument.geolocation.latitude || null,
-      longitude: formDocument.geolocation.longitude || null,
-      municipality: formDocument.geolocation.municipality || null,
-    };
-
     // Title validation
     if (typeof formDocument.title !== "string" || !formDocument.title.trim()) {
       newErrors.title = "Title is required and must be a non-empty string.";
@@ -161,11 +161,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     // Issuance date validation
     if (
       typeof combinedIssuanceDate !== "string" ||
-      !dayjs(
-        combinedIssuanceDate,
-        ["YYYY-MM-DD", "YYYY-MM", "YYYY"],
-        true
-      ).isValid()
+      !dayjs(combinedIssuanceDate, ["YYYY-MM-DD", "YYYY-MM", "YYYY"], true).isValid() ||
+      !dayjs(combinedIssuanceDate).isValid()
     ) {
       newErrors.issuanceDate =
         "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
@@ -244,10 +241,52 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       newErrors.description = "Description must not exceed 1000 characters.";
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    return newErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const combinedIssuanceDate = `${formDocument.year}${
+      formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
+    }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
+
+    const sanitizedGeolocation = {
+      latitude: formDocument.geolocation.latitude || null,
+      longitude: formDocument.geolocation.longitude || null,
+      municipality: formDocument.geolocation.municipality || null,
+    };
+
+    const validationErrors = validateForm(combinedIssuanceDate);
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      if (validationErrors.title) {
+        titleRef.current.focus();
+      } else if (validationErrors.stakeholders) {
+        stakeholdersRef.current.focus();
+      } else if (validationErrors.scale) {
+        scaleRef.current.focus();
+      } else if (validationErrors.type) {
+        typeRef.current.focus();
+      } else if (validationErrors.issuanceDate) {
+        issuanceDateRef.current.focus();
+      } else if (validationErrors.language) {
+        languageRef.current.focus();
+      } else if (validationErrors.nrPages) {
+        nrPagesRef.current.focus();
+      } else if (validationErrors.latitude) {
+        latitudeRef.current.focus();
+      } else if (validationErrors.longitude) {
+        longitudeRef.current.focus();
+      } else if (validationErrors.municipality) {
+        municipalityRef.current.focus();
+      } else if (validationErrors.description) {
+        descriptionRef.current.focus();
+      }
       return;
     }
+
     try {
       if (!document) {
         const newDocId = await handleAdd(
@@ -386,6 +425,18 @@ export default function DocumentFormComponent({ document, show, onHide }) {
             errors={errors}
             handleChange={handleChange}
             kirunaBorderCoordinates={kirunaBorderCoordinates}
+            refs={{
+              titleRef,
+              stakeholdersRef,
+              typeRef,
+              issuanceDateRef,
+              languageRef,
+              nrPagesRef,
+              latitudeRef,
+              longitudeRef,
+              municipalityRef,
+              descriptionRef,
+            }}
           />
           <UploadFilesComponent
             updateFilesToUpload={updateFilesToUpload}
@@ -417,6 +468,7 @@ function DocumentFormFields({
   errors,
   handleChange,
   kirunaBorderCoordinates,
+  refs,
 }) {
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
@@ -555,6 +607,7 @@ function DocumentFormFields({
               placeholder="Example title"
               isInvalid={!!errors.title}
               required
+              ref={refs.titleRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.title}
@@ -563,7 +616,7 @@ function DocumentFormFields({
         </Col>
       </Row>
 
-      {/* STAKEHOLDERS AND SCALE */}
+      {/* STAKEHOLDERS */}
       <Row className="mb-4">
         <Col md={6}>
           <Form.Group controlId="formDocumentStakeholders">
@@ -587,6 +640,7 @@ function DocumentFormFields({
                     handleChange("stakeholders", newStakeholders);
                   }}
                   isInvalid={!!errors.stakeholders}
+                  ref={refs.stakeholdersRef}
                 />
               ))
             ) : (
@@ -614,6 +668,7 @@ function DocumentFormFields({
                     placeholder="Example stakeholder"
                     isInvalid={!!errors.stakeholders}
                     className="me-2"
+                    ref={refs.stakeholdersRef}
                   />
                   <Button
                     variant="danger"
@@ -658,6 +713,7 @@ function DocumentFormFields({
                 onChange={(e) => handleChange("scale", e.target.value)}
                 isInvalid={!!errors.scale}
                 required
+                ref={refs.scaleRef}
               >
                 <option value="">Select scale</option>
                 {allScales.map((scaleOption) => (
@@ -765,6 +821,7 @@ function DocumentFormFields({
                 onChange={(e) => handleChange("type", e.target.value)}
                 isInvalid={!!errors.type}
                 required
+                ref={refs.typeRef}
               >
                 <option value="">Select type</option>
                 {allDocumentTypes.map((typeOption) => (
@@ -816,10 +873,9 @@ function DocumentFormFields({
         </Col>
       </Row>
 
-      {/* LANGUAGE  AND PAGES */}
+      {/* LANGUAGE */}
       <Row className={"mb-4"}>
         <Col md={6}>
-          {/* LANGUAGE */}
           <Form.Group className="mb-3" controlId="formDocumentLanguage">
             <Form.Label>Language</Form.Label>
             <div className="divider" />
@@ -829,6 +885,7 @@ function DocumentFormFields({
               onChange={(e) => handleChange("language", e.target.value)}
               placeholder="English"
               isInvalid={!!errors.language}
+              ref={refs.languageRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.language}
@@ -846,6 +903,7 @@ function DocumentFormFields({
               min={0}
               onChange={(e) => handleChange("nrPages", Number(e.target.value))}
               isInvalid={!!errors.nrPages}
+              ref={refs.nrPagesRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.nrPages}
@@ -871,6 +929,7 @@ function DocumentFormFields({
                 document.geolocation.municipality === "Entire municipality"
               }
               isInvalid={!!errors.latitude}
+              refs={refs.latitudeRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.latitude}
@@ -901,6 +960,7 @@ function DocumentFormFields({
               disabled={
                 document.geolocation.municipality === "Entire municipality"
               }
+              refs={refs.longitudeRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.longitude}
@@ -953,6 +1013,7 @@ function DocumentFormFields({
               className="mt-2"
               feedback={errors.municipality}
               feedbackType="invalid"
+              ref={refs.municipalityRef}
             />
           </Col>
         </Form.Group>
@@ -971,6 +1032,7 @@ function DocumentFormFields({
               onChange={(e) => handleChange("description", e.target.value)}
               placeholder="Description of the document"
               isInvalid={!!errors.description}
+              ref={refs.descriptionRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.description}
@@ -987,6 +1049,7 @@ DocumentFormFields.propTypes = {
   errors: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   kirunaBorderCoordinates: PropTypes.array.isRequired,
+  refs: PropTypes.object.isRequired,
 };
 
 function UploadFilesComponent({
