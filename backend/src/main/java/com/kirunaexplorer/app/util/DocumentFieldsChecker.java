@@ -12,7 +12,6 @@ import java.util.List;
 @Component
 public class DocumentFieldsChecker {
 
-
     /**
      * Remove duplicates from the list of stakeholders
      *
