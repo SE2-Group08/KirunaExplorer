@@ -12,12 +12,6 @@ import java.util.List;
 @Component
 public class DocumentFieldsChecker {
 
-    /**
-     * Utility class, should not be instantiated
-     */
-    private DocumentFieldsChecker() {
-        throw new UnsupportedOperationException("Utility class");
-    }
 
     /**
      * Remove duplicates from the list of stakeholders
@@ -61,13 +55,19 @@ public class DocumentFieldsChecker {
     }
 
     /**
-     * Get new document scale
+     * Checks if the given scale is in the format "1:any integer number > 1" and returns null if it is.
+     * Otherwise, it checks if the scale is not already present in the list of existing document scales
+     * and returns a new DocumentScale object if it is not present.
      *
-     * @param scale                  Scale to check
-     * @param existingDocumentScales List of existing document scales
-     * @return New document scale
+     * @param scale                  the scale to check
+     * @param existingDocumentScales the list of existing document scales
+     * @return a new DocumentScale object if the scale is not in the format "1:any integer number > 1"
+     * and not already present in the list, null otherwise
      */
     public static DocumentScale getNewDocumentScale(String scale, List<DocumentScale> existingDocumentScales) {
+        if (scale.matches("^1:[1-9]\\d*$")) {
+            return null;
+        }
         if (existingDocumentScales.stream().noneMatch(existing -> existing.getScale().equals(scale))) {
             return new DocumentScale(null, scale);
         }

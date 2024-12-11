@@ -1,14 +1,8 @@
 package com.kirunaexplorer.app.config;
 
-import com.kirunaexplorer.app.model.Document;
+import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.model.Document.DatePrecision;
-import com.kirunaexplorer.app.model.DocumentType;
-import com.kirunaexplorer.app.model.GeoReference;
-import com.kirunaexplorer.app.model.Stakeholder;
-import com.kirunaexplorer.app.repository.DocumentRepository;
-import com.kirunaexplorer.app.repository.DocumentTypeRepository;
-import com.kirunaexplorer.app.repository.GeoReferenceRepository;
-import com.kirunaexplorer.app.repository.StakeholderRepository;
+import com.kirunaexplorer.app.repository.*;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -26,23 +20,31 @@ public class DataInitializer implements CommandLineRunner {
     private final GeoReferenceRepository geoReferenceRepository;
     private final StakeholderRepository stakeholderRepository;
     private final DocumentTypeRepository documentTypeRepository;
+    private final DocumentScaleRepository documentScaleRepository;
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
     public DataInitializer(
         DocumentRepository documentRepository,
         GeoReferenceRepository geoReferenceRepository,
         StakeholderRepository stakeholderRepository,
-        DocumentTypeRepository documentTypeRepository
+        DocumentTypeRepository documentTypeRepository,
+        DocumentScaleRepository documentScaleRepository
     ) {
         this.documentRepository = documentRepository;
         this.geoReferenceRepository = geoReferenceRepository;
         this.stakeholderRepository = stakeholderRepository;
         this.documentTypeRepository = documentTypeRepository;
+        this.documentScaleRepository = documentScaleRepository;
     }
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+
+        initializeStakeholders();
+        initializeDocumentType();
+        initializeDocumentScale();
+
 
         Document document1 = new Document(null,
             "Compilation of responses 'So what the people of Kiruna think?'",
@@ -232,11 +234,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
 
-        initializeStakeholders();
-        initializeDocumentType();
-
     }
-
 
     private void addNewDocument(int documentNumber) {
         Document document = new Document(null,
@@ -281,4 +279,8 @@ public class DataInitializer implements CommandLineRunner {
         documentTypeRepository.save(new DocumentType(null, "Material effect"));
     }
 
+    private void initializeDocumentScale() {
+        documentScaleRepository.save(new DocumentScale(null, "Text"));
+        documentScaleRepository.save(new DocumentScale(null, "blueprints/effects"));
+    }
 }

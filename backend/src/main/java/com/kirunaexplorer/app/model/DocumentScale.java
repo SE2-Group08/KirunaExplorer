@@ -2,7 +2,10 @@ package com.kirunaexplorer.app.model;
 
 import com.kirunaexplorer.app.dto.response.DocumentScaleResponseDTO;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 @Entity
@@ -10,8 +13,6 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"documentLinks"})
-@ToString(exclude = {"documentLinks"})
 @Table(name = "DOCUMENT_SCALE")
 public class DocumentScale {
 

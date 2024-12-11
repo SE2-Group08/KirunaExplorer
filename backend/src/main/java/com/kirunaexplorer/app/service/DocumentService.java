@@ -105,14 +105,6 @@ public class DocumentService {
             documentTypeRepository.save(newDocumentType);
         }
 
-        // Save document
-        Document document = documentRequest.toDocument();
-        document = documentRepository.save(document);
-
-        // Save geolocation
-        GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
-        geoReferenceRepository.save(geoReference);
-
         // Get existing scales
         List<DocumentScale> existingScales = documentScaleRepository.findAll();
         // Get new scale to add to the db
@@ -121,6 +113,14 @@ public class DocumentService {
         if (newScale != null) {
             documentScaleRepository.save(newScale);
         }
+
+        // Save document
+        Document document = documentRequest.toDocument();
+        document = documentRepository.save(document);
+
+        // Save geolocation
+        GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
+        geoReferenceRepository.save(geoReference);
 
         return document.getId();
     }
@@ -181,8 +181,8 @@ public class DocumentService {
             return List.of();
         }
         return documents.stream()
-                .map(Document::toDocumentBriefResponseDTO)
-                .toList();
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
     }
 }
 

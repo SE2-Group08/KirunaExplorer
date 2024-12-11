@@ -28,6 +28,7 @@ public record DocumentRequestDTO(
 
     @NotNull
     @Size(min = 2, max = 64)
+    @Pattern(regexp = "^(1:[1-9]\\d*$|[a-zA-Z/]+)$")
     String scale,
 
     @NotNull
