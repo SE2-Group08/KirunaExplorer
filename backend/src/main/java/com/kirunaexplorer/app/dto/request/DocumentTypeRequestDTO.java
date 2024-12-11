@@ -16,8 +16,9 @@ public record DocumentTypeRequestDTO(
     String name
 ) {
 
-    /***
+    /**
      * Converts the DocumentRequestDTO to a Document object.
+     *
      * @return Document object
      */
     public DocumentType toDocumentType() {

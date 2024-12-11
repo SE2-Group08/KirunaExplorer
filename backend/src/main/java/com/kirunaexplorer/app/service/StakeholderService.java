@@ -18,8 +18,9 @@ public class StakeholderService {
         this.stakeholderRepository = stakeholderRepository;
     }
 
-    /***
+    /**
      * Get all stakeholders
+     *
      * @return List of stakeholders
      */
     @Transactional
@@ -29,8 +30,9 @@ public class StakeholderService {
             .toList();
     }
 
-    /***
+    /**
      * Create a document
+     *
      * @param stakeholderRequest StakeholderRequestDTO
      * @return Long
      */

@@ -80,8 +80,9 @@ public class DocumentLinkService {
         documentLinkRepository.save(documentLink);
     }
 
-    /***
+    /**
      * Delete a document link
+     *
      * @param linkId Document link id
      */
     @Transactional
@@ -92,8 +93,9 @@ public class DocumentLinkService {
         documentLinkRepository.delete(documentLink);
     }
 
-    /***
+    /**
      * Get all links for a document
+     *
      * @param id Document id
      * @return List<DocumentBriefLinksResponseDTO>
      */
