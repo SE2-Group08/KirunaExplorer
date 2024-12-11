@@ -13,13 +13,6 @@ import java.util.List;
 public class DocumentFieldsChecker {
 
     /**
-     * Utility class, should not be instantiated
-     */
-    private DocumentFieldsChecker() {
-        throw new UnsupportedOperationException("Utility class");
-    }
-
-    /**
      * Remove duplicates from the list of stakeholders
      *
      * @param document Document to check
