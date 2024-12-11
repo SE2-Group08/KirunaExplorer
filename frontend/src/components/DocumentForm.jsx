@@ -27,6 +27,7 @@ import DocumentResources from "./DocumentResources";
 import "../App.scss";
 import getKirunaArea from "./KirunaArea.jsx";
 import { Document } from "../model/Document.mjs";
+import { validateForm } from "../utils/formValidation.js";
 
 export default function DocumentFormComponent({ document, show, onHide }) {
   const kirunaBorderCoordinates = getKirunaArea();
@@ -122,135 +123,135 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   });
 
-  const validateForm = (combinedIssuanceDate) => {
-    const newErrors = {}; // Reset errors
-    // Title validation
-    if (typeof formDocument.title !== "string" || !formDocument.title.trim()) {
-      newErrors.title = "Title is required and must be a non-empty string.";
-    } else if (formDocument.title.length < 2) {
-      newErrors.title = "Title must be at least 2 characters.";
-    } else if (formDocument.title.length > 64) {
-      newErrors.title = "Title must be less than 64 characters.";
-    }
+  // const validateForm = (combinedIssuanceDate) => {
+  //   const newErrors = {}; // Reset errors
+  //   // Title validation
+  //   if (typeof formDocument.title !== "string" || !formDocument.title.trim()) {
+  //     newErrors.title = "Title is required and must be a non-empty string.";
+  //   } else if (formDocument.title.length < 2) {
+  //     newErrors.title = "Title must be at least 2 characters.";
+  //   } else if (formDocument.title.length > 64) {
+  //     newErrors.title = "Title must be less than 64 characters.";
+  //   }
 
-    if (
-      !Array.isArray(formDocument.stakeholders) ||
-      formDocument.stakeholders.length === 0 ||
-      formDocument.stakeholders.some((s) => typeof s !== "string" || !s.trim())
-    ) {
-      newErrors.stakeholders =
-        "At least one stakeholder is required, and all must be non-empty strings.";
-    } else if (
-      new Set(formDocument.stakeholders.map((s) => s.trim().toLowerCase()))
-        .size !== formDocument.stakeholders.length
-    ) {
-      newErrors.stakeholders = "Stakeholders must not contain duplicates.";
-    } else if (
-      formDocument.stakeholders.some((s) => s.trim().toLowerCase() === "other")
-    ) {
-      newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
-    }
+  //   if (
+  //     !Array.isArray(formDocument.stakeholders) ||
+  //     formDocument.stakeholders.length === 0 ||
+  //     formDocument.stakeholders.some((s) => typeof s !== "string" || !s.trim())
+  //   ) {
+  //     newErrors.stakeholders =
+  //       "At least one stakeholder is required, and all must be non-empty strings.";
+  //   } else if (
+  //     new Set(formDocument.stakeholders.map((s) => s.trim().toLowerCase()))
+  //       .size !== formDocument.stakeholders.length
+  //   ) {
+  //     newErrors.stakeholders = "Stakeholders must not contain duplicates.";
+  //   } else if (
+  //     formDocument.stakeholders.some((s) => s.trim().toLowerCase() === "other")
+  //   ) {
+  //     newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
+  //   }
 
-    if (typeof formDocument.scale !== "string" || !formDocument.scale.trim()) {
-      newErrors.scale =
-        "Scale is required and must match one of the defined patterns.";
-    } else if (formDocument.scale.includes(":")) {
-      const [first, second] = formDocument.scale.split(":").map(Number);
-      if (first > second) {
-        newErrors.scale =
-          "The first number of the scale must be smaller than the second one.";
-      }
-    }
+  //   if (typeof formDocument.scale !== "string" || !formDocument.scale.trim()) {
+  //     newErrors.scale =
+  //       "Scale is required and must match one of the defined patterns.";
+  //   } else if (formDocument.scale.includes(":")) {
+  //     const [first, second] = formDocument.scale.split(":").map(Number);
+  //     if (first > second) {
+  //       newErrors.scale =
+  //         "The first number of the scale must be smaller than the second one.";
+  //     }
+  //   }
 
-    // Issuance date validation
-    console.log("Issuance date " + typeof(combinedIssuanceDate) + " " + combinedIssuanceDate);
-    if (
-      typeof combinedIssuanceDate !== "string" ||
-      !dayjs(
-        combinedIssuanceDate,
-        ["YYYY-MM-DD", "YYYY-MM", "YYYY"],
-        true
-      ).isValid()
-    ) {
-      newErrors.issuanceDate =
-        "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
-    }
+  //   // Issuance date validation
+  //   console.log("Issuance date " + typeof(combinedIssuanceDate) + " " + combinedIssuanceDate);
+  //   if (
+  //     typeof combinedIssuanceDate !== "string" ||
+  //     !dayjs(
+  //       combinedIssuanceDate,
+  //       ["YYYY-MM-DD", "YYYY-MM", "YYYY"],
+  //       true
+  //     ).isValid()
+  //   ) {
+  //     newErrors.issuanceDate =
+  //       "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
+  //   }
 
-    // Type validation
-    if (
-      !formDocument.type ||
-      (formDocument.type === "Other" && !formDocument.customType)
-    ) {
-      newErrors.type = "Type is required.";
-    } else if (formDocument.type === "Other") {
-      newErrors.type = "Type cannot be 'Other'.";
-    } else if (formDocument.type.length > 64 && formDocument.type.length < 2) {
-      newErrors.type = "Type must be between 2 and 64 characters.";
-    }
+  //   // Type validation
+  //   if (
+  //     !formDocument.type ||
+  //     (formDocument.type === "Other" && !formDocument.customType)
+  //   ) {
+  //     newErrors.type = "Type is required.";
+  //   } else if (formDocument.type === "Other") {
+  //     newErrors.type = "Type cannot be 'Other'.";
+  //   } else if (formDocument.type.length > 64 && formDocument.type.length < 2) {
+  //     newErrors.type = "Type must be between 2 and 64 characters.";
+  //   }
 
-    // Language validation
-    if (
-      formDocument.language &&
-      (formDocument.language.length < 2 || formDocument.language.length > 64)
-    ) {
-      newErrors.language = "Language must be between 2 and 64 characters.";
-    }
+  //   // Language validation
+  //   if (
+  //     formDocument.language &&
+  //     (formDocument.language.length < 2 || formDocument.language.length > 64)
+  //   ) {
+  //     newErrors.language = "Language must be between 2 and 64 characters.";
+  //   }
 
-    // Number of pages validation
-    if (formDocument.nrPages && typeof formDocument.nrPages !== "number") {
-      newErrors.nrPages = "Number of pages must be an integer";
-    }
+  //   // Number of pages validation
+  //   if (formDocument.nrPages && typeof formDocument.nrPages !== "number") {
+  //     newErrors.nrPages = "Number of pages must be an integer";
+  //   }
 
-    // Geolocation validation
-    if (
-      formDocument.geolocation.latitude &&
-      formDocument.geolocation.longitude
-    ) {
-      const point = {
-        lat: formDocument.geolocation.latitude,
-        lng: formDocument.geolocation.longitude,
-      };
+  //   // Geolocation validation
+  //   if (
+  //     formDocument.geolocation.latitude &&
+  //     formDocument.geolocation.longitude
+  //   ) {
+  //     const point = {
+  //       lat: formDocument.geolocation.latitude,
+  //       lng: formDocument.geolocation.longitude,
+  //     };
 
-      const kirunaBorderCoordinatesLngLat = kirunaBorderCoordinates.map(
-        ([lat, lng]) => [lng, lat]
-      );
-      const polygon = [
-        ...kirunaBorderCoordinatesLngLat,
-        kirunaBorderCoordinatesLngLat[0], // Close the loop
-      ];
-      const [x, y] = [point.lng, point.lat]; // Ensure [lng, lat]
-      let inside = false;
+  //     const kirunaBorderCoordinatesLngLat = kirunaBorderCoordinates.map(
+  //       ([lat, lng]) => [lng, lat]
+  //     );
+  //     const polygon = [
+  //       ...kirunaBorderCoordinatesLngLat,
+  //       kirunaBorderCoordinatesLngLat[0], // Close the loop
+  //     ];
+  //     const [x, y] = [point.lng, point.lat]; // Ensure [lng, lat]
+  //     let inside = false;
 
-      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        const [xi, yi] = polygon[i];
-        const [xj, yj] = polygon[j];
+  //     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+  //       const [xi, yi] = polygon[i];
+  //       const [xj, yj] = polygon[j];
 
-        const intersect =
-          yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-        if (intersect) inside = !inside;
-      }
+  //       const intersect =
+  //         yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+  //       if (intersect) inside = !inside;
+  //     }
 
-      if (!inside) {
-        newErrors.latitude = "Geolocation must be within the Kiruna boundary.";
-        newErrors.longitude = "Geolocation must be within the Kiruna boundary.";
-      }
-    }
-    if (
-      (formDocument.geolocation.latitude ||
-        formDocument.geolocation.longitude) &&
-      formDocument.geolocation.municipality === "Entire municipality"
-    ) {
-      newErrors.municipality =
-        "Geolocation must be 'Entire municipality' or a valid coordinate.";
-    }
+  //     if (!inside) {
+  //       newErrors.latitude = "Geolocation must be within the Kiruna boundary.";
+  //       newErrors.longitude = "Geolocation must be within the Kiruna boundary.";
+  //     }
+  //   }
+  //   if (
+  //     (formDocument.geolocation.latitude ||
+  //       formDocument.geolocation.longitude) &&
+  //     formDocument.geolocation.municipality === "Entire municipality"
+  //   ) {
+  //     newErrors.municipality =
+  //       "Geolocation must be 'Entire municipality' or a valid coordinate.";
+  //   }
 
-    // Description validation
-    if (formDocument.description && formDocument.description.length > 1000) {
-      newErrors.description = "Description must not exceed 1000 characters.";
-    }
+  //   // Description validation
+  //   if (formDocument.description && formDocument.description.length > 1000) {
+  //     newErrors.description = "Description must not exceed 1000 characters.";
+  //   }
 
-    return newErrors;
-  };
+  //   return newErrors;
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -265,7 +266,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       municipality: formDocument.geolocation.municipality || null,
     };
 
-    const validationErrors = validateForm(combinedIssuanceDate);
+    // const validationErrors = validateForm(combinedIssuanceDate);
+    const validationErrors = validateForm(formDocument, combinedIssuanceDate, kirunaBorderCoordinates);
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {

@@ -205,13 +205,13 @@ function DocumentDescriptionFields({ document }) {
             <div className="divider"></div>
             <div className="info-item">
               <label>Language:</label>
-              <span>{document.language ? `${document.language}` : "-"}</span>
+              <span>{document.language || "-"}</span>
             </div>
             <div className="divider"></div>
 
             <div className="info-item">
               <label>Pages:</label>
-              <span>{document.nrPages > 0 ? `${document.nrPages}` : "-"}</span>
+              <span>{document.nrPages || "-"}</span>
             </div>
             <div className="divider"></div>
             <div className="info-item">
