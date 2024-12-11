@@ -17,8 +17,9 @@ public class DocumentScaleService {
         this.documentScaleRepository = documentScaleRepository;
     }
 
-    /***
+    /**
      * Get all documents in brief format
+     *
      * @return List of DocumentBriefResponseDTO
      */
     public List<DocumentScaleResponseDTO> getAllDocumentScales() {
@@ -28,8 +29,9 @@ public class DocumentScaleService {
     }
 
 
-    /***
+    /**
      * Create a documentScale
+     *
      * @param documentScaleRequest DocumentScaleRequestDTO
      * @return DocumentScale.id
      */

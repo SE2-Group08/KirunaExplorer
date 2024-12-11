@@ -22,8 +22,9 @@ public class DocumentTypeController {
         this.documentTypeService = documentTypeService;
     }
 
-    /***
+    /**
      * Endpoint to get all documents in brief format
+     *
      * @return List of DocumentBriefResponseDTO
      */
     @GetMapping
@@ -31,8 +32,9 @@ public class DocumentTypeController {
         return ResponseEntity.ok(documentTypeService.getAllDocumentTypes());
     }
 
-    /***
+    /**
      * Endpoint to create a document
+     *
      * @param type DocumentRequestDTO
      * @return ResponseEntity<Void>
      */

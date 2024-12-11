@@ -97,8 +97,9 @@ public class Document {
         );
     }
 
-    /***
+    /**
      * Converts the Document object to a DocumentBriefLinksResponseDTO object.
+     *
      * @param linksDTOs List of LinksDTO objects
      * @return DocumentBriefLinksResponseDTO object
      */
@@ -109,8 +110,9 @@ public class Document {
         );
     }
 
-    /***
+    /**
      * Map the document links to DocumentBriefLinksResponseDTO
+     *
      * @param documentLinks List of DocumentLink objects
      * @return List<DocumentBriefLinksResponseDTO>
      */
@@ -130,8 +132,9 @@ public class Document {
             .toList();
     }
 
-    /***
+    /**
      * Update the document from a DocumentRequestDTO
+     *
      * @param dto DocumentRequestDTO
      */
     public void updateFromDocumentRequestDTO(DocumentRequestDTO dto) {

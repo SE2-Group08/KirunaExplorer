@@ -16,8 +16,9 @@ public record DocumentScaleRequestDTO(
 ) {
 
 
-    /***
+    /**
      * Converts the DocumentScaleRequestDTO to a Document object.
+     *
      * @return DocumentScale object
      */
     public DocumentScale toDocumentScale() {

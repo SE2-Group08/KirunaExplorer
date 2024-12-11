@@ -22,8 +22,9 @@ public class DocumentScaleController {
         this.documentScaleService = documentScaleService;
     }
 
-    /***
+    /**
      * Endpoint to get all documents in brief format
+     *
      * @return List of DocumentBriefResponseDTO
      */
     @GetMapping
@@ -32,9 +33,9 @@ public class DocumentScaleController {
     }
 
 
-
-    /***
+    /**
      * Endpoint to create a document
+     *
      * @param scale DocumentScaleRequestDTO
      * @return ResponseEntity<Void>
      */
