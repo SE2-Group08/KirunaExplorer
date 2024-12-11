@@ -1,4 +1,4 @@
-import {Document, DocumentSnippet} from "./model/Document.mjs";
+import { Document, DocumentSnippet } from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
 import Link from "./model/Link.mjs";
 import { DocumentType } from "./model/DocumentType.mjs";
@@ -11,20 +11,18 @@ const SERVER_URL = "http://localhost:8080/api/v1";
  * ************************** */
 
 const uploadFiles = async (id, files) => {
-    const formData = new FormData();
+  const formData = new FormData();
   files.forEach((file) => {
     formData.append("files", file);
   });
 
-
   const url = `${SERVER_URL}/documents/${id}/files`;
-    console.log("Uploading file to URL:", url);
+  console.log("Uploading file to URL:", url);
 
-    const response = await fetch(url, {
-      method: "POST",
-      body: formData,
-    })
-  .then(handleInvalidResponse)
+  const response = await fetch(url, {
+    method: "POST",
+    body: formData,
+  }).then(handleInvalidResponse);
 };
 
 const deleteFile = async (fileId) => {
@@ -91,8 +89,8 @@ const createLink = async (documentId, link) => {
 // Retrieve all links of a document
 const getAllLinksOfDocument = async (documentId) => {
   const links = await fetch(`${SERVER_URL}/documents/${documentId}/links`)
-      .then(handleInvalidResponse)
-      .then((response) => response.json());
+    .then(handleInvalidResponse)
+    .then((response) => response.json());
   return links;
 };
 
@@ -133,7 +131,7 @@ const getDocumentsByPageNumber = async (pageNo = 0) => {
   try {
     const response = await fetch(`${SERVER_URL}/documents?pageNo=${pageNo}`);
     if (!response.ok) {
-      console.error(response)
+      console.error(response);
     }
     const documents = await response.json();
     return documents;
@@ -145,8 +143,6 @@ const getDocumentsByPageNumber = async (pageNo = 0) => {
 
 const addDocument = async (document) => {
   try {
-    console.log("ADD DOCUMENT: ", document);
-
     const response = await fetch(`${SERVER_URL}/documents`, {
       method: "POST",
       headers: {
@@ -156,7 +152,11 @@ const addDocument = async (document) => {
     });
 
     if (!response.ok) {
-      console.error("Failed to add document:", response.status, response.statusText);
+      console.error(
+        "Failed to add document:",
+        response.status,
+        response.statusText
+      );
       return null;
     }
 
@@ -177,8 +177,6 @@ const addDocument = async (document) => {
   }
 };
 
-
-
 // Retrieve a document by id
 const getDocumentById = async (documentId) => {
   const document = await fetch(`${SERVER_URL}/documents/${documentId}`)
@@ -196,18 +194,6 @@ const updateDocument = async (documentId, nextDocument) => {
     },
     body: JSON.stringify(nextDocument),
   }).then(handleInvalidResponse);
-
-  console.log("Response Status:", response.status);
-  console.log("Response Headers:", [...response.headers.entries()]);
-
-  const location = response.headers.get("location");
-  if (location) {
-    console.log("Location header:", location);
-  } else {
-    console.error("Location header is missing.");
-  }
-
-  return await response.json();
 };
 
 // Delete a document given its id
@@ -218,23 +204,26 @@ const deleteDocument = async (documentId) => {
 };
 
 const searchDocuments = async (keyword) => {
-    const params = new URLSearchParams();
-    if (keyword) {
-        params.append('keyword', keyword);
+  const params = new URLSearchParams();
+  if (keyword) {
+    params.append("keyword", keyword);
+  }
+
+  const queryString = params.toString(); // Automatically encodes spaces as '+'
+
+  const response = await fetch(
+    `${SERVER_URL}/documents/search?${queryString}`,
+    {
+      method: "GET",
+      // Removed 'Content-Type' header as it's not needed for GET requests
     }
+  )
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then(mapAPISnippetsToSnippet);
 
-    const queryString = params.toString(); // Automatically encodes spaces as '+'
-
-    const response =  await fetch(`${SERVER_URL}/documents/search?${queryString}`, {
-        method: 'GET',
-        // Removed 'Content-Type' header as it's not needed for GET requests
-    })
-        .then(handleInvalidResponse)
-        .then((response) => response.json())
-        .then(mapAPISnippetsToSnippet);
-
-    return response;
-}
+  return response;
+};
 
 // /* ************************** *
 //  *      Stakeholders APIs     *
@@ -298,12 +287,16 @@ const getAllScales = async () => {
     .then(handleInvalidResponse)
     .then((response) => response.json())
     .then((scales) => {
-      const textScales = scales.filter(scale => !scale.scale.includes(':')).sort();
-      const numericScales = scales.filter(scale => scale.scale.includes(':')).sort((a, b) => {
-        const numA = parseInt(a.scale.split(':')[1], 10);
-        const numB = parseInt(b.scale.split(':')[1], 10);
-        return numA - numB;
-      });
+      const textScales = scales
+        .filter((scale) => !scale.scale.includes(":"))
+        .sort();
+      const numericScales = scales
+        .filter((scale) => scale.scale.includes(":"))
+        .sort((a, b) => {
+          const numA = parseInt(a.scale.split(":")[1], 10);
+          const numB = parseInt(b.scale.split(":")[1], 10);
+          return numA - numB;
+        });
       return [...textScales, ...numericScales];
     })
     .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));

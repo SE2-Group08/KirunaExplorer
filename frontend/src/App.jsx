@@ -63,8 +63,7 @@ function App() {
             autohide
             onClose={() => setFeedback("")}
             delay={4000}
-            position="top-end"
-            className="position-fixed end-0 m-3"
+            className="notification-toast"
           >
             <ToastBody>
               {feedback.type === "danger" && <i className="bi bi-exclamation-circle-fill text-danger me-2"></i>}
