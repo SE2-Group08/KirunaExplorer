@@ -19,6 +19,8 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
 import API from "../API.mjs";
 import FeedbackContext from "../contexts/FeedbackContext";
 import DocumentResources from "./DocumentResources";
@@ -59,7 +61,9 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const titleRef = useRef(null);
   const stakeholdersRef = useRef(null);
   const scaleRef = useRef(null);
-  const issuanceDateRef = useRef(null);
+  const dayRef = useRef(null);
+  const monthRef = useRef(null);
+  const yearRef = useRef(null);
   const typeRef = useRef(null);
   const languageRef = useRef(null);
   const nrPagesRef = useRef(null);
@@ -69,7 +73,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const descriptionRef = useRef(null);
 
   useEffect(() => {
-    if (document && document.id) {
+    if (document?.id) {
       setFormDocument({
         title: document.title || "",
         stakeholders: document.stakeholders || [],
@@ -159,9 +163,14 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     }
 
     // Issuance date validation
+    console.log("Issuance date " + typeof(combinedIssuanceDate) + " " + combinedIssuanceDate);
     if (
       typeof combinedIssuanceDate !== "string" ||
-      !dayjs(combinedIssuanceDate, ["YYYY-MM-DD", "YYYY-MM", "YYYY"], true).isValid()
+      !dayjs(
+        combinedIssuanceDate,
+        ["YYYY-MM-DD", "YYYY-MM", "YYYY"],
+        true
+      ).isValid()
     ) {
       newErrors.issuanceDate =
         "Issuance date is required and must be in the format DD/MM/YYYY, MM/YYYY or YYYY.";
@@ -247,8 +256,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     e.preventDefault();
 
     const combinedIssuanceDate = `${formDocument.year}${
-      formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
-    }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
+        formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
+      }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`
 
     const sanitizedGeolocation = {
       latitude: formDocument.geolocation.latitude || null,
@@ -269,7 +278,9 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       } else if (validationErrors.type) {
         typeRef.current.focus();
       } else if (validationErrors.issuanceDate) {
-        issuanceDateRef.current.focus();
+        dayRef.current.focus();
+        monthRef.current.focus();
+        yearRef.current.focus();
       } else if (validationErrors.language) {
         languageRef.current.focus();
       } else if (validationErrors.nrPages) {
@@ -428,7 +439,9 @@ export default function DocumentFormComponent({ document, show, onHide }) {
               titleRef,
               stakeholdersRef,
               typeRef,
-              issuanceDateRef,
+              dayRef,
+              monthRef,
+              yearRef,
               languageRef,
               nrPagesRef,
               latitudeRef,
@@ -484,10 +497,6 @@ function DocumentFormFields({
 
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
-  const dayRef = useRef(null);
-  const monthRef = useRef(null);
-  const yearRef = useRef(null);
-
   useEffect(() => {
     // Fetch all stakeholders
     API.getAllStakeholders()
@@ -527,7 +536,7 @@ function DocumentFormFields({
     if (value.length <= 2) {
       handleChange("day", value);
       if (value.length === 2) {
-        monthRef.current.focus();
+        refs.monthRef.current.focus();
       }
     }
   };
@@ -537,7 +546,7 @@ function DocumentFormFields({
     if (value.length <= 2) {
       handleChange("month", value);
       if (value.length === 2) {
-        yearRef.current.focus();
+        refs.yearRef.current.focus();
       }
     }
   };
@@ -621,7 +630,7 @@ function DocumentFormFields({
           <Form.Group controlId="formDocumentStakeholders">
             <Form.Label>Stakeholders *</Form.Label>
             <div className="divider" />
-            {allStakeholders.length ? (
+            {allStakeholders ? (
               allStakeholders.map((stakeholderOption) => (
                 <Form.Check
                   key={stakeholderOption.id}
@@ -705,7 +714,7 @@ function DocumentFormFields({
           <Form.Group className="mb-3" controlId="formDocumentScale">
             <Form.Label>Scale *</Form.Label>
             <div className="divider" />
-            {allScales.length ? (
+            {allScales ? (
               <Form.Control
                 as="select"
                 value={document.scale}
@@ -776,7 +785,7 @@ function DocumentFormFields({
                 isInvalid={!!errors.issuanceDate}
                 placeholder="DD"
                 className="me-1"
-                ref={dayRef && refs.issuanceDateRef}
+                ref={refs.dayRef}
                 style={{ width: "80px" }}
               />
               <span>/</span>
@@ -787,7 +796,7 @@ function DocumentFormFields({
                 isInvalid={!!errors.issuanceDate}
                 placeholder="MM"
                 className="mx-1"
-                ref={monthRef && refs.issuanceDateRef}
+                ref={refs.monthRef}
                 style={{ width: "80px" }}
               />
               <span>/</span>
@@ -798,7 +807,7 @@ function DocumentFormFields({
                 isInvalid={!!errors.issuanceDate}
                 placeholder="YYYY"
                 className="ms-1"
-                ref={yearRef && refs.issuanceDateRef}
+                ref={refs.yearRef}
                 style={{ width: "100px" }}
               />
             </div>
@@ -813,7 +822,7 @@ function DocumentFormFields({
           <Form.Group className="mb-3" controlId="formDocumentType">
             <Form.Label>Type *</Form.Label>
             <div className="divider" />
-            {allDocumentTypes.length ? (
+            {allDocumentTypes ? (
               <Form.Control
                 as="select"
                 value={document.type}
