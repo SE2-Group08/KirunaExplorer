@@ -253,12 +253,108 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   //   return newErrors;
   // };
 
+  const handleValidationErrors = (validationErrors) => {
+    if (validationErrors.title) {
+      titleRef.current.focus();
+    } else if (validationErrors.stakeholders) {
+      stakeholdersRef.current.focus();
+    } else if (validationErrors.scale) {
+      scaleRef.current.focus();
+    } else if (validationErrors.type) {
+      typeRef.current.focus();
+    } else if (validationErrors.issuanceDate) {
+      dayRef.current.focus();
+      monthRef.current.focus();
+      yearRef.current.focus();
+    } else if (validationErrors.language) {
+      languageRef.current.focus();
+    } else if (validationErrors.nrPages) {
+      nrPagesRef.current.focus();
+    } else if (validationErrors.latitude) {
+      latitudeRef.current.focus();
+    } else if (validationErrors.longitude) {
+      longitudeRef.current.focus();
+    } else if (validationErrors.municipality) {
+      municipalityRef.current.focus();
+    } else if (validationErrors.description) {
+      descriptionRef.current.focus();
+    }
+  };
+
+  const createDocument = async (
+    formDocument,
+    combinedIssuanceDate,
+    sanitizedGeolocation
+  ) => {
+    const newDocId = await handleAdd(
+      new Document(
+        undefined,
+        formDocument.title,
+        formDocument.stakeholders,
+        formDocument.scale,
+        combinedIssuanceDate,
+        formDocument.type,
+        formDocument.nrConnections,
+        formDocument.language,
+        formDocument.nrPages,
+        sanitizedGeolocation,
+        formDocument.description
+      )
+    );
+    return newDocId;
+  };
+
+  const updateDocument = async (
+    document,
+    formDocument,
+    combinedIssuanceDate,
+    sanitizedGeolocation
+  ) => {
+    await handleSave(
+      new Document(
+        document.id,
+        formDocument.title,
+        formDocument.stakeholders,
+        formDocument.scale,
+        combinedIssuanceDate,
+        formDocument.type,
+        formDocument.nrConnections,
+        formDocument.language,
+        formDocument.nrPages,
+        sanitizedGeolocation,
+        formDocument.description
+      )
+    );
+  };
+
+  const uploadFiles = async (docId, filesToUpload) => {
+    if (filesToUpload.length > 0) {
+      try {
+        await API.uploadFiles(docId, filesToUpload);
+      } catch (error) {
+        setFeedbackFromError(error);
+      }
+    }
+  };
+
+  const deleteFiles = async (deletedExistingFiles) => {
+    if (deletedExistingFiles.length > 0) {
+      try {
+        await Promise.all(
+          deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+        );
+      } catch (error) {
+        setFeedbackFromError(error);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const combinedIssuanceDate = `${formDocument.year}${
-        formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
-      }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`
+      formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
+    }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
     const sanitizedGeolocation = {
       latitude: formDocument.geolocation.latitude || null,
@@ -267,103 +363,135 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     };
 
     // const validationErrors = validateForm(combinedIssuanceDate);
-    const validationErrors = validateForm(formDocument, combinedIssuanceDate, kirunaBorderCoordinates);
+    const validationErrors = validateForm(
+      formDocument,
+      combinedIssuanceDate,
+      kirunaBorderCoordinates
+    );
     setErrors(validationErrors);
-
     if (Object.keys(validationErrors).length > 0) {
-      if (validationErrors.title) {
-        titleRef.current.focus();
-      } else if (validationErrors.stakeholders) {
-        stakeholdersRef.current.focus();
-      } else if (validationErrors.scale) {
-        scaleRef.current.focus();
-      } else if (validationErrors.type) {
-        typeRef.current.focus();
-      } else if (validationErrors.issuanceDate) {
-        dayRef.current.focus();
-        monthRef.current.focus();
-        yearRef.current.focus();
-      } else if (validationErrors.language) {
-        languageRef.current.focus();
-      } else if (validationErrors.nrPages) {
-        nrPagesRef.current.focus();
-      } else if (validationErrors.latitude) {
-        latitudeRef.current.focus();
-      } else if (validationErrors.longitude) {
-        longitudeRef.current.focus();
-      } else if (validationErrors.municipality) {
-        municipalityRef.current.focus();
-      } else if (validationErrors.description) {
-        descriptionRef.current.focus();
-      }
+      handleValidationErrors(validationErrors);
       return;
     }
 
     try {
       if (!document) {
-        const newDocId = await handleAdd(
-          new Document(
-            undefined,
-            formDocument.title,
-            formDocument.stakeholders,
-            formDocument.scale,
-            combinedIssuanceDate,
-            formDocument.type,
-            formDocument.nrConnections,
-            formDocument.language,
-            formDocument.nrPages,
-            sanitizedGeolocation,
-            formDocument.description
-          )
+        const newDocId = await createDocument(
+          formDocument,
+          combinedIssuanceDate,
+          sanitizedGeolocation
         );
-
-        if (filesToUpload.length > 0) {
-          try {
-            await API.uploadFiles(newDocId, filesToUpload);
-          } catch (error) {
-            setFeedbackFromError(error);
-          }
-        }
+        await uploadFiles(newDocId, filesToUpload);
       } else {
-        await handleSave(
-          new Document(
-            document.id,
-            formDocument.title,
-            formDocument.stakeholders,
-            formDocument.scale,
-            combinedIssuanceDate,
-            formDocument.type,
-            formDocument.nrConnections,
-            formDocument.language,
-            formDocument.nrPages,
-            sanitizedGeolocation,
-            formDocument.description
-          )
+        await updateDocument(
+          document,
+          formDocument,
+          combinedIssuanceDate,
+          sanitizedGeolocation
         );
-
-        if (filesToUpload.length > 0) {
-          try {
-            await API.uploadFiles(document.id, filesToUpload);
-          } catch (error) {
-            setFeedbackFromError(error);
-          }
-        }
-
-        if (deletedExistingFiles.length > 0) {
-          try {
-            await Promise.all(
-              deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
-            );
-          } catch (error) {
-            setFeedbackFromError(error);
-          }
-        }
+        await uploadFiles(document.id, filesToUpload);
+        await deleteFiles(deletedExistingFiles);
       }
       setFilesToUpload([]);
       onHide();
     } catch (error) {
       setFeedbackFromError(error);
     }
+
+    // if (Object.keys(validationErrors).length > 0) {
+    //   if (validationErrors.title) {
+    //     titleRef.current.focus();
+    //   } else if (validationErrors.stakeholders) {
+    //     stakeholdersRef.current.focus();
+    //   } else if (validationErrors.scale) {
+    //     scaleRef.current.focus();
+    //   } else if (validationErrors.type) {
+    //     typeRef.current.focus();
+    //   } else if (validationErrors.issuanceDate) {
+    //     dayRef.current.focus();
+    //     monthRef.current.focus();
+    //     yearRef.current.focus();
+    //   } else if (validationErrors.language) {
+    //     languageRef.current.focus();
+    //   } else if (validationErrors.nrPages) {
+    //     nrPagesRef.current.focus();
+    //   } else if (validationErrors.latitude) {
+    //     latitudeRef.current.focus();
+    //   } else if (validationErrors.longitude) {
+    //     longitudeRef.current.focus();
+    //   } else if (validationErrors.municipality) {
+    //     municipalityRef.current.focus();
+    //   } else if (validationErrors.description) {
+    //     descriptionRef.current.focus();
+    //   }
+    //   return;
+    // }
+
+    // try {
+    //   if (!document) {
+    //     const newDocId = await handleAdd(
+    //       new Document(
+    //         undefined,
+    //         formDocument.title,
+    //         formDocument.stakeholders,
+    //         formDocument.scale,
+    //         combinedIssuanceDate,
+    //         formDocument.type,
+    //         formDocument.nrConnections,
+    //         formDocument.language,
+    //         formDocument.nrPages,
+    //         sanitizedGeolocation,
+    //         formDocument.description
+    //       )
+    //     );
+
+    //     if (filesToUpload.length > 0) {
+    //       try {
+    //         await API.uploadFiles(newDocId, filesToUpload);
+    //       } catch (error) {
+    //         setFeedbackFromError(error);
+    //       }
+    //     }
+    //   } else {
+    //     await handleSave(
+    //       new Document(
+    //         document.id,
+    //         formDocument.title,
+    //         formDocument.stakeholders,
+    //         formDocument.scale,
+    //         combinedIssuanceDate,
+    //         formDocument.type,
+    //         formDocument.nrConnections,
+    //         formDocument.language,
+    //         formDocument.nrPages,
+    //         sanitizedGeolocation,
+    //         formDocument.description
+    //       )
+    //     );
+
+    //     if (filesToUpload.length > 0) {
+    //       try {
+    //         await API.uploadFiles(document.id, filesToUpload);
+    //       } catch (error) {
+    //         setFeedbackFromError(error);
+    //       }
+    //     }
+
+    //     if (deletedExistingFiles.length > 0) {
+    //       try {
+    //         await Promise.all(
+    //           deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+    //         );
+    //       } catch (error) {
+    //         setFeedbackFromError(error);
+    //       }
+    //     }
+    //   }
+    //   setFilesToUpload([]);
+    //   onHide();
+    // } catch (error) {
+    //   setFeedbackFromError(error);
+    // }
   };
 
   const handleDeleteExistingFile = (fileId) => {
