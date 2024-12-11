@@ -87,32 +87,8 @@ public class DocumentService {
     @Transactional
     public Long createDocument(DocumentRequestDTO documentRequest) {
 
-        // Remove duplicates stakeholders
-        DocumentFieldsChecker.removeStakeholderDuplicates(documentRequest);
-        // Get existing stakeholders
-        List<Stakeholder> existingStakeholders = stakeholderRepository.findAll();
-        // Get new stakeholders to add to the database
-        List<Stakeholder> newStakeholders = DocumentFieldsChecker.getNewStakeholders(documentRequest.stakeholders(), existingStakeholders);
-        // Add new stakeholders to the database
-        stakeholderRepository.saveAll(newStakeholders);
-
-        // Get existing document types
-        List<DocumentType> existingDocumentTypes = documentTypeRepository.findAll();
-        // Get new document type to add to the database
-        DocumentType newDocumentType = DocumentFieldsChecker.getNewDocumentType(documentRequest.type(), existingDocumentTypes);
-        // Add new document type to the database
-        if (newDocumentType != null) {
-            documentTypeRepository.save(newDocumentType);
-        }
-
-        // Get existing scales
-        List<DocumentScale> existingScales = documentScaleRepository.findAll();
-        // Get new scale to add to the db
-        DocumentScale newScale = DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
-        // Add new scale to the db
-        if (newScale != null) {
-            documentScaleRepository.save(newScale);
-        }
+        // Store new stakeholders, type and scale
+        storeNewStakeholdersTypeScale(documentRequest);
 
         // Save document
         Document document = documentRequest.toDocument();
@@ -137,6 +113,36 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + id));
 
+        // Store new stakeholders, type and scale
+        storeNewStakeholdersTypeScale(documentRequest);
+
+        // Update document
+        document.updateFromDocumentRequestDTO(documentRequest);
+        documentRepository.save(document);
+
+        GeoReference geoReference = geoReferenceRepository.findById(document.getId())
+            .orElseGet(() -> new GeoReference(document.getId(), document)); // Create new if not exist
+
+        geoReference.updateFromDTO(documentRequest.geolocation()); // Update geolocation
+        geoReferenceRepository.save(geoReference);
+    }
+
+    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
+        List<Document> documents = documentRepository.searchDocuments(keyword, type);
+        if (documents == null) {
+            return List.of();
+        }
+        return documents.stream()
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
+    }
+
+    /**
+     * Store new stakeholders, type and scale
+     *
+     * @param documentRequest DocumentRequestDTO
+     */
+    private void storeNewStakeholdersTypeScale(DocumentRequestDTO documentRequest) {
         // Remove duplicates stakeholders
         DocumentFieldsChecker.removeStakeholderDuplicates(documentRequest);
         // Get existing stakeholders
@@ -163,26 +169,6 @@ public class DocumentService {
         if (newScale != null) {
             documentScaleRepository.save(newScale);
         }
-
-        // Update document
-        document.updateFromDocumentRequestDTO(documentRequest);
-        documentRepository.save(document);
-
-        GeoReference geoReference = geoReferenceRepository.findById(document.getId())
-            .orElseGet(() -> new GeoReference(document.getId(), document)); // Create new if not exist
-
-        geoReference.updateFromDTO(documentRequest.geolocation()); // Update geolocation
-        geoReferenceRepository.save(geoReference);
-    }
-
-    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
-        List<Document> documents = documentRepository.searchDocuments(keyword, type);
-        if (documents == null) {
-            return List.of();
-        }
-        return documents.stream()
-            .map(Document::toDocumentBriefResponseDTO)
-            .toList();
     }
 }
 
