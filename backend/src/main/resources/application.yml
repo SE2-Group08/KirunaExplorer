@@ -22,6 +22,8 @@ spring:
       max-file-size: 25MB  # Maximum size for a single uploaded file
       max-request-size: 50MB  # Maximum size for a multipart request
 
+  messages:
+    basename: messages
 
 springdoc:
   api-docs:

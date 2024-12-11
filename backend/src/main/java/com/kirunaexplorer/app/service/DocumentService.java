@@ -61,7 +61,7 @@ public class DocumentService {
      */
     public List<DocumentBriefPageResponseDTO> getDocumentsByPageNumber(int pageNo) {
         Page<Document> pagedResult = documentRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNo, PAGE_SIZE));
-
+        System.out.println("ARRIVATO QUI");
         return List.of(DocumentBriefPageResponseDTO.from(pagedResult));
     }
 

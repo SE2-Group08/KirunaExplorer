@@ -33,7 +33,7 @@ public class DocumentController {
      * @return List of DocumentBriefPageResponseDTO
      */
     @GetMapping
-    public ResponseEntity<List<DocumentBriefPageResponseDTO>> getDocumentsByPageNumber(@RequestParam(value = "pageNo", required = false, defaultValue = "0") @Min(0) int pageNo) {
+    public ResponseEntity<List<DocumentBriefPageResponseDTO>> getDocumentsByPageNumber(@RequestParam(value = "pageNo", required = false, defaultValue = "0") @Min(value = 0, message = "{error.pageNo.min}") int pageNo) {
         return ResponseEntity.ok(documentService.getDocumentsByPageNumber(pageNo));
     }
 
