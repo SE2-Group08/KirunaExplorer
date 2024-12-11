@@ -37,7 +37,7 @@ public class DocumentTypeService {
      */
     @Transactional
     public Long createDocumentType(DocumentTypeRequestDTO documentTypeRequest) {
-        Boolean documentTypeExists = documentTypeRepository.existsByTypeName((documentTypeRequest.name()));
+        boolean documentTypeExists = documentTypeRepository.existsByTypeName((documentTypeRequest.name()));
         if (documentTypeExists) {
             throw new IllegalArgumentException("Document type already exists");
         }

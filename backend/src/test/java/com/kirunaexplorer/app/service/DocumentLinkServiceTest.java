@@ -184,13 +184,11 @@ class DocumentLinkServiceTest {
     @Nested
     class DeleteLinkTests {
 
-        private Long documentId;
         private Long linkId;
         private DocumentLink documentLink;
 
         @BeforeEach
         void setUp() {
-            documentId = 1L;
             linkId = 1L;
             documentLink = new DocumentLink();
             documentLink.setId(linkId);

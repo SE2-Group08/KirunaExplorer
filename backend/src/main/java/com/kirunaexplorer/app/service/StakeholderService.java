@@ -36,7 +36,7 @@ public class StakeholderService {
      */
     @Transactional
     public Long createStakeholder(StakeholderRequestDTO stakeholderRequest) {
-        Boolean stakeholderExists = stakeholderRepository.existsByName(stakeholderRequest.name());
+        boolean stakeholderExists = stakeholderRepository.existsByName(stakeholderRequest.name());
         if (stakeholderExists) {
             throw new DuplicateStakeholderException("Stakeholder with the same name already exists");
         }

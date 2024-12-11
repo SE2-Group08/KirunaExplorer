@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.Set;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class FileServiceTests {
+class FileServiceTests {
 
     @Mock
     private FileRepository fileRepository;
@@ -61,7 +60,7 @@ public class FileServiceTests {
         when(documentRepository.findById(documentId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-                () -> fileService.storeFiles(documentId, request));
+            () -> fileService.storeFiles(documentId, request));
 
         verify(fileRepository, never()).saveAll(any());
     }
@@ -87,7 +86,7 @@ public class FileServiceTests {
         when(fileRepository.findById(fileId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-                () -> fileService.getFile(fileId));
+            () -> fileService.getFile(fileId));
     }
 
     /*@Test
@@ -114,7 +113,7 @@ public class FileServiceTests {
         when(fileRepository.findById(fileId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-                () -> fileService.deleteFile(fileId));
+            () -> fileService.deleteFile(fileId));
 
         verify(fileRepository, never()).delete(any());
         verify(documentRepository, never()).save(any());
@@ -145,7 +144,7 @@ public class FileServiceTests {
         when(documentRepository.findById(documentId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-                () -> fileService.getFilesSnippet(documentId));
+            () -> fileService.getFilesSnippet(documentId));
 
         verify(documentRepository).findById(documentId);
     }

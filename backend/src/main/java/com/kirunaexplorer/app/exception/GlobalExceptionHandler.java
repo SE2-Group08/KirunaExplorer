@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-import java.io.File;
 import java.time.LocalDateTime;
 
 @ControllerAdvice
@@ -74,6 +73,17 @@ public class GlobalExceptionHandler {
             request.getDescription(false),
             LocalDateTime.now());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    // Handle File Read Exception (500)
+    @ExceptionHandler(FileReadException.class)
+    public ResponseEntity<ErrorResponse> handleFileReadException(FileReadException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            ex.getMessage(),
+            request.getDescription(false),
+            LocalDateTime.now());
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // Handle generic exceptions (500)

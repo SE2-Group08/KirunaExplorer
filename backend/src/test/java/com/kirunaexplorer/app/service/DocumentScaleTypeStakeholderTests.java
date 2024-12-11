@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
-public class DocumentScaleTypeStakeholderTests {
+class DocumentScaleTypeStakeholderTests {
 
     @Mock
     private DocumentTypeRepository documentTypeRepository;
@@ -37,8 +37,8 @@ public class DocumentScaleTypeStakeholderTests {
     @Test
     void shouldReturnAllDocumentTypes() {
         List<DocumentType> types = List.of(
-                new DocumentType(1L, "Type A"),
-                new DocumentType(2L, "Type B")
+            new DocumentType(1L, "Type A"),
+            new DocumentType(2L, "Type B")
         );
 
         Mockito.when(documentTypeRepository.findAll()).thenReturn(types);
@@ -58,15 +58,15 @@ public class DocumentScaleTypeStakeholderTests {
         Mockito.when(documentTypeRepository.existsByTypeName(typeName)).thenReturn(true);
 
         Assertions.assertThrows(IllegalArgumentException.class,
-                () -> documentTypeService.createDocumentType(request));
+            () -> documentTypeService.createDocumentType(request));
     }
 
     // DocumentScaleService Tests
     @Test
     void shouldReturnAllDocumentScales() {
         List<DocumentScale> scales = List.of(
-                new DocumentScale(1L, "Scale 1"),
-                new DocumentScale(2L, "Scale 2")
+            new DocumentScale(1L, "Scale 1"),
+            new DocumentScale(2L, "Scale 2")
         );
 
         Mockito.when(documentScaleRepository.findAll()).thenReturn(scales);
