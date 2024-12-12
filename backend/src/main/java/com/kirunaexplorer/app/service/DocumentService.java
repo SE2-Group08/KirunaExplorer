@@ -87,23 +87,8 @@ public class DocumentService {
     @Transactional
     public Long createDocument(DocumentRequestDTO documentRequest) {
 
-        // Remove duplicates stakeholders
-        DocumentFieldsChecker.removeStakeholderDuplicates(documentRequest);
-        // Get existing stakeholders
-        List<Stakeholder> existingStakeholders = stakeholderRepository.findAll();
-        // Get new stakeholders to add to the database
-        List<Stakeholder> newStakeholders = DocumentFieldsChecker.getNewStakeholders(documentRequest.stakeholders(), existingStakeholders);
-        // Add new stakeholders to the database
-        stakeholderRepository.saveAll(newStakeholders);
-
-        // Get existing document types
-        List<DocumentType> existingDocumentTypes = documentTypeRepository.findAll();
-        // Get new document type to add to the database
-        DocumentType newDocumentType = DocumentFieldsChecker.getNewDocumentType(documentRequest.type(), existingDocumentTypes);
-        // Add new document type to the database
-        if (newDocumentType != null) {
-            documentTypeRepository.save(newDocumentType);
-        }
+        // Store new stakeholders, type and scale
+        storeNewStakeholdersTypeScale(documentRequest);
 
         // Save document
         Document document = documentRequest.toDocument();
@@ -112,15 +97,6 @@ public class DocumentService {
         // Save geolocation
         GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
         geoReferenceRepository.save(geoReference);
-
-        // Get existing scales
-        List<DocumentScale> existingScales = documentScaleRepository.findAll();
-        // Get new scale to add to the db
-        DocumentScale newScale = DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
-        // Add new scale to the db
-        if (newScale != null) {
-            documentScaleRepository.save(newScale);
-        }
 
         return document.getId();
     }
@@ -137,32 +113,8 @@ public class DocumentService {
         Document document = documentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + id));
 
-        // Remove duplicates stakeholders
-        DocumentFieldsChecker.removeStakeholderDuplicates(documentRequest);
-        // Get existing stakeholders
-        List<Stakeholder> existingStakeholders = stakeholderRepository.findAll();
-        // Get new stakeholders to add to the database
-        List<Stakeholder> newStakeholders = DocumentFieldsChecker.getNewStakeholders(documentRequest.stakeholders(), existingStakeholders);
-        // Add new stakeholders to the database
-        stakeholderRepository.saveAll(newStakeholders);
-
-        // Get existing document types
-        List<DocumentType> existingDocumentTypes = documentTypeRepository.findAll();
-        // Get new document type to add to the database
-        DocumentType newDocumentType = DocumentFieldsChecker.getNewDocumentType(documentRequest.type(), existingDocumentTypes);
-        // Add new document type to the database
-        if (newDocumentType != null) {
-            documentTypeRepository.save(newDocumentType);
-        }
-
-        // Get existing scales
-        List<DocumentScale> existingScales = documentScaleRepository.findAll();
-        // Get new scale to add to the db
-        DocumentScale newScale = DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
-        // Add new scale to the db
-        if (newScale != null) {
-            documentScaleRepository.save(newScale);
-        }
+        // Store new stakeholders, type and scale
+        storeNewStakeholdersTypeScale(documentRequest);
 
         // Update document
         document.updateFromDocumentRequestDTO(documentRequest);
@@ -181,8 +133,42 @@ public class DocumentService {
             return List.of();
         }
         return documents.stream()
-                .map(Document::toDocumentBriefResponseDTO)
-                .toList();
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
+    }
+
+    /**
+     * Store new stakeholders, type and scale
+     *
+     * @param documentRequest DocumentRequestDTO
+     */
+    private void storeNewStakeholdersTypeScale(DocumentRequestDTO documentRequest) {
+        // Remove duplicates stakeholders
+        DocumentFieldsChecker.removeStakeholderDuplicates(documentRequest);
+        // Get existing stakeholders
+        List<Stakeholder> existingStakeholders = stakeholderRepository.findAll();
+        // Get new stakeholders to add to the database
+        List<Stakeholder> newStakeholders = DocumentFieldsChecker.getNewStakeholders(documentRequest.stakeholders(), existingStakeholders);
+        // Add new stakeholders to the database
+        stakeholderRepository.saveAll(newStakeholders);
+
+        // Get existing document types
+        List<DocumentType> existingDocumentTypes = documentTypeRepository.findAll();
+        // Get new document type to add to the database
+        DocumentType newDocumentType = DocumentFieldsChecker.getNewDocumentType(documentRequest.type(), existingDocumentTypes);
+        // Add new document type to the database
+        if (newDocumentType != null) {
+            documentTypeRepository.save(newDocumentType);
+        }
+
+        // Get existing scales
+        List<DocumentScale> existingScales = documentScaleRepository.findAll();
+        // Get new scale to add to the db
+        DocumentScale newScale = DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
+        // Add new scale to the db
+        if (newScale != null) {
+            documentScaleRepository.save(newScale);
+        }
     }
 }
 

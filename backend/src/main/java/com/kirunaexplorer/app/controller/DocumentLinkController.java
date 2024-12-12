@@ -25,9 +25,10 @@ public class DocumentLinkController {
         this.documentLinkService = documentLinkService;
     }
 
-    /***
+    /**
      * Endpoint to link two documents
-     * @param id Document id
+     *
+     * @param id      Document id
      * @param request LinkDocumentsRequestDTO
      * @return ResponseEntity<Void>
      */
@@ -41,8 +42,9 @@ public class DocumentLinkController {
         return ResponseEntity.created(location).build();
     }
 
-    /***
+    /**
      * Endpoint to update a document link
+     *
      * @param request LinkDocumentsRequestDTO
      * @return ResponseEntity<Void>
      */
@@ -52,8 +54,9 @@ public class DocumentLinkController {
         return ResponseEntity.noContent().build();
     }
 
-    /***
+    /**
      * Endpoint to delete a document link
+     *
      * @param linkId Document link id
      * @return ResponseEntity<Void>
      */
@@ -63,8 +66,9 @@ public class DocumentLinkController {
         return ResponseEntity.noContent().build();
     }
 
-    /***
+    /**
      * Endpoint to get all links for a document
+     *
      * @param id Document id
      * @return ResponseEntity<List < DocumentBriefLinksResponseDTO>>
      */

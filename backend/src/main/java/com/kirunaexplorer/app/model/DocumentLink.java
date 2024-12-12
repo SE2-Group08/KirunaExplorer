@@ -44,8 +44,9 @@ public class DocumentLink {
         }
     }
 
-    /***
+    /**
      * Convert to LinksDTO
+     *
      * @return LinksDTO
      */
     public LinksDTO toLinksDTO() {

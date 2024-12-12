@@ -18,8 +18,9 @@ public class StakeholderService {
         this.stakeholderRepository = stakeholderRepository;
     }
 
-    /***
+    /**
      * Get all stakeholders
+     *
      * @return List of stakeholders
      */
     @Transactional
@@ -29,14 +30,15 @@ public class StakeholderService {
             .toList();
     }
 
-    /***
+    /**
      * Create a document
+     *
      * @param stakeholderRequest StakeholderRequestDTO
      * @return Long
      */
     @Transactional
     public Long createStakeholder(StakeholderRequestDTO stakeholderRequest) {
-        Boolean stakeholderExists = stakeholderRepository.existsByName(stakeholderRequest.name());
+        boolean stakeholderExists = stakeholderRepository.existsByName(stakeholderRequest.name());
         if (stakeholderExists) {
             throw new DuplicateStakeholderException("Stakeholder with the same name already exists");
         }

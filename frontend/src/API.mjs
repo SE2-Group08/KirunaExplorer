@@ -1,5 +1,6 @@
-import {Document, DocumentSnippet} from "./model/Document.mjs";
+import { Document, DocumentSnippet } from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
+import Link from "./model/Link.mjs";
 import { DocumentType } from "./model/DocumentType.mjs";
 import { Scale } from "./model/Scale.mjs";
 
@@ -71,7 +72,6 @@ const uploadFiles = async (id, files, token) => {
   files.forEach((file) => {
     formData.append("files", file);
   });
-
 
   const url = `${SERVER_URL}/documents/${id}/files`;
     const response = await fetch(url, {
@@ -179,7 +179,6 @@ const updateLink = async (documentId, linkId, updatedLink) => {
 
 // Delete a link for a document
 const deleteLink = async (linkId, token) => {
-  console.log("API DELETE LINK: ", linkId);
   return await fetch(`${SERVER_URL}/links/${linkId}`, {
     method: "DELETE",
     headers: {
@@ -213,7 +212,7 @@ const getDocumentsByPageNumber = async (pageNo = 0, token) => {
       }
     });
     if (!response.ok) {
-      console.error(response)
+      console.error(response);
     }
     const documents = await response.json();
     return documents;
@@ -225,7 +224,6 @@ const getDocumentsByPageNumber = async (pageNo = 0, token) => {
 
 const addDocument = async (document, token) => {
   try {
-
     const response = await fetch(`${SERVER_URL}/documents`, {
       method: "POST",
       headers: {
@@ -236,7 +234,11 @@ const addDocument = async (document, token) => {
     });
 
     if (!response.ok) {
-      console.error("Failed to add document:", response.status, response.statusText);
+      console.error(
+        "Failed to add document:",
+        response.status,
+        response.statusText
+      );
       return null;
     }
 
@@ -246,9 +248,7 @@ const addDocument = async (document, token) => {
       return null;
     }
 
-    console.log("Location header:", location);
     const newDocId = location.split("/").pop(); // Estrarre l'ID dal percorso
-    console.log("Extracted ID:", newDocId);
 
     return newDocId;
   } catch (error) {
@@ -257,16 +257,9 @@ const addDocument = async (document, token) => {
   }
 };
 
-
-
 // Retrieve a document by id
 const getDocumentById = async (documentId) => {
-  const document = await fetch(`${SERVER_URL}/documents/${documentId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
+  const document = await fetch(`${SERVER_URL}/documents/${documentId}`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
     .then(mapAPIDocumentToDocument);
@@ -301,23 +294,26 @@ const deleteDocument = async (documentId) => {
 };
 
 const searchDocuments = async (keyword) => {
-    const params = new URLSearchParams();
-    if (keyword) {
-        params.append('keyword', keyword);
+  const params = new URLSearchParams();
+  if (keyword) {
+    params.append("keyword", keyword);
+  }
+
+  const queryString = params.toString(); // Automatically encodes spaces as '+'
+
+  const response = await fetch(
+    `${SERVER_URL}/documents/search?${queryString}`,
+    {
+      method: "GET",
+      // Removed 'Content-Type' header as it's not needed for GET requests
     }
+  )
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then(mapAPISnippetsToSnippet);
 
-    const queryString = params.toString(); // Automatically encodes spaces as '+'
-
-    const response =  await fetch(`${SERVER_URL}/documents/search?${queryString}`, {
-        method: 'GET',
-        // Removed 'Content-Type' header as it's not needed for GET requests
-    })
-        .then(handleInvalidResponse)
-        .then((response) => response.json())
-        .then(mapAPISnippetsToSnippet);
-
-    return response;
-}
+  return response;
+};
 
 // /* ************************** *
 //  *      Stakeholders APIs     *
@@ -381,12 +377,16 @@ const getAllScales = async () => {
     .then(handleInvalidResponse)
     .then((response) => response.json())
     .then((scales) => {
-      const textScales = scales.filter(scale => !scale.scale.includes(':')).sort();
-      const numericScales = scales.filter(scale => scale.scale.includes(':')).sort((a, b) => {
-        const numA = parseInt(a.scale.split(':')[1], 10);
-        const numB = parseInt(b.scale.split(':')[1], 10);
-        return numA - numB;
-      });
+      const textScales = scales
+        .filter((scale) => !scale.scale.includes(":"))
+        .sort();
+      const numericScales = scales
+        .filter((scale) => scale.scale.includes(":"))
+        .sort((a, b) => {
+          const numA = parseInt(a.scale.split(":")[1], 10);
+          const numB = parseInt(b.scale.split(":")[1], 10);
+          return numA - numB;
+        });
       return [...textScales, ...numericScales];
     })
     .then((sortedScales) => sortedScales.map((scale) => Scale.fromJSON(scale)));

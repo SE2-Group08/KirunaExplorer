@@ -373,6 +373,37 @@
         "required": [
           "value"
         ]
+      },
+      "File": {
+        "title": "File",
+        "type": "string",
+        "format": "binary",
+        "description": "The binary content of the file"
+      },
+      "FileSnippet": {
+        "title": "FileSnippet",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fileId": {
+            "type": "integer",
+            "description": "The unique identifier of the file"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "The name of the file",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "The size of the file in bytes"
+          }
+        },
+        "required": [
+          "fileId",
+          "fileName"
+        ]
       }
     }
   },
@@ -724,7 +755,7 @@
         }
       }
     },
-    "api/v1/files/{fileId}": {
+    "/api/v1/files/{fileId}": {
       "parameters": [
         {
           "name": "fileId",

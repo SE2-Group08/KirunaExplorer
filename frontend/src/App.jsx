@@ -22,7 +22,12 @@ function App() {
   const [shouldRefresh, setShouldRefresh] = useState(true);
 
   const setFeedbackFromError = (error) => {
-    let msg = error.message ? error.message : "Unknown error";
+    let msg = "";
+    if (error.message) {
+      msg = error.message;
+    } else {
+      msg = "Unknown error";
+    }
     setFeedback({ type: "danger", message: msg });
   };
 
@@ -101,14 +106,12 @@ function App() {
                 />
               </Route>
             </Routes>
-          </Container>
           <Toast
-              show={feedback !== ""}
-              autohide
-              onClose={() => setFeedback("")}
-              delay={4000}
-              position="top-end"
-              className="position-fixed end-0 m-3"
+            show={feedback !== ""}
+            autohide
+            onClose={() => setFeedback("")}
+            delay={4000}
+            className="notification-toast"
           >
             <ToastBody>
               {feedback.type === "danger" && <i className="bi bi-exclamation-circle-fill text-danger me-2"></i>}
@@ -116,9 +119,10 @@ function App() {
               {feedback.message}
             </ToastBody>
           </Toast>
-          <Footer />
-        </div>
-      </FeedbackContext.Provider>
+        </Container>
+        <Footer />
+      </div>
+    </FeedbackContext.Provider>
   );
 }
 

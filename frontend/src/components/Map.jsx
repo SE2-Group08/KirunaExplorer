@@ -47,7 +47,7 @@ const MapKiruna = () => {
   const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
   const [tileLayer, setTileLayer] = useState("satellite");
-  const {setFeedbackFromError, setShouldRefresh} = useContext(FeedbackContext);
+  const {setFeedbackFromError} = useContext(FeedbackContext);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
 
   // Reference for dynamic Polygon

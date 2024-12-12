@@ -1,25 +1,18 @@
 package com.kirunaexplorer.app.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
-import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
-import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentScaleResponseDTO;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"documentLinks"})
-@ToString(exclude = {"documentLinks"})
 @Table(name = "DOCUMENT_SCALE")
 public class DocumentScale {
 
@@ -34,6 +27,6 @@ public class DocumentScale {
         return new DocumentScaleResponseDTO(
             this.id.intValue(),
             this.scale
-            );
+        );
     }
 }
