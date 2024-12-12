@@ -1,9 +1,7 @@
 package com.kirunaexplorer.app.controller;
 
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
-import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
-import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
-import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
+import com.kirunaexplorer.app.dto.response.*;
 import com.kirunaexplorer.app.service.DocumentService;
 import com.kirunaexplorer.app.validation.groups.document.PostDocument;
 import com.kirunaexplorer.app.validation.groups.document.PutDocument;
@@ -89,6 +87,16 @@ public class DocumentController {
     @GetMapping("/search")
     public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam(required = false) String keyword, @RequestParam(required = false) String type) {
         return documentService.searchDocuments(keyword, type);
+    }
+
+    /**
+     * Endpoint to get all documents in brief format for the diagram
+     *
+     * @return List of DocumentBriefLinksResponseDTO
+     */
+    @GetMapping("/diagram")
+    public ResponseEntity<List<DocumentDiagramResponseDTO>> getDocumentsForDiagram() {
+        return ResponseEntity.ok(documentService.getDocumentsForDiagram());
     }
 }
 

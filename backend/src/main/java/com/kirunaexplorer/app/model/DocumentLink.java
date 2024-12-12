@@ -2,6 +2,7 @@ package com.kirunaexplorer.app.model;
 
 import com.kirunaexplorer.app.constants.DocumentLinkType;
 import com.kirunaexplorer.app.dto.inout.LinksDTO;
+import com.kirunaexplorer.app.dto.inout.LinksDocumentDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -50,5 +51,10 @@ public class DocumentLink {
      */
     public LinksDTO toLinksDTO() {
         return new LinksDTO(this.id, type);
+    }
+
+    public LinksDocumentDTO toLinksDocumentDTO(Long documentId) {
+        Long otherDocumentId = this.document.getId().equals(documentId) ? this.linkedDocument.getId() : this.document.getId();
+        return new LinksDocumentDTO(otherDocumentId, type);
     }
 }

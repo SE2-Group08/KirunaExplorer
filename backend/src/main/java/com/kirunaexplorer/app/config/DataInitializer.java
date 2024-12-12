@@ -1,14 +1,9 @@
 package com.kirunaexplorer.app.config;
 
-import com.kirunaexplorer.app.model.Document;
+import com.kirunaexplorer.app.constants.DocumentLinkType;
+import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.model.Document.DatePrecision;
-import com.kirunaexplorer.app.model.DocumentType;
-import com.kirunaexplorer.app.model.GeoReference;
-import com.kirunaexplorer.app.model.Stakeholder;
-import com.kirunaexplorer.app.repository.DocumentRepository;
-import com.kirunaexplorer.app.repository.DocumentTypeRepository;
-import com.kirunaexplorer.app.repository.GeoReferenceRepository;
-import com.kirunaexplorer.app.repository.StakeholderRepository;
+import com.kirunaexplorer.app.repository.*;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -26,18 +21,21 @@ public class DataInitializer implements CommandLineRunner {
     private final GeoReferenceRepository geoReferenceRepository;
     private final StakeholderRepository stakeholderRepository;
     private final DocumentTypeRepository documentTypeRepository;
+    private final DocumentLinkRepository documentLinkRepository;
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
     public DataInitializer(
         DocumentRepository documentRepository,
         GeoReferenceRepository geoReferenceRepository,
         StakeholderRepository stakeholderRepository,
-        DocumentTypeRepository documentTypeRepository
+        DocumentTypeRepository documentTypeRepository,
+        DocumentLinkRepository documentLinkRepository
     ) {
         this.documentRepository = documentRepository;
         this.geoReferenceRepository = geoReferenceRepository;
         this.stakeholderRepository = stakeholderRepository;
         this.documentTypeRepository = documentTypeRepository;
+        this.documentLinkRepository = documentLinkRepository;
     }
 
     @Override
@@ -227,9 +225,16 @@ public class DataInitializer implements CommandLineRunner {
         );
         geoReferenceRepository.save(geoRef7);
 
-        for (int i = 0; i < 100; i++) {
-            addNewDocument(i);
-        }
+//        for (int i = 0; i < 100; i++) {
+//            addNewDocument(i);
+//        }
+
+        documentLinkRepository.save(new DocumentLink(null, document1, document2, DocumentLinkType.DIRECT_CONSEQUENCE, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document1, document2, DocumentLinkType.COLLATERAL_CONSEQUENCE, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document1, document2, DocumentLinkType.PREVISION, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document2, document3, DocumentLinkType.DIRECT_CONSEQUENCE, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document2, document4, DocumentLinkType.COLLATERAL_CONSEQUENCE, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document3, document4, DocumentLinkType.PREVISION, LocalDateTime.now()));
 
 
         initializeStakeholders();
