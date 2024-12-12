@@ -96,6 +96,7 @@ public class DocumentController {
      */
     @GetMapping("/diagram")
     public ResponseEntity<List<DocumentDiagramResponseDTO>> getDocumentsForDiagram() {
+        System.out.println("getDocumentsForDiagram");
         return ResponseEntity.ok(documentService.getDocumentsForDiagram());
     }
 }

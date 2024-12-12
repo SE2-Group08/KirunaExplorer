@@ -162,7 +162,7 @@ const FullPageChart = () => {
   }, [documentsToShow]);
 
   useEffect(() => {
-    API.getAllDocumentSnippets()
+    API.getAllDocumentSnippetsWithLinks()
       .then((data) => setDocumentsToShow(data))
       .catch((err) => console.error("Error fetching documents:", err));
   }, []);
