@@ -1,19 +1,21 @@
-@import './styles/custom.scss';
+@import "./styles/custom.scss";
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overscroll-behavior: none;
   /* background-color: #E6E8EA; */
 }
 
 .header-navbar {
-  color: map-get($theme-colors, "white" );
+  color: map-get($theme-colors, "white");
 }
 
 .header-navbar a {
-  color: map-get($theme-colors, "white" );
+  color: map-get($theme-colors, "white");
 }
 
 .header-navbar a:hover {
@@ -22,15 +24,14 @@ html, body, #root {
 
 .card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: none;
 }
 
 .card:hover {
-  transform: scale(1.05); 
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); 
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
-
 
 .splash-background {
   min-height: 90vh;
@@ -46,11 +47,12 @@ html, body, #root {
   color: #343a40;
 }
 
-.scrollable-list-documents{
-  height: calc(100vh - 90px - 40px);
-  overflow-y: auto; 
+.scrollable-list-documents {
+  flex: 1;
+  overflow-y: auto;
   padding: 1rem;
   margin-top: 15px;
+  margin-bottom: 15px;
   background-color: light;
 }
 
@@ -64,7 +66,7 @@ html, body, #root {
 
 .document-card-linked {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  background-color: map-get($theme-colors, "info" );
+  background-color: map-get($theme-colors, "info");
 }
 
 .document-card:hover {
@@ -87,13 +89,13 @@ html, body, #root {
 }
 
 .brick-button {
-  background-color: map-get($theme-colors, "dark" ) !important;
-  border-color: map-get($theme-colors, "dark" ) !important;
-  color: map-get($theme-colors, "light" )!important;
+  background-color: map-get($theme-colors, "dark") !important;
+  border-color: map-get($theme-colors, "dark") !important;
+  color: map-get($theme-colors, "light") !important;
 }
 .divider {
-  border-bottom: 2px solid map-get($theme-colors, "light" ); 
-  margin: 0; 
+  border-bottom: 2px solid map-get($theme-colors, "light");
+  margin: 0;
 }
 .brick-button:hover {
   background-color: #51576d !important;
@@ -106,12 +108,12 @@ html, body, #root {
 }
 
 .modal-header {
-  border-bottom: none; 
+  border-bottom: none;
 }
 
 .modal-title {
-  font-weight: 600; 
-  color: map-get($theme-colors, "dark"); 
+  font-weight: 600;
+  color: map-get($theme-colors, "dark");
 }
 
 .modal-body {
@@ -122,58 +124,58 @@ html, body, #root {
 
 .document-info {
   display: flex;
-  flex: 1; 
+  flex: 1;
 }
 
 .info-section {
-  flex: 1; 
-  margin-right: 1rem; 
+  flex: 1;
+  margin-right: 1rem;
 }
 
 .description-area {
-  flex: 1; 
+  flex: 1;
 }
 
 .description-area label {
-  font-weight: 500; 
-  color: map-get($theme-colors, "primary"); 
-  width: 40%; 
+  font-weight: 500;
+  color: map-get($theme-colors, "primary");
+  width: 40%;
 }
 
 .info-item {
   display: flex;
-  justify-content: space-between; 
-  align-items: center; 
+  justify-content: space-between;
+  align-items: center;
 }
 
 .info-item label {
-  font-weight: 500; 
+  font-weight: 500;
   color: map-get($theme-colors, "primary");
-  width: 40%; 
+  width: 40%;
 }
 
 .info-item span {
-  flex: 1; 
-  text-align: right; 
+  flex: 1;
+  text-align: right;
 }
 
 .divider {
-  border-bottom: 1px solid map-get($theme-colors, "secondary"); 
-  margin: 0.5rem 0; 
+  border-bottom: 1px solid map-get($theme-colors, "secondary");
+  margin: 0.5rem 0;
 }
 
 .divider-vertical {
-  width: 1px; 
-  background-color: map-get($theme-colors, "secondary"); 
-  margin: 0 1rem; 
+  width: 1px;
+  background-color: map-get($theme-colors, "secondary");
+  margin: 0 1rem;
 }
 
 .description-textarea {
-  width: 100%; 
+  width: 100%;
   border: 1px solid map-get($theme-colors, "secondary");
   border-radius: 4px;
-  padding: 0.5rem; 
-  resize: none; 
+  padding: 0.5rem;
+  resize: none;
 }
 
 .description-textarea label {
@@ -183,12 +185,12 @@ html, body, #root {
 }
 
 .modal-footer {
-  border-top: none; 
-  justify-content: space-between; 
+  border-top: none;
+  justify-content: space-between;
 }
 
 button {
-  transition: background-color 0.2s ease; 
+  transition: background-color 0.2s ease;
 }
 
 .mb-5 {
@@ -203,12 +205,12 @@ button {
 
 .document-card-text {
   font-size: 0.9rem;
-  color: map-get($theme-colors, "dark" );
-  margin-bottom: 0.5rem; 
+  color: map-get($theme-colors, "dark");
+  margin-bottom: 0.5rem;
 }
 
 .bg-linked-document {
-  background-color: map-get($theme-colors, "dark" );
+  background-color: map-get($theme-colors, "dark");
   color: map-get($theme-colors, "secondary");
 }
 
@@ -219,7 +221,7 @@ button {
   width: 300px;
   height: calc(100% - 40px);
   background: #ffffff;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
   transition: right 0.3s ease, opacity 0.3s ease;
   border-radius: 8px;
   padding: 20px;
@@ -256,7 +258,7 @@ button {
 }
 
 .snippet-item {
-  border-bottom: 1px solid map-get($theme-colors, "white" );
+  border-bottom: 1px solid map-get($theme-colors, "white");
 }
 
 .snippet-title {
@@ -268,7 +270,7 @@ button {
 .snippet-scale,
 .snippet-issuance-date {
   font-size: 0.9rem;
-  color: map-get($theme-colors, "dark" );
+  color: map-get($theme-colors, "dark");
 }
 
 .snippet-list {
@@ -278,7 +280,7 @@ button {
   max-height: calc(100% - 60px); /* Increase max-height */
   overflow-y: auto;
   scrollbar-width: none; /* For Firefox */
-  -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
   padding-top: 20px; /* Add this line to add padding to the top */
   padding-bottom: 20px; /* Add padding to the bottom */
   margin-bottom: 0; /* Remove margin from bottom */
@@ -286,7 +288,24 @@ button {
 
 .modal-content {
   background: map-get($theme-colors, "white");
-  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
   border-radius: 8px;
   padding: 20px;
+}
+
+.notification-toast {
+  z-index: 1051; /* Ensure this is higher than the modal's z-index */
+  position: fixed;
+  top: 60px;
+  right: 20px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  background-color: map-get($theme-colors, "secondary");
+  box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow to the top of the footer */
+  z-index: 1000; /* Ensure the footer is above other content */
 }

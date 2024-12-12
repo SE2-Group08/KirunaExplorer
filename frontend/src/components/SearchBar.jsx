@@ -22,7 +22,6 @@ function SearchBar({ onSearch }) {
             return;
         }
 
-        console.log("Trimmed search term: ", trimmedSearchTerm);
         onSearch(trimmedSearchTerm);
 
         setSearchTerm('');
