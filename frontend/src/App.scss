@@ -6,7 +6,7 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overscroll-behavior: none;
   /* background-color: #E6E8EA; */
 }
 
@@ -48,10 +48,11 @@ body,
 }
 
 .scrollable-list-documents {
-  height: calc(100vh - 90px - 40px);
+  flex: 1;
   overflow-y: auto;
   padding: 1rem;
   margin-top: 15px;
+  margin-bottom: 15px;
   background-color: light;
 }
 
@@ -297,4 +298,14 @@ button {
   position: fixed;
   top: 60px;
   right: 20px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  background-color: map-get($theme-colors, "secondary");
+  box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow to the top of the footer */
+  z-index: 1000; /* Ensure the footer is above other content */
 }

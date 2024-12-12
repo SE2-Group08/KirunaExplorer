@@ -22,10 +22,11 @@ import DocumentFormComponent from "./DocumentForm";
 import DocumentDescriptionComponent from "./DocumentDescription";
 
 export default function ListDocuments({ shouldRefresh }) {
-  const [documents, setDocuments] = useState([]);
-  const [addDocument, setAddDocument] = useState(false);
-  const [show, setShow] = useState(false);
+  const [allDocuments, setAllDocuments] = useState([]);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showLegendModal, setShowLegendModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [linking, setLinking] = useState(false);
   const [selectedLinkDocuments, setSelectedLinkDocuments] = useState([]);
@@ -34,7 +35,6 @@ export default function ListDocuments({ shouldRefresh }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [links, setLinks] = useState([]);
-  const [showLegend, setShowLegend] = useState(false);
   const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
     []
   );
@@ -42,23 +42,33 @@ export default function ListDocuments({ shouldRefresh }) {
     useContext(FeedbackContext);
 
   useEffect(() => {
+    // Scroll to top of the page
+    window.scrollTo(0, 0);
+
+    // Fetch documents by page number
+    API.getDocumentsByPageNumber(currentPage)
+      .then((response) => {
+        setAllDocuments(response[0].documentSnippets);
+        setTotalPages(response[0].totalPages);
+      })
+      .then(() => setShouldRefresh(false))
+      .catch((error) => setFeedbackFromError(error));
+
+    // Fetch all links of the selected document if linking is true
     if (linking) {
       API.getAllLinksOfDocument(selectedDocumentToLink.id)
         .then(setAllLinksOfSelectedDocument)
         .catch((error) => setFeedbackFromError(error));
     }
-  }, [linking, showLinkModal]);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    API.getDocumentsByPageNumber(currentPage)
-      .then((response) => {
-        setDocuments(response[0].documentSnippets);
-        setTotalPages(response[0].totalPages);
-      })
-      .then(() => setShouldRefresh(false))
-      .catch((error) => setFeedbackFromError(error));
-  }, [shouldRefresh, setShouldRefresh, setFeedbackFromError, currentPage]);
+  }, [
+    linking,
+    showLinkModal,
+    shouldRefresh,
+    setShouldRefresh,
+    setFeedbackFromError,
+    currentPage,
+    // selectedDocumentToLink.id,
+  ]);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -85,71 +95,12 @@ export default function ListDocuments({ shouldRefresh }) {
         }
         setShowLinkModal(true);
       } else {
-        setShow(true);
+        setShowDescriptionModal(true);
       }
     } catch (error) {
       setFeedbackFromError(error);
     }
   };
-
-  // const handleSave = (document) => {
-  //   API.updateDocument(document.id, document)
-  //       .then(() => API.getAllDocumentSnippets().then(setDocuments))
-  //       .then(() => setShouldRefresh(false))
-  //       .then(() =>
-  //           setFeedback({
-  //             type: "success",
-  //             message: "Document updated successfully",
-  //           })
-  //       )
-  //       .catch((error) =>
-  //           setFeedbackFromError(error)
-  //       );
-  //   setShow(false);
-  //   setShouldRefresh(true);
-  // };
-
-  // const handleAdd = async (document) => {
-  //   try {
-  //     // Aggiungi il documento e ottieni la risposta
-  //     const newDocResponse = await API.addDocument(document);
-
-  //     /* Estrai l'ID dal documento creato
-  //     const newDocId = newDocResponse.id || newDocResponse.data?.id;*/
-
-  //     // Aggiorna la lista dei documenti
-  //     const updatedDocuments = await API.getAllDocumentSnippets();
-  //     setDocuments(updatedDocuments);
-
-  //     // Aggiorna lo stato e fornisci feedback
-  //     setShouldRefresh(false);
-  //     setFeedback({ type: "success", message: "Document added successfully" });
-  //     setShow(false);
-
-  //     return newDocResponse;
-  //   } catch (error) {
-  //     // Gestione errori
-  //     setFeedbackFromError(error);
-  //     throw error; // Propaga l'errore se necessario
-  //   }
-  // };
-
-  // const handleDelete = (documentId) => {
-  //   API.deleteDocument(documentId)
-  //       .then(() => API.getAllDocumentSnippets().then(setDocuments))
-  //       .then(() => setShouldRefresh(false))
-  //       .then(() =>
-  //           setFeedback({
-  //             type: "success",
-  //             message: "Document deleted successfully",
-  //           })
-  //       )
-  //       .catch((error) =>
-  //           setFeedbackFromError(error)
-  //       );
-  //   setShow(false);
-  //   setShouldRefresh(true);
-  // };
 
   const handleLinkToClick = () => {
     setSelectedDocumentToLink(selectedDocument);
@@ -174,65 +125,44 @@ export default function ListDocuments({ shouldRefresh }) {
     );
   };
 
-  const handleExitLinkMode = () => {
-    setLinking(false);
-    setSelectedLinkDocuments([]);
-  };
+  // const handleEditClick = (document) => {
+  //   setSelectedDocument(document);
+  //   setShowDescriptionModal(false); // Close the description modal
+  //   setShowFormModal(true); // Open the form modal
+  // };
 
   return (
     <Container fluid className="scrollable-list-documents">
       <Row>
-        <h1>{linking ? "Link a Document" : "Documents"}</h1>
-        <LegendModal show={showLegend} onHide={() => setShowLegend(false)} />
-      </Row>
-      <Row className="d-flex justify-content-between align-items-center mb-3">
-        {linking ? (
-          <p>Choose the document you want to link</p>
-        ) : (
-          <>
-            <p>
-              Here you can find all the documents about Kiruna&apos;s relocation
-              process.
-            </p>
-            <p>Click on a document to see more details.</p>
-          </>
-        )}
-      </Row>
-      <Row className="d-flex justify-content-between align-items-center mb-3">
+        <Col>
+          <h1>{linking ? "Link a Document" : "Documents"}</h1>
+          <LegendModal
+            show={showLegendModal}
+            onHide={() => setShowLegendModal(false)}
+          />
+        </Col>
         <Col xs="auto">
           {linking ? (
-            <>
-              <Button
-                title="Confirm links"
-                variant="success"
-                onClick={handleCompleteLink}
-              >
-                <i className="bi bi-check-square"></i>
-              </Button>
-              <Button
-                title="Exit link mode"
-                variant="secondary"
-                onClick={() => {
-                  handleExitLinkMode();
-                }}
-                className="ms-2"
-              >
-                <i className="bi bi-box-arrow-left"></i>
-              </Button>
-            </>
+            <Button
+              title="Confirm links"
+              className="me-4"
+              variant="success"
+              onClick={handleCompleteLink}
+            >
+              <i className="bi bi-check-square"></i>
+            </Button>
           ) : (
             <Button
               title="Add new document"
+              className="me-4"
               variant="primary"
               onClick={() => {
-                setAddDocument(true);
+                setShowFormModal(true);
               }}
             >
               <i className="bi bi-plus-square"></i>
             </Button>
           )}
-        </Col>
-        <Col xs="auto">
           <Button
             title={compactView ? "List view" : "Card view"}
             variant="secondary"
@@ -249,7 +179,7 @@ export default function ListDocuments({ shouldRefresh }) {
             className="ms-2"
             variant="secondary"
             onClick={() => {
-              setShowLegend(!showLegend);
+              setShowLegendModal(!showLegendModal);
             }}
           >
             <i className="bi bi-question-circle"></i>
@@ -257,21 +187,23 @@ export default function ListDocuments({ shouldRefresh }) {
         </Col>
       </Row>
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
-        {documents.length === 0 ? (
+        {allDocuments.length === 0 ? (
           <Spinner animation="border" role="status" className="mx-auto">
             <span className="visually-hidden">Loading...</span>
           </Spinner>
         ) : compactView ? (
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
-              documents={documents}
+              documents={allDocuments}
               onSelect={handleSelection}
               isLinkedDocument={isLinkedDocument}
+              allLinksOfSelectedDocument={allLinksOfSelectedDocument}
+              linking={linking}
             />
           </Row>
         ) : (
           <Row xs={1} sm={2} md={3} lg={4} className="g-4 mx-auto">
-            {documents.map((document) => (
+            {allDocuments.map((document) => (
               <DocumentSnippetCardComponent
                 key={document.id}
                 document={document}
@@ -294,14 +226,14 @@ export default function ListDocuments({ shouldRefresh }) {
         {selectedDocument && (
           <DocumentDescriptionComponent
             onLinkToClick={handleLinkToClick}
-            show={show}
+            show={showDescriptionModal}
             onHide={() => {
               setSelectedDocument(null);
-              setShow(false);
+              setShowDescriptionModal(false);
             }}
             document={selectedDocument}
-            // handleDelete={handleDelete}
             onSnippetClick={handleSelection}
+            // handleDelete={handleDelete}
           />
         )}
         {selectedDocumentToLink && showLinkModal && (
@@ -319,11 +251,11 @@ export default function ListDocuments({ shouldRefresh }) {
             selectedDocumentToLink={selectedDocumentToLink}
           />
         )}
-        {addDocument && (
+        {showFormModal && (
           <DocumentFormComponent
             document={undefined}
-            show={addDocument}
-            onHide={() => setAddDocument(false)}
+            show={showFormModal}
+            onHide={() => setShowFormModal(false)}
           />
         )}
       </Row>
@@ -340,7 +272,27 @@ function DocumentSnippetTableComponent({
   documents,
   onSelect,
   isLinkedDocument,
+  // allLinksOfSelectedDocument,
+  // linking,
 }) {
+  // const documentLinks =
+  //   allLinksOfSelectedDocument.find((doc) => doc.document.id === document.id)
+  //     ?.links || [];
+
+  // const linkInitials = documentLinks.map((link) => {
+  //   switch (link.linkType) {
+  //     case "PREVISION":
+  //       return "P";
+  //     case "DIRECT_CONSEQUENCE":
+  //       return "DC";
+  //     case "COLLATERAL_CONSEQUENCE":
+  //       return "CC";
+  //     case "UPDATE":
+  //       return "U";
+  //     default:
+  //       return "";
+  //   }
+  // });
   return (
     <Table hover responsive>
       <thead>
@@ -366,9 +318,7 @@ function DocumentSnippetTableComponent({
               transition: !isLinkedDocument(document)
                 ? "transform 0.2s"
                 : "none",
-              backgroundColor: isLinkedDocument(document)
-                ? "#AAA598"
-                : "transparent",
+              border: isLinkedDocument(document) ? "4px solid #AAA598" : "none",
             }}
             onMouseEnter={(e) => {
               if (!isLinkedDocument(document)) {
@@ -404,7 +354,11 @@ function DocumentSnippetTableComponent({
                   : "DD/MM/YYYY"
               )}
             </td>
-            {/* <td>{document.type}</td> */}
+            {/* {linking && linkInitials.length > 0 ? (
+              <td>{linkInitials.join(", ")}</td>
+            ) : (
+              ""
+            )} */}
           </tr>
         ))}
       </tbody>
@@ -416,6 +370,8 @@ DocumentSnippetTableComponent.propTypes = {
   documents: PropTypes.array.isRequired,
   onSelect: PropTypes.func.isRequired,
   isLinkedDocument: PropTypes.func.isRequired,
+  allLinksOfSelectedDocument: PropTypes.array.isRequired,
+  linking: PropTypes.bool.isRequired,
 };
 
 const DocumentSnippetCardComponent = ({
