@@ -11,7 +11,6 @@ import {
   Spinner,
 } from "react-bootstrap";
 import "../App.scss";
-// import DocumentModal from "./DocumentModal";
 import API from "../API";
 import LinkModal from "./LinkModal";
 import FeedbackContext from "../contexts/FeedbackContext";
@@ -124,12 +123,6 @@ export default function ListDocuments({ shouldRefresh }) {
         selectedDocumentToLink?.id === document.id)
     );
   };
-
-  // const handleEditClick = (document) => {
-  //   setSelectedDocument(document);
-  //   setShowDescriptionModal(false); // Close the description modal
-  //   setShowFormModal(true); // Open the form modal
-  // };
 
   return (
     <Container fluid className="scrollable-list-documents">

@@ -46,7 +46,6 @@ export default function DocumentDescriptionComponent({
 
   const handleEditClick = () => {
     setEditDocument(true);
-    // onHide();
   };
 
   return (
@@ -131,7 +130,7 @@ function DocumentDescriptionFields({ document }) {
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {
-    if (document && document.id) {
+    if (document?.id) {
       API.getDocumentFiles(document.id)
         .then((files) => {
           setExistingFiles(files);
@@ -145,6 +144,16 @@ function DocumentDescriptionFields({ document }) {
       await API.downloadFile(id, name, extension);
     } catch (error) {
       setFeedbackFromError(error);
+    }
+  };
+
+  const formatIssuanceDate = (issuanceDate) => {
+    if (issuanceDate.length === 4) {
+      return dayjs(issuanceDate).format("YYYY");
+    } else if (issuanceDate.length === 7) {
+      return dayjs(issuanceDate).format("MM/YYYY");
+    } else {
+      return dayjs(issuanceDate).format("DD/MM/YYYY");
     }
   };
 
@@ -217,24 +226,18 @@ function DocumentDescriptionFields({ document }) {
             <div className="info-item">
               <label>Location:</label>
               <span>
-                {document.geolocation.latitude &&
-                document.geolocation.longitude ? (
-                  `${document.geolocation.latitude}, ${document.geolocation.longitude}`
-                ) : document.geolocation.municipality ? (
-                  `${document.geolocation.municipality}`
-                ) : (
-                  <OverlayTrigger
-                    placement="top"
-                    overlay={
-                      <Tooltip>
-                        This document hasn&apos;t been geolocated yet. Remember
-                        to add it.
-                      </Tooltip>
-                    }
-                  >
-                    <i className="bi bi-exclamation-triangle"></i>
-                  </OverlayTrigger>
-                )}
+                {formatIssuanceDate(document.issuanceDate)}
+                <OverlayTrigger
+                  placement="top"
+                  overlay={
+                    <Tooltip>
+                      This document hasn&apos;t been geolocated yet. Remember to
+                      add it.
+                    </Tooltip>
+                  }
+                >
+                  <i className="bi bi-exclamation-triangle"></i>
+                </OverlayTrigger>
               </span>
             </div>
           </div>
