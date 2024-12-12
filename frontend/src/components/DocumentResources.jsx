@@ -85,7 +85,6 @@ DocumentResources.propTypes = {
     resources: PropTypes.arrayOf(
         PropTypes.shape({
             name: PropTypes.string.isRequired,
-            url: PropTypes.string.isRequired,
         })
     ),
     onDelete: PropTypes.func,

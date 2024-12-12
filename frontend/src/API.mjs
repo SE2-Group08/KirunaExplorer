@@ -82,7 +82,7 @@ const uploadFiles = async (id, files, token) => {
       body: formData,
     })
   .then(handleInvalidResponse)
-    .then((response) => response.json());
+    .then((response) => response);
 };
 
 const deleteFile = async (fileId, token) => {
@@ -286,7 +286,7 @@ const updateDocument = async (documentId, nextDocument, token) => {
     body: JSON.stringify(nextDocument),
   }).then(handleInvalidResponse);
 
-  return await response.json();
+  return await response;
     } catch (error) {
         console.error("Error updating document:", error.message);
         throw error; // Propagate the error to be handled by the caller

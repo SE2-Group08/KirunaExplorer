@@ -155,19 +155,9 @@ export default function DocumentModal(props) {
             newErrors.stakeholders = "Stakeholders cannot be named 'other'.";
         }
 
-        const scalePatterns = [
-            "Text",
-            "Blueprint/Material effects",
-            /^[1-9]:[1-9][0-9]*$/,
-        ];
         if (
             typeof document.scale !== "string" ||
-            !document.scale.trim() ||
-            !scalePatterns.some((pattern) =>
-                typeof pattern === "string"
-                    ? pattern === document.scale
-                    : pattern.test(document.scale)
-            )
+            !document.scale.trim()
         ) {
             newErrors.scale =
                 "Scale is required and must match one of the defined patterns.";
@@ -284,6 +274,9 @@ export default function DocumentModal(props) {
 
                 if (filesToUpload.length > 0) {
                     try {
+                        console.log(newDocId)
+                        console.log(filesToUpload)
+                        console.log(props.authToken)
                         await API.uploadFiles(newDocId, filesToUpload, props.authToken);
                     } catch (error) {
                         console.error("Error uploading files:", error);
@@ -936,7 +929,7 @@ function DocumentFormComponent({
                     <Form.Group className="mb-3" controlId="formDocumentScale">
                         <Form.Label>Scale *</Form.Label>
                         <div className="divider"/>
-                        {allScales.length ? (
+                        {allScales ? (
                                 <Form.Control
                                     as="select"
                                     value={document.scale}
