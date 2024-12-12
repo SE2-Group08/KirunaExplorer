@@ -157,6 +157,16 @@ function DocumentDescriptionFields({ document }) {
     }
   };
 
+  const formatGeolocation = (geolocation) => {
+    if (geolocation.latitude && geolocation.longitude) {
+      return `${geolocation.latitude}, ${geolocation.longitude}`;
+    } else if (geolocation.municipality) {
+      return geolocation.municipality;
+    } else {
+      return null;
+    }
+  };
+
   return (
     <div className="modal-body-component">
       <Row>
@@ -218,11 +228,8 @@ function DocumentDescriptionFields({ document }) {
             <div className="info-item">
               <label>Location:</label>
               <span>
-                {document.geolocation.latitude &&
-                document.geolocation.longitude ? (
-                  `${document.geolocation.latitude}, ${document.geolocation.longitude}`
-                ) : document.geolocation.municipality ? (
-                  `${document.geolocation.municipality}`
+                {document.geolocation ? (
+                  formatGeolocation(document.geolocation)
                 ) : (
                   <OverlayTrigger
                     placement="top"

@@ -17,7 +17,6 @@ const uploadFiles = async (id, files) => {
   });
 
   const url = `${SERVER_URL}/documents/${id}/files`;
-  console.log("Uploading file to URL:", url);
 
   const response = await fetch(url, {
     method: "POST",
@@ -107,7 +106,6 @@ const updateLink = async (documentId, linkId, updatedLink) => {
 
 // Delete a link for a document
 const deleteLink = async (linkId) => {
-  console.log("API DELETE LINK: ", linkId);
   return await fetch(`${SERVER_URL}/links/${linkId}`, {
     method: "DELETE",
   }).then(handleInvalidResponse);
@@ -166,9 +164,7 @@ const addDocument = async (document) => {
       return null;
     }
 
-    console.log("Location header:", location);
     const newDocId = location.split("/").pop(); // Estrarre l'ID dal percorso
-    console.log("Extracted ID:", newDocId);
 
     return newDocId;
   } catch (error) {

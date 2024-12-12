@@ -359,14 +359,16 @@ export default function DocumentFormComponent({ document, show, onHide }) {
             existingFiles={existingFiles}
             handleDeleteExistingFile={handleDeleteExistingFile}
           />
-          <Button
-            className="mt-4"
-            title="submit"
-            variant="success"
-            onClick={handleSubmit}
-          >
-            <i className="bi bi-check2"></i>
-          </Button>
+          <div className="d-flex justify-content-end">
+            <Button
+              className="mt-4"
+              title="submit"
+              variant="success"
+              onClick={handleSubmit}
+            >
+              <i className="bi bi-check2"></i>
+            </Button>
+          </div>
         </Form>
       </Modal.Body>
     </Modal>
@@ -1070,7 +1072,6 @@ function UploadFilesComponent({
                 <h6>Selected files:</h6>
                 <ListGroup variant="flush">
                   {files.map((file, index) => (
-                    console.log(file),
                     <ListGroup.Item
                       key={index}
                       className="d-flex justify-content-between align-items-center"
