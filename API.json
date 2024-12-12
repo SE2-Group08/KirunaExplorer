@@ -373,10 +373,127 @@
         "required": [
           "value"
         ]
+      },
+      "File": {
+        "title": "File",
+        "type": "string",
+        "format": "binary",
+        "description": "The binary content of the file"
+      },
+      "FileSnippet": {
+        "title": "FileSnippet",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fileId": {
+            "type": "integer",
+            "description": "The unique identifier of the file"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "The name of the file",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "The size of the file in bytes"
+          }
+        },
+        "required": [
+          "fileId",
+          "fileName"
+        ]
       }
     }
   },
   "paths": {
+    "/api/v1/documents/map": {
+      "get": {
+        "summary": "Get the info for the map",
+        "tags": [
+          "map"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "documentSnippet": {
+                        "$ref": "#/components/schemas/documentSnippet"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/diagram": {
+      "get": {
+        "summary": "Get the info for the diagram",
+        "tags": [
+          "diagram"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "documentSnippet": {
+                        "$ref": "#/components/schemas/documentSnippet"
+                      },
+                      "links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "linkId": {
+                              "type": "integer",
+                              "description": "The id link"
+                            },
+                            "linkType": {
+                              "type": "string",
+                              "description": "The type of the link",
+                              "enum": [
+                                "Direct consequence",
+                                "Collateral consequence",
+                                "Projection",
+                                "Update"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/documents": {
       "get": {
         "summary": "Get all documents",
@@ -724,7 +841,7 @@
         }
       }
     },
-    "api/v1/files/{fileId}": {
+    "/api/v1/files/{fileId}": {
       "parameters": [
         {
           "name": "fileId",
