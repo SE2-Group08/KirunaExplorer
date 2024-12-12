@@ -2,6 +2,8 @@ package com.kirunaexplorer.app.exception;
 
 import com.kirunaexplorer.app.config.FileUploadProperties;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,9 +21,11 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     private final FileUploadProperties fileUploadProperties;
+    private final MessageSource messageSource;
 
-    public GlobalExceptionHandler(FileUploadProperties fileUploadProperties) {
+    public GlobalExceptionHandler(FileUploadProperties fileUploadProperties, MessageSource messageSource) {
         this.fileUploadProperties = fileUploadProperties;
+        this.messageSource = messageSource;
     }
 
     // Handle Resource Not Found (404)
@@ -110,7 +114,7 @@ public class GlobalExceptionHandler {
         String errorMessage;
         switch (ex.getName()) {
             case "pageNo":
-                errorMessage = "Invalid value for parameter 'pageNo': " + ex.getValue() + ". It must be an integer bigger than or equal to 0.";
+                errorMessage = messageSource.getMessage("error.pageNo.invalid", new Object[]{ex.getValue()}, LocaleContextHolder.getLocale());
                 break;
             default:
                 errorMessage = ex.getMessage();

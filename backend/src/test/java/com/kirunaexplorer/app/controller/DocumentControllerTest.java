@@ -50,10 +50,7 @@ class DocumentControllerTest {
     @Nested
     class GetDocumentsByPageNumberTests {
 
-        private final int pageNo = 0;
-        private final int negativePageNo = -1;
-        private final String nonIntegerPageNo = "abc";
-        private List<DocumentBriefPageResponseDTO> documents = List.of(new DocumentBriefPageResponseDTO(
+        private final List<DocumentBriefPageResponseDTO> documents = List.of(new DocumentBriefPageResponseDTO(
             1,
             0,
             2,
@@ -76,21 +73,28 @@ class DocumentControllerTest {
             ))
         ));
 
+
         /**
-         * Test for successful retrieval of documents by page number.
-         * This test verifies that the `getDocumentsByPageNumber` method in the `DocumentController`
-         * returns a response with status code 200 (OK) and the expected list of documents.
+         * Test for successfully retrieving documents by page number.
+         * This test verifies that when a valid page number is provided,
+         * the response status is `200 OK` and the response body contains
+         * the expected documents.
+         *
+         * @throws Exception if an error occurs during the request
          */
         @Test
-        void testGetDocumentsByPageNumber_successful() {
-            when(documentService.getDocumentsByPageNumber(pageNo)).thenReturn(documents);
+        void testGetDocumentsByPageNumber_successful() throws Exception {
+            int validPageNo = 0;
 
-            ResponseEntity<List<DocumentBriefPageResponseDTO>> response = documentController.getDocumentsByPageNumber(pageNo);
+            when(documentService.getDocumentsByPageNumber(validPageNo)).thenReturn(documents);
 
-            assertNotNull(response, "The response should not be null");
-            assertEquals(HttpStatus.OK, response.getStatusCode(), "The status code should be OK - 200");
-            assertEquals(documents, response.getBody(), "The response body should match the documents");
-            assertEquals(documents.get(0).documentSnippets().size(), Objects.requireNonNull(response.getBody()).get(0).totalItems(), "The response body should have 2 elements");
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/documents")
+                    .param("pageNo", String.valueOf(validPageNo)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].currentPage").value(validPageNo))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].totalItems").value(documents.get(0).documentSnippets().size()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].documentSnippets[0].id").value(documents.get(0).documentSnippets().get(0).id()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].documentSnippets[1].id").value(documents.get(0).documentSnippets().get(1).id()));
         }
 
         /**
@@ -104,6 +108,7 @@ class DocumentControllerTest {
         void testGetDocumentsByPageNumber_negativePageNo() throws Exception {
             String errorMessage = messageSource.getMessage("error.pageNo.min", null, LocaleContextHolder.getLocale());
 
+            int negativePageNo = -1;
             mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/documents")
                     .param("pageNo", String.valueOf(negativePageNo)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -118,9 +123,31 @@ class DocumentControllerTest {
          */
         @Test
         void testGetDocumentsByPageNumber_nonIntegerAsPageNo() throws Exception {
+            String nonIntegerPageNo = "abc";
+            String errorMessage = messageSource.getMessage("error.pageNo.invalid", new Object[]{nonIntegerPageNo}, LocaleContextHolder.getLocale());
+
             mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/documents")
                     .param("pageNo", nonIntegerPageNo))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
+        }
+
+        /**
+         * Test for handling the case when the page number is not provided in the `getDocumentsByPageNumber` method.
+         * This test verifies that when the page number is not provided, the response status is `200 OK`
+         * and the response body contains the expected documents for the default page number (0).
+         *
+         * @throws Exception if an error occurs during the request
+         */
+        @Test
+        void testGetDocumentsByPageNumber_pageNoNotProvided() throws Exception {
+            when(documentService.getDocumentsByPageNumber(0)).thenReturn(documents);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/documents"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].totalItems").value(documents.get(0).documentSnippets().size()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].documentSnippets[0].id").value(documents.get(0).documentSnippets().get(0).id()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].documentSnippets[1].id").value(documents.get(0).documentSnippets().get(1).id()));
         }
     }
 
@@ -197,49 +224,15 @@ class DocumentControllerTest {
     @Nested
     class CreateDocumentTests {
 
-//        @Test
-//        void testCreateDocument_successful() {
-//            DocumentRequestDTO documentRequest = new DocumentRequestDTO(null, "title", List.of("stakeholder"), "scale", "2023-01-01", "type", 0, "en", 10, null, "description");
-//            Long documentId = 1L;
-//            when(documentService.createDocument(documentRequest)).thenReturn(documentId);
-//
-//            ResponseEntity<Void> response = documentController.createDocument(documentRequest);
-//
-//            assertNotNull(response, "The response should not be null");
-//            assertEquals(HttpStatus.CREATED, response.getStatusCode(), "The status code should be CREATED");
-//            assertNotNull(response.getHeaders().getLocation(), "The location header should not be null");
-//        }
     }
 
     @Nested
     class UpdateDocumentTests {
 
-//        @Test
-//        void testUpdateDocument_successful() {
-//            DocumentRequestDTO documentRequest = new DocumentRequestDTO(1L, "title", List.of("stakeholder"), "scale", "2023-01-01", "type", 0, "en", 10, null, "description");
-//
-//            ResponseEntity<Void> response = documentController.updateDocument(documentRequest);
-//
-//            verify(documentService, times(1)).updateDocument(documentRequest);
-//            assertNotNull(response, "The response should not be null");
-//            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode(), "The status code should be NO_CONTENT");
-//        }
     }
 
     @Nested
     class SearchDocumentsTests {
 
-//        @Test
-//        void testSearchDocuments_successful() {
-//            String keyword = "keyword";
-//            String type = "type";
-//            List<DocumentBriefResponseDTO> documents = List.of(new DocumentBriefResponseDTO());
-//            when(documentService.searchDocuments(keyword, type)).thenReturn(documents);
-//
-//            List<DocumentBriefResponseDTO> response = documentController.searchDocuments(keyword, type);
-//
-//            assertNotNull(response, "The response should not be null");
-//            assertEquals(documents, response, "The response should match the documents");
-//        }
     }
 }
