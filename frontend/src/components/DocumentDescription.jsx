@@ -176,15 +176,7 @@ function DocumentDescriptionFields({ document }) {
             <div className="divider"></div>
             <div className="info-item">
               <label>Issuance Date:</label>
-              <span>
-                {dayjs(document.issuanceDate).format(
-                  document.issuanceDate.length === 4
-                    ? "YYYY"
-                    : document.issuanceDate.length === 7
-                    ? "MM/YYYY"
-                    : "DD/MM/YYYY"
-                )}
-              </span>
+              <span>{formatIssuanceDate(document.issuanceDate) || "-"}</span>
             </div>
             <div className="divider"></div>
             <div className="info-item">
@@ -226,18 +218,24 @@ function DocumentDescriptionFields({ document }) {
             <div className="info-item">
               <label>Location:</label>
               <span>
-                {formatIssuanceDate(document.issuanceDate)}
-                <OverlayTrigger
-                  placement="top"
-                  overlay={
-                    <Tooltip>
-                      This document hasn&apos;t been geolocated yet. Remember to
-                      add it.
-                    </Tooltip>
-                  }
-                >
-                  <i className="bi bi-exclamation-triangle"></i>
-                </OverlayTrigger>
+                {document.geolocation.latitude &&
+                document.geolocation.longitude ? (
+                  `${document.geolocation.latitude}, ${document.geolocation.longitude}`
+                ) : document.geolocation.municipality ? (
+                  `${document.geolocation.municipality}`
+                ) : (
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={
+                      <Tooltip>
+                        This document hasn&apos;t been geolocated yet. Remember
+                        to add it.
+                      </Tooltip>
+                    }
+                  >
+                    <i className="bi bi-exclamation-triangle"></i>
+                  </OverlayTrigger>
+                )}
               </span>
             </div>
           </div>

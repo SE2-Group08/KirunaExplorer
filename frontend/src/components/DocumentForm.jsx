@@ -232,7 +232,6 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       municipality: formDocument.geolocation.municipality || null,
     };
 
-    // const validationErrors = validateForm(combinedIssuanceDate);
     const validationErrors = validateForm(
       formDocument,
       combinedIssuanceDate,
@@ -564,8 +563,8 @@ function DocumentFormFields({
                 (stakeholder) =>
                   !allStakeholders.map((s) => s.name).includes(stakeholder)
               )
-              .map((stakeholder, index) => (
-                <div key={index} className="d-flex mb-2">
+              .map((stakeholder) => (
+                <div key={stakeholder.id} className="d-flex mb-2">
                   <Form.Control
                     type="text"
                     value={stakeholder}
@@ -1071,6 +1070,7 @@ function UploadFilesComponent({
                 <h6>Selected files:</h6>
                 <ListGroup variant="flush">
                   {files.map((file, index) => (
+                    console.log(file),
                     <ListGroup.Item
                       key={index}
                       className="d-flex justify-content-between align-items-center"

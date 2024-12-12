@@ -363,8 +363,8 @@ DocumentSnippetTableComponent.propTypes = {
   documents: PropTypes.array.isRequired,
   onSelect: PropTypes.func.isRequired,
   isLinkedDocument: PropTypes.func.isRequired,
-  allLinksOfSelectedDocument: PropTypes.array.isRequired,
-  linking: PropTypes.bool.isRequired,
+  // allLinksOfSelectedDocument: PropTypes.array.isRequired,
+  // linking: PropTypes.bool.isRequired,
 };
 
 const DocumentSnippetCardComponent = ({
