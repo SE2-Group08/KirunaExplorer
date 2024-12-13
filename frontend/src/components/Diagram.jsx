@@ -6,6 +6,8 @@ import { getIconUrlForDocument } from "../utils/iconMapping";
 const FullPageChart = () => {
   const svgRef = useRef();
   const [documentsToShow, setDocumentsToShow] = useState([]);
+  const [zoomLevel, setZoomLevel] = useState(1);
+
 
   useEffect(() => {
     const margin = { top: 50, right: 50, bottom: 50, left: 100 };
@@ -17,7 +19,7 @@ const FullPageChart = () => {
     const blueprints = ["Blueprints/effects", ""];
 
     const fixedYDomain = [...nonNumericDomain, ...numericDomain, ...blueprints];
-
+  
     // Funzione per determinare il colore della linea in base al tipo di collegamento
     const getLinkColor = (linkType) => {
       return "black";
@@ -170,7 +172,7 @@ const FullPageChart = () => {
           .html(`<strong>${d.title}</strong><p>Scale: ${d.scale}</p>`) // Mostra il titolo del documento
           .style("left", `${event.pageX + 10}px`)
           .style("top", `${event.pageY + 10}px`);
-        d3.select(this).attr("opacity", 0.7); // Modifica l'opacità dell'icona
+        d3.select(this).attr("opacity", 0.9); // Modifica l'opacità dell'icona
       })
       .on("mousemove", (event) => {
         tooltip
@@ -180,9 +182,7 @@ const FullPageChart = () => {
       .on("mouseout", function () {
         tooltip.style("opacity", 0); // Nascondi il tooltip
         d3.select(this).attr("opacity", 1); // Ripristina l'opacità dell'icona
-      });
-
-
+      })
 
     // Disegna le linee curve per i collegamenti tra i documenti
     const drawnLinks = new Set(); // Set per memorizzare le coppie di documenti già considerate
@@ -225,9 +225,9 @@ const FullPageChart = () => {
         }
       });
     });
-    
 
-
+    // Alza le icone dei documenti sopra le linee
+    svg.selectAll(".document-icon").raise();
 
     // Cleanup
     return () => {
@@ -242,7 +242,7 @@ const FullPageChart = () => {
   }, []);
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div>
       <svg ref={svgRef}></svg>
     </div>
   );
