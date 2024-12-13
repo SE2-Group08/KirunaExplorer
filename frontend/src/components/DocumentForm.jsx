@@ -8,6 +8,7 @@ import {
   Button,
   Spinner,
   ListGroup,
+  InputGroup,
 } from "react-bootstrap";
 import {
   MapContainer,
@@ -428,6 +429,9 @@ function DocumentFormFields({
         setAllScales(scales);
       })
       .catch((e) => setFeedbackFromError(e));
+  }, [setFeedbackFromError]);
+
+  useEffect(() => {
     // Set marker position if geolocation is available
     if (document.geolocation.latitude && document.geolocation.longitude) {
       setMarkerPosition([
@@ -439,12 +443,17 @@ function DocumentFormFields({
     if (document.language && !languageOptions.includes(document.language)) {
       setLanguageOptions([...languageOptions, document.language]);
     }
+
+    // if (document.scale && !allScales.some((s) => s.name === document.scale)) {
+    //   setAllScales([...allScales, { id: Date.now(), name: document.scale }]);
+    // }
   }, [
     document.geolocation.latitude,
     document.geolocation.longitude,
     document.language,
+    // document.scale,
     languageOptions,
-    setFeedbackFromError,
+    // allScales,
   ]);
 
   const handleDayChange = (e) => {
@@ -632,22 +641,25 @@ function DocumentFormFields({
             <Form.Label>Scale *</Form.Label>
             <div className="divider" />
             {allScales ? (
-              <Form.Control
-                as="select"
-                value={document.scale}
-                onChange={(e) => handleChange("scale", e.target.value)}
-                isInvalid={!!errors.scale}
-                required
-                ref={refs.scaleRef}
-              >
-                <option value="">Select scale</option>
-                {allScales.map((scaleOption) => (
-                  <option key={scaleOption.id} value={scaleOption.name}>
-                    {scaleOption.name}
-                  </option>
-                ))}
-                <option value="Other">Other</option>
-              </Form.Control>
+              <>
+                <Form.Control
+                  as="select"
+                  value={document.scale}
+                  onChange={(e) => handleChange("scale", e.target.value)}
+                  isInvalid={!!errors.scale}
+                  required
+                  ref={refs.scaleRef}
+                >
+                  <option value="">Select scale</option>
+                  {allScales.map((scaleOption) => (
+                    <option key={scaleOption.id} value={scaleOption.name}>
+                      {scaleOption.name}
+                    </option>
+                  ))}
+                  <option value="Architectural">Architectural</option>
+                  <option value="Other">Other</option>
+                </Form.Control>
+              </>
             ) : (
               <Spinner animation="border" role="status" className="mx-auto" />
             )}
@@ -663,19 +675,55 @@ function DocumentFormFields({
                 />
                 <Button
                   variant="primary"
+                  disabled={
+                    allScales.some((s) => s.name === document.customScale) ||
+                    allScales.some(
+                      (s) => s.name === `1:${document.customScale}`
+                    )
+                  }
                   onClick={() => {
-                    if (
-                      document.customScale &&
-                      !allScales.some((s) => s.name === document.customScale)
-                    ) {
-                      allScales.push({
-                        id: Date.now(),
-                        name: document.customScale,
-                      });
-                      handleChange("scale", document.customScale);
-                    }
+                    setAllScales([
+                      ...allScales,
+                      { id: Date.now(), name: document.customScale },
+                    ]);
+                    handleChange("scale", document.customScale);
                   }}
-                  title="Add custom scale"
+                  title="Add a custom scale"
+                >
+                  <i className="bi bi-plus-square"></i>
+                </Button>
+              </div>
+            )}
+            {document.scale === "Architectural" && (
+              <div className="d-flex mt-2">
+                <InputGroup className="me-2">
+                  <InputGroup.Text>1 :</InputGroup.Text>
+                  <Form.Control
+                    type="number"
+                    value={document.customScale}
+                    onChange={(e) =>
+                      handleChange("customScale", e.target.value)
+                    }
+                    isInvalid={!!errors.scale}
+                    placeholder="Enter the scale value"
+                  />
+                </InputGroup>
+                <Button
+                  variant="primary"
+                  disabled={
+                    allScales.some((s) => s.name === document.customScale) ||
+                    allScales.some(
+                      (s) => s.name === `1:${document.customScale}`
+                    )
+                  }
+                  onClick={() => {
+                    setAllScales([
+                      ...allScales,
+                      { id: Date.now(), name: `1:${document.customScale}` },
+                    ]);
+                    handleChange("scale", `1:${document.customScale}`);
+                  }}
+                  title="Add an architectural scale"
                 >
                   <i className="bi bi-plus-square"></i>
                 </Button>
