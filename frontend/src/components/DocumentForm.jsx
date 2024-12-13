@@ -391,6 +391,10 @@ function DocumentFormFields({
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
   const [allScales, setAllScales] = useState([]);
+  const [languageOptions, setLanguageOptions] = useState([
+    "Swedish",
+    "English",
+  ]);
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const [markerPosition, setMarkerPosition] = useState([
     document.geolocation.latitude
@@ -431,9 +435,15 @@ function DocumentFormFields({
         document.geolocation.longitude,
       ]);
     }
+
+    if (document.language && !languageOptions.includes(document.language)) {
+      setLanguageOptions([...languageOptions, document.language]);
+    }
   }, [
     document.geolocation.latitude,
     document.geolocation.longitude,
+    document.language,
+    languageOptions,
     setFeedbackFromError,
   ]);
 
@@ -506,6 +516,7 @@ function DocumentFormFields({
       setMarkerPosition([document.geolocation.latitude, lng]);
     }
   };
+
   return (
     <>
       {/* TITLE*/}
@@ -794,13 +805,52 @@ function DocumentFormFields({
             <Form.Label>Language</Form.Label>
             <div className="divider" />
             <Form.Control
-              type="text"
+              as="select"
               value={document.language}
               onChange={(e) => handleChange("language", e.target.value)}
-              placeholder="English"
               isInvalid={!!errors.language}
               ref={refs.languageRef}
-            />
+            >
+              <option value="">Select language</option>
+              {languageOptions.map((languageOption) => (
+                <option key={languageOption} value={languageOption}>
+                  {languageOption}
+                </option>
+              ))}
+              <option value="Other">Other</option>
+            </Form.Control>
+            {document.language === "Other" && (
+              <div className="d-flex mt-2">
+                <Form.Control
+                  type="text"
+                  placeholder="Enter custom language"
+                  value={document.customLanguage || ""}
+                  onChange={(e) =>
+                    handleChange("customLanguage", e.target.value)
+                  }
+                  isInvalid={!!errors.language}
+                  className="me-2"
+                />
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    if (
+                      document.customLanguage &&
+                      !languageOptions.includes(document.customLanguage)
+                    ) {
+                      setLanguageOptions([
+                        ...languageOptions,
+                        document.customLanguage,
+                      ]);
+                      handleChange("language", document.customLanguage);
+                    }
+                  }}
+                  title="Add custom language"
+                >
+                  <i className="bi bi-plus-square"></i>
+                </Button>
+              </div>
+            )}
             <Form.Control.Feedback type="invalid">
               {errors.language}
             </Form.Control.Feedback>
