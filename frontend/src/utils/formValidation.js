@@ -111,6 +111,9 @@ const validateTitle = (title) => {
   };
   
   const validateLanguage = (language) => {
+    if (/\d/.test(language)) {
+      return "Language must not contain numbers.";
+    }
     if (language && (language.length < 2 || language.length > 64)) {
       return "Language must be between 2 and 64 characters.";
     }
