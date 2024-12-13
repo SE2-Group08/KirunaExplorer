@@ -428,7 +428,6 @@ function DocumentFormFields({
     // Fetch all scales
     API.getAllScales()
       .then((scales) => {
-        console.log(scales)
         if (document.scale && !scales.some((s) => s.name === document.scale)) {
           setScaleOptions([...scales, { id: Date.now(), name: document.scale }]);
         } else {
