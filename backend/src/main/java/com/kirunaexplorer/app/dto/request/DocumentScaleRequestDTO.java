@@ -2,16 +2,14 @@ package com.kirunaexplorer.app.dto.request;
 
 import com.kirunaexplorer.app.model.DocumentScale;
 import com.kirunaexplorer.app.validation.groups.document_scale.PostDocumentScale;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record DocumentScaleRequestDTO(
-    @Null(groups = {PostDocumentScale.class})
+    @Null(groups = {PostDocumentScale.class}, message = "id must be not null")
     Long id,
 
-    @NotNull
-    @Size(min = 2, max = 64)
+    @NotNull(message = "scale must be not null")
+    @Size(min = 2, max = 64, message = "invalid size for scale")
     String scale
 ) {
 
