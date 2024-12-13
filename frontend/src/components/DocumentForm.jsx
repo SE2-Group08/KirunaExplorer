@@ -41,6 +41,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       title: "",
       stakeholders: [],
       scale: "",
+      customScale: "",
       issuanceDate: "",
       day: "",
       month: "",
@@ -80,6 +81,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
         title: document.title || "",
         stakeholders: document.stakeholders || [],
         scale: document.scale || "",
+        customScale: "",
         issuanceDate: document.issuanceDate || "",
         day: document.issuanceDate
           ? document.issuanceDate.split("-")[2] || ""
@@ -391,7 +393,7 @@ function DocumentFormFields({
 }) {
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
-  const [allScales, setAllScales] = useState([]);
+  const [scaleOptions, setScaleOptions] = useState([]);
   const [languageOptions, setLanguageOptions] = useState([
     "Swedish",
     "English",
@@ -426,7 +428,12 @@ function DocumentFormFields({
     // Fetch all scales
     API.getAllScales()
       .then((scales) => {
-        setAllScales(scales);
+        console.log(scales)
+        if (document.scale && !scales.some((s) => s.name === document.scale)) {
+          setScaleOptions([...scales, { id: Date.now(), name: document.scale }]);
+        } else {
+          setScaleOptions(scales);
+        }
       })
       .catch((e) => setFeedbackFromError(e));
   }, [setFeedbackFromError]);
@@ -443,17 +450,11 @@ function DocumentFormFields({
     if (document.language && !languageOptions.includes(document.language)) {
       setLanguageOptions([...languageOptions, document.language]);
     }
-
-    // if (document.scale && !allScales.some((s) => s.name === document.scale)) {
-    //   setAllScales([...allScales, { id: Date.now(), name: document.scale }]);
-    // }
   }, [
     document.geolocation.latitude,
     document.geolocation.longitude,
     document.language,
-    // document.scale,
     languageOptions,
-    // allScales,
   ]);
 
   const handleDayChange = (e) => {
@@ -640,7 +641,7 @@ function DocumentFormFields({
           <Form.Group className="mb-3" controlId="formDocumentScale">
             <Form.Label>Scale *</Form.Label>
             <div className="divider" />
-            {allScales ? (
+            {scaleOptions ? (
               <>
                 <Form.Control
                   as="select"
@@ -651,7 +652,7 @@ function DocumentFormFields({
                   ref={refs.scaleRef}
                 >
                   <option value="">Select scale</option>
-                  {allScales.map((scaleOption) => (
+                  {scaleOptions.map((scaleOption) => (
                     <option key={scaleOption.id} value={scaleOption.name}>
                       {scaleOption.name}
                     </option>
@@ -676,14 +677,14 @@ function DocumentFormFields({
                 <Button
                   variant="primary"
                   disabled={
-                    allScales.some((s) => s.name === document.customScale) ||
-                    allScales.some(
+                    scaleOptions.some((s) => s.name === document.customScale) ||
+                    scaleOptions.some(
                       (s) => s.name === `1:${document.customScale}`
                     )
                   }
                   onClick={() => {
-                    setAllScales([
-                      ...allScales,
+                    setScaleOptions([
+                      ...scaleOptions,
                       { id: Date.now(), name: document.customScale },
                     ]);
                     handleChange("scale", document.customScale);
@@ -711,14 +712,14 @@ function DocumentFormFields({
                 <Button
                   variant="primary"
                   disabled={
-                    allScales.some((s) => s.name === document.customScale) ||
-                    allScales.some(
+                    scaleOptions.some((s) => s.name === document.customScale) ||
+                    scaleOptions.some(
                       (s) => s.name === `1:${document.customScale}`
                     )
                   }
                   onClick={() => {
-                    setAllScales([
-                      ...allScales,
+                    setScaleOptions([
+                      ...scaleOptions,
                       { id: Date.now(), name: `1:${document.customScale}` },
                     ]);
                     handleChange("scale", `1:${document.customScale}`);
@@ -826,10 +827,10 @@ function DocumentFormFields({
                         (t) => t.name === document.customType
                       )
                     ) {
-                      allDocumentTypes.push({
-                        id: Date.now(),
-                        name: document.customType,
-                      });
+                        setAllDocumentTypes((prevTypes) => [
+                        ...prevTypes,
+                        { id: Date.now(), name: document.customType },
+                        ]);
                       handleChange("type", document.customType);
                     }
                   }}
