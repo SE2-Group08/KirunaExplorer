@@ -480,7 +480,7 @@ function DocumentFormFields({
     handleChange("geolocation", {
       latitude: lat,
       longitude: lng,
-      municipality: null,
+      municipality: "",
     });
   };
 
@@ -493,26 +493,26 @@ function DocumentFormFields({
 
   const handleLatitudeChange = (e) => {
     const value = e.target.value;
-    const lat = value === "" ? null : parseFloat(value);
+    const lat = value === "" ? "" : parseFloat(value);
     handleChange("geolocation", {
       ...document.geolocation,
       latitude: lat,
-      municipality: null,
+      municipality: "",
     });
-    if (lat != null && document.geolocation.longitude != null) {
+    if (lat != "" && document.geolocation.longitude != "") {
       setMarkerPosition([lat, document.geolocation.longitude]);
     }
   };
 
   const handleLongitudeChange = (e) => {
     const value = e.target.value;
-    const lng = value === "" ? null : parseFloat(value);
+    const lng = value === "" ? "" : parseFloat(value);
     handleChange("geolocation", {
       ...document.geolocation,
       longitude: lng,
-      municipality: null,
+      municipality: "",
     });
-    if (document.geolocation.latitude != null && lng != null) {
+    if (document.geolocation.latitude != "" && lng != "") {
       setMarkerPosition([document.geolocation.latitude, lng]);
     }
   };
@@ -576,8 +576,8 @@ function DocumentFormFields({
                 (stakeholder) =>
                   !allStakeholders.map((s) => s.name).includes(stakeholder)
               )
-              .map((stakeholder) => (
-                <div key={stakeholder.id} className="d-flex mb-2">
+              .map((stakeholder, index) => (
+                <div key={index} className="d-flex mb-2">
                   <Form.Control
                     type="text"
                     value={stakeholder}
@@ -886,7 +886,7 @@ function DocumentFormFields({
               min={67.3564329180828}
               max={69.05958911620179}
               step={0.00001}
-              value={document.geolocation.latitude}
+              value={document.geolocation.latitude || ""}
               onChange={handleLatitudeChange}
               id="formDocumentGeolocationLatitude"
               disabled={
@@ -902,7 +902,7 @@ function DocumentFormFields({
               min={67.3564329180828}
               max={69.05958911620179}
               step={0.00001}
-              value={document.geolocation.latitude}
+              value={document.geolocation.latitude || ""}
               onChange={handleLatitudeChange}
               disabled={
                 document.geolocation.municipality === "Entire municipality"
@@ -933,7 +933,7 @@ function DocumentFormFields({
               min={17.89900836116174}
               max={23.28669305841499}
               step={0.00001}
-              value={document.geolocation.longitude}
+              value={document.geolocation.longitude || ""}
               onChange={handleLongitudeChange}
               disabled={
                 document.geolocation.municipality === "Entire municipality"
@@ -951,7 +951,7 @@ function DocumentFormFields({
                 <Marker position={markerPosition} />
                 {document.geolocation.municipality === "Entire municipality" ? (
                   <Polygon positions={kirunaBorderCoordinates} />
-                ) : null}
+                ) : undefined}
                 <MapClickHandler />
               </MapContainer>
             </div>
