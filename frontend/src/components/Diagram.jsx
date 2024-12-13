@@ -12,14 +12,32 @@ const FullPageChart = () => {
     const width = window.innerWidth - margin.left - margin.right;
     const height = window.innerHeight * 0.85 - margin.top - margin.bottom;
 
-    // Dividi il dominio Y in sezioni
     const nonNumericDomain = [" ", "Text", "Concept"];
     const numericDomain = ["1:100000", "1:10000", "1:5000", "1:1000"];
     const blueprints = ["Blueprints/effects", ""];
 
     const fixedYDomain = [...nonNumericDomain, ...numericDomain, ...blueprints];
 
-    // Funzione per normalizzare le scale
+    // Funzione per determinare il colore della linea in base al tipo di collegamento
+    const getLinkColor = (linkType) => {
+      return "black";
+    };
+
+    const getLinkDashArray = (linkType) => {
+      switch (linkType) {
+        case "DIRECT_CONSEQUENCE":
+          return "none"; // Linea continua
+        case "COLLATERAL_CONSEQUENCE":
+          return "5,5"; // Linea tratteggiata
+        case "PREVISION":
+          return "1,5"; // Linea puntinata
+        case "UPDATE": // Un altro tipo di link se necessario
+          return "10,5,1,5"; // Linea tratto-punto
+        default:
+          return "none"; // Linea continua di default
+      }
+    };
+
     const normalizeScale = (scale) => {
       if (scale === "Blueprint/Material effects") {
         return "Blueprints/effects";
@@ -27,7 +45,6 @@ const FullPageChart = () => {
       return scale;
     };
 
-    // Funzione per ottenere il valore numerico da una scala
     const parseNumericScale = (scale) => {
       const match = scale.match(/^1:(\d+)$/);
       return match ? parseInt(match[1]) : null;
@@ -44,13 +61,10 @@ const FullPageChart = () => {
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    const xAxis = d3.axisBottom(xScale)
-      .ticks(21)
-      .tickFormat(d3.format("d"));
+    const xAxis = d3.axisBottom(xScale).ticks(21).tickFormat(d3.format("d"));
     const yAxis = d3.axisLeft(yScale);
 
     svg.append("g").call(yAxis);
-
     svg
       .append("g")
       .attr("transform", `translate(0, ${height})`)
@@ -69,15 +83,26 @@ const FullPageChart = () => {
     svg
       .append("g")
       .attr("class", "grid grid-vertical")
-      .call(d3.axisBottom(xScale)
-        .ticks(21)
-        .tickSize(height)
-        .tickFormat(""))
+      .call(d3.axisBottom(xScale).ticks(21).tickSize(height).tickFormat(""))
       .selectAll(".tick line")
       .attr("stroke", "#ddd")
       .attr("stroke-dasharray", "4,4");
 
-    // Disegno dei documenti
+    // Tooltip container
+    const tooltip = d3
+    .select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("padding", "8px")
+    .style("background", "rgba(0, 0, 0, 0.8)")
+    .style("color", "white")
+    .style("border-radius", "4px")
+    .style("pointer-events", "none")
+    .style("font-size", "12px")
+    .style("height", "60px")
+
+    // Calcolare le posizioni dei documenti
+    const documentPositions = {};
     svg
       .selectAll(".document-icon")
       .data(documentsToShow)
@@ -88,72 +113,121 @@ const FullPageChart = () => {
         const year = parseInt(d.issuanceDate);
         const xStart = xScale(year);
         const xEnd = xScale(year + 1);
-        return xStart + Math.random() * (xEnd - xStart) - 15; // Posizionamento casuale nella colonna
+        const xPos = xStart + Math.random() * (xEnd - xStart) - 15;
+        documentPositions[d.id] = { x: xPos }; // Salva la posizione X
+        return xPos;
       })
       .attr("y", (d) => {
         const normalizedScale = normalizeScale(d.scale);
         const numericScale = parseNumericScale(normalizedScale);
-        
+
+        let yPos = yScale("Text") - 15; // Valore di default
+
         if (numericScale) {
-          let yStart = null, yEnd = null;
-      
-          // Caso speciale per la scala tra 1:1 e 1:1000
-          if (numericScale <= parseNumericScale("1:1000") && numericScale >= parseNumericScale("1:1")) {
-            yStart = yScale("Blueprints/effects");
-            yEnd = yScale("1:1000");
+          // Caso specifico per scale <= 1:1000
+          if (numericScale <= 1000 && numericScale >= 1) {
+            const yBlueprints = yScale("Blueprints/effects");
+            const y1000 = yScale("1:1000");
+            yPos = yBlueprints + Math.random() * (y1000 - yBlueprints) - 15;
           } else {
-            // Logica per le altre scale numeriche
+            // Calcola la posizione Y in base agli altri intervalli
             for (let i = 0; i < numericDomain.length - 1; i++) {
               const currentScale = parseNumericScale(numericDomain[i]);
               const nextScale = parseNumericScale(numericDomain[i + 1]);
-              
               if (
                 currentScale !== null &&
                 nextScale !== null &&
                 numericScale > nextScale &&
                 numericScale <= currentScale
               ) {
-                yStart = yScale(numericDomain[i + 1]);
-                yEnd = yScale(numericDomain[i]);
+                yPos =
+                  yScale(numericDomain[i + 1]) +
+                  Math.random() * (yScale(numericDomain[i]) - yScale(numericDomain[i + 1])) -
+                  15;
                 break;
               }
             }
           }
-      
-          if (yStart !== null && yEnd !== null) {
-            return yStart + Math.random() * (yEnd - yStart) - 15;
-          }
+        } else if (normalizedScale === "Blueprints/effects") {
+          // Caso specifico per scale "Blueprints/effects"
+          const yMin = yScale(""); // Assumendo "" sia il valore minimo Y
+          const yBlueprints = yScale("Blueprints/effects");
+          yPos = yMin + Math.random() * (yBlueprints - yMin) - 15;
+        } else {
+          // Fallback
+          yPos = yScale(normalizeScale(d.scale)) - 15;
         }
-      
-        // Per scale non numeriche
-        if (nonNumericDomain.includes(normalizedScale)) {
-          return yScale(normalizedScale) - 15;
-        }
-      
-        // Per blueprint (Blueprints/effects)
-        if (blueprints.includes(normalizedScale)) {
-          // Posizionamento casuale tra 0 (inizio) e il valore di "Blueprints/effects" (fine)
-          const startY = yScale(""); // punto di partenza
-          const endY = yScale("Blueprints/effects"); // punto di fine
-          // Genera un valore y casuale tra startY e endY
-          return startY + Math.random() * (endY - startY) - 15; // -15 per un offset, se necessario
-        }
-        
-      
-        // Default
-        return yScale("Text") - 15;
-      })      
-      
+
+        documentPositions[d.id].y = yPos; // Salva la posizione Y
+        return yPos;
+      })
       .attr("width", 30)
       .attr("height", 30)
       .attr("xlink:href", (d) => getIconUrlForDocument(d.type, d.stakeholders))
-      .attr("opacity", 1)
-      .on("mouseover", function () {
-        d3.select(this).attr("opacity", 0.7);
+      .on("mouseover", function (event, d) {
+        tooltip
+          .style("opacity", 1)
+          .html(`<strong>${d.title}</strong><p>Scale: ${d.scale}</p>`) // Mostra il titolo del documento
+          .style("left", `${event.pageX + 10}px`)
+          .style("top", `${event.pageY + 10}px`);
+        d3.select(this).attr("opacity", 0.7); // Modifica l'opacità dell'icona
+      })
+      .on("mousemove", (event) => {
+        tooltip
+          .style("left", `${event.pageX + 10}px`)
+          .style("top", `${event.pageY + 10}px`);
       })
       .on("mouseout", function () {
-        d3.select(this).attr("opacity", 1);
+        tooltip.style("opacity", 0); // Nascondi il tooltip
+        d3.select(this).attr("opacity", 1); // Ripristina l'opacità dell'icona
       });
+
+
+
+    // Disegna le linee curve per i collegamenti tra i documenti
+    const drawnLinks = new Set(); // Set per memorizzare le coppie di documenti già considerate
+    
+    documentsToShow.forEach((document) => {
+      document.links.forEach((link, index) => {
+        const targetDocument = documentsToShow.find((d) => d.id === link.documentId);
+        if (targetDocument) {
+          const linkType = link.linkType;
+    
+          // Genera un identificativo unico per la coppia di documenti e il tipo di link (es: "1-2-linkType")
+          const linkId = [document.id, targetDocument.id].sort().join("-") + `-${linkType}`;
+          
+          // Disegna la linea solo se questa coppia di documenti con questo tipo non è già stata processata
+          if (!drawnLinks.has(linkId)) {
+            drawnLinks.add(linkId); // Segna questa coppia e tipo come processati
+    
+            const startX = documentPositions[document.id].x + 15; // Aggiungi un offset per centrarsi sull'icona
+            const startY = documentPositions[document.id].y + 15;
+            const endX = documentPositions[targetDocument.id].x + 15;
+            const endY = documentPositions[targetDocument.id].y + 15;
+    
+            // Calcola la curvatura in base all'indice del link
+            const curveOffset = 40 * (index - Math.floor(document.links.length / 1.3)); // Valore di curvatura
+            const controlPointX = (startX + endX) / 2 + curveOffset;
+            const controlPointY = (startY + endY) / 2 - Math.abs(curveOffset) / 2; // Controlla la posizione dell'arco
+    
+            // Crea una curva con il path, applicando il tipo di linea
+            svg
+              .append("path")
+              .attr(
+                "d",
+                `M ${startX},${startY} Q ${controlPointX},${controlPointY} ${endX},${endY}`
+              )
+              .attr("fill", "none")
+              .attr("stroke", getLinkColor(linkType))
+              .attr("stroke-width", 2)
+              .attr("stroke-dasharray", getLinkDashArray(linkType)); // Usa il tipo di linea
+          }
+        }
+      });
+    });
+    
+
+
 
     // Cleanup
     return () => {

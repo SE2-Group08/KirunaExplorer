@@ -134,7 +134,6 @@ const getAllDocumentSnippetsWithLinks = async () => {
   const documents = await fetch(`${SERVER_URL}/documents/diagram`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
-    .then(mapAPISnippetsToSnippet);
     console.log("API DOCUMENTS: ", documents);
   return documents;
 };
