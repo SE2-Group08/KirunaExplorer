@@ -429,7 +429,10 @@ function DocumentFormFields({
     API.getAllScales()
       .then((scales) => {
         if (document.scale && !scales.some((s) => s.name === document.scale)) {
-          setScaleOptions([...scales, { id: Date.now(), name: document.scale }]);
+          setScaleOptions([
+            ...scales,
+            { id: Date.now(), name: document.scale },
+          ]);
         } else {
           setScaleOptions(scales);
         }
@@ -676,7 +679,7 @@ function DocumentFormFields({
                 <Button
                   variant="primary"
                   disabled={
-                    scaleOptions.some((s) => s.name === document.customScale) ||
+                    scaleOptions.some((s) => s.name.toLowerCase() === document.customScale.trim().toLowerCase()) ||
                     scaleOptions.some(
                       (s) => s.name === `1:${document.customScale}`
                     )
@@ -819,19 +822,16 @@ function DocumentFormFields({
                 />
                 <Button
                   variant="primary"
+                  disabled={
+                    document.customType &&
+                    allDocumentTypes.some((t) => t.name.toLowerCase() === document.customType.trim().toLowerCase())
+                  }
                   onClick={() => {
-                    if (
-                      document.customType &&
-                      !allDocumentTypes.some(
-                        (t) => t.name === document.customType
-                      )
-                    ) {
-                        setAllDocumentTypes((prevTypes) => [
-                        ...prevTypes,
-                        { id: Date.now(), name: document.customType },
-                        ]);
-                      handleChange("type", document.customType);
-                    }
+                    setAllDocumentTypes((prevTypes) => [
+                      ...prevTypes,
+                      { id: Date.now(), name: document.customType },
+                    ]);
+                    handleChange("type", document.customType);
                   }}
                   title="Add custom type"
                 >
