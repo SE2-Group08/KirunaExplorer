@@ -29,7 +29,7 @@ import getKirunaArea from "./KirunaArea.jsx";
 import { Document } from "../model/Document.mjs";
 import { validateForm } from "../utils/formValidation.js";
 
-export default function DocumentFormComponent({ document, show, onHide }) {
+export default function DocumentFormComponent({ document, show, onHide, authToken }) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [existingFiles, setExistingFiles] = useState([]);
   const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
@@ -200,7 +200,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const uploadFiles = async (docId, filesToUpload) => {
     if (filesToUpload.length > 0) {
       try {
-        await API.uploadFiles(docId, filesToUpload);
+        await API.uploadFiles(docId, filesToUpload, authToken);
       } catch (error) {
         setFeedbackFromError(error);
       }
@@ -211,7 +211,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     if (deletedExistingFiles.length > 0) {
       try {
         await Promise.all(
-          deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+          deletedExistingFiles.map((fileId) => API.deleteFile(fileId, authToken))
         );
       } catch (error) {
         setFeedbackFromError(error);
@@ -291,7 +291,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   };
 
   const handleSave = async (d) => {
-    API.updateDocument(d.id, d)
+    API.updateDocument(d.id, d, authToken)
       .then(() => setShouldRefresh(true))
       .then(() =>
         setFeedback({
@@ -306,7 +306,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const handleAdd = async (d) => {
     try {
       // Aggiungi il documento e ottieni la risposta
-      const newDocResponse = await API.addDocument(d);
+      const newDocResponse = await API.addDocument(d, authToken);
 
       // Aggiorna lo stato e fornisci feedback
       setShouldRefresh(true);
@@ -379,6 +379,7 @@ DocumentFormComponent.propTypes = {
   document: PropTypes.object,
   onHide: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
+  authToken: PropTypes.string.isRequired
 };
 
 function DocumentFormFields({

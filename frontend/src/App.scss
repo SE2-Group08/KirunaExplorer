@@ -6,7 +6,7 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
-  overscroll-behavior: none;
+  overflow: hidden;
   /* background-color: #E6E8EA; */
 }
 
@@ -47,8 +47,8 @@ body,
   color: #343a40;
 }
 
-.scrollable-list-documents {
-  flex: 1;
+.scrollable-list-documents{
+  height: calc(100vh - 90px - 40px);
   overflow-y: auto;
   padding: 1rem;
   margin-top: 15px;

@@ -22,6 +22,7 @@ export default function DocumentDescriptionComponent({
   onHide,
   onLinkToClick,
   onSnippetClick,
+  authToken
 }) {
   const [isSliderOpened, setIsSliderOpened] = useState(false);
   const [editDocument, setEditDocument] = useState(false);
@@ -103,6 +104,7 @@ export default function DocumentDescriptionComponent({
         onClose={handleCloseSlider}
         onSnippetClick={handleSnippetClick}
         document={document}
+        authToken={authToken}
       />
       <DocumentFormComponent
         document={document}
@@ -111,6 +113,7 @@ export default function DocumentDescriptionComponent({
           setEditDocument(false);
           onHide();
         }}
+        authToken={authToken}
       />
     </Modal>
   );
@@ -122,6 +125,7 @@ DocumentDescriptionComponent.propTypes = {
   onHide: PropTypes.func.isRequired,
   onLinkToClick: PropTypes.func.isRequired,
   onSnippetClick: PropTypes.func.isRequired,
+  authToken: PropTypes.string.isRequired,
 };
 
 function DocumentDescriptionFields({ document }) {

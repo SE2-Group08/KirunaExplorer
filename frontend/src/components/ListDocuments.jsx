@@ -22,8 +22,6 @@ import DocumentFormComponent from "./DocumentForm";
 import DocumentDescriptionComponent from "./DocumentDescription";
 
 export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner, authToken }) {
-  const [documents, setDocuments] = useState([]);
-  const [show, setShow] = useState(false);
   const [allDocuments, setAllDocuments] = useState([]);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
@@ -253,6 +251,7 @@ export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner,
             onLinkConfirm={handleLinkConfirm}
             links={links}
             selectedDocumentToLink={selectedDocumentToLink}
+            authToken={authToken}
           />
         )}
         {showFormModal && (
@@ -260,6 +259,7 @@ export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner,
             document={undefined}
             show={showFormModal}
             onHide={() => setShowFormModal(false)}
+            authToken={authToken}
           />
         )}
       </Row>

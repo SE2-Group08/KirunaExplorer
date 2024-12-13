@@ -10,7 +10,7 @@ const ListDocumentLinks = ({
                              documentId,
                              isOpen,
                              onClose,
-        authToken,
+                               authToken,
                              // onSnippetClick,
                              // document,
                            }) => {
