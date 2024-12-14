@@ -82,7 +82,7 @@ const MapKiruna = () => {
 
   const kirunaBorderCoordinates = getKirunaArea();
 
-  const handleSearch = (keyword) => {
+    const handleSearch = async ({ keyword = "", documentTypes = [], stakeholders = [], scales = [] }) => {
     if (!keyword) {
       setFilteredDocuments(documents);
       return;
@@ -97,6 +97,24 @@ const MapKiruna = () => {
         });
   };
 
+  const onRealTimeSearch = async ({ keyword = "", documentTypes = [], stakeholders = [], scales = [] }) => {
+      const lowerCaseKeyword = keyword.toLowerCase();
+
+      const filtered = documents.filter((doc) => {
+          const matchesKeyword =
+              !keyword || doc.title.toLowerCase().includes(lowerCaseKeyword);
+          const matchesDocumentTypes =
+              documentTypes.length === 0 || documentTypes.includes(doc.type);
+          const matchesStakeholders =
+              stakeholders.length === 0 || stakeholders.some((id) => doc.stakeholders.includes(id));
+          const matchesScales =
+              scales.length === 0 || scales.includes(doc.scale);
+
+          return matchesKeyword && matchesDocumentTypes && matchesStakeholders && matchesScales;
+      });
+
+      setFilteredDocuments(filtered);
+  }
   return (
       <div style={{display: "flex", height: "100vh", position: "relative"}}>
           <div style={{position: 'absolute', top: '10px', left: '30px', zIndex: 1000, marginBottom: "5rem",
@@ -105,7 +123,7 @@ const MapKiruna = () => {
           }}>
               <SearchBar
                   onSearch={handleSearch}
-              />
+                  onRealTimeSearch={onRealTimeSearch}/>
           </div>
           <MapStyleToggle setTileLayer={setTileLayer}/>
           <Button

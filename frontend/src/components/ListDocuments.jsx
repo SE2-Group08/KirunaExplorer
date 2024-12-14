@@ -20,9 +20,16 @@ import { getIconUrlForDocument } from "../utils/iconMapping";
 import LegendModal from "./Legend";
 import DocumentFormComponent from "./DocumentForm";
 import DocumentDescriptionComponent from "./DocumentDescription";
+import SearchBar from "./SearchBar"; // Import the updated SearchBar component
 
-export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner, authToken }) {
+export default function ListDocuments({
+                                        shouldRefresh,
+                                        loggedIn,
+                                        isUrbanPlanner,
+                                        authToken,
+                                      }) {
   const [allDocuments, setAllDocuments] = useState([]);
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -56,6 +63,7 @@ export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner,
     API.getDocumentsByPageNumber(currentPage, authToken)
       .then((response) => {
         setAllDocuments(response[0].documentSnippets);
+        setFilteredDocuments(response[0].documentSnippets); // Initialize filtered documents
         setTotalPages(response[0].totalPages);
       })
       .then(() => setShouldRefresh(false))
@@ -132,6 +140,35 @@ export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner,
     );
   };
 
+  const handleSearchInput = ({ keyword = "", documentTypes = [], stakeholders = [], scales = [] }) => {
+    const lowerCaseKeyword = keyword.toLowerCase();
+
+    const filtered = allDocuments.filter((doc) => {
+      const matchesKeyword =
+          !keyword || doc.title.toLowerCase().includes(lowerCaseKeyword);
+      const matchesDocumentTypes =
+          documentTypes.length === 0 || documentTypes.includes(doc.type);
+      const matchesStakeholders =
+          stakeholders.length === 0 || stakeholders.some((id) => doc.stakeholders.includes(id));
+      const matchesScales =
+          scales.length === 0 || scales.includes(doc.scale);
+
+      return matchesKeyword && matchesDocumentTypes && matchesStakeholders && matchesScales;
+    });
+
+    setFilteredDocuments(filtered);
+  };
+
+  const handleSearch = async ({ keyword = "", documentTypes = [], stakeholders = [], scales = [] }) => {
+    try {
+      const response = await API.searchDocuments(keyword);
+      setAllDocuments(response); // Update the master list with backend results
+      setFilteredDocuments(response); // Update the filtered list
+    } catch (error) {
+      setFeedbackFromError(error);
+    }
+  };
+
   return (
     <Container fluid className="scrollable-list-documents">
       <Row>
@@ -187,15 +224,26 @@ export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner,
           </Button>
         </Col>
       </Row>
+
+        {/* SearchBar Component */}
+        <Row className="my-4">
+          <Col>
+            <SearchBar
+                onSearch={handleSearch}
+                onRealTimeSearch={handleSearchInput}
+            />
+          </Col>
+        </Row>
+
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
-        {allDocuments.length === 0 ? (
+        {filteredDocuments.length === 0 ? (
           <Spinner animation="border" role="status" className="mx-auto">
             <span className="visually-hidden">Loading...</span>
           </Spinner>
         ) : compactView ? (
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
-              documents={allDocuments}
+              documents={filteredDocuments}
               onSelect={handleSelection}
               isLinkedDocument={isLinkedDocument}
               allLinksOfSelectedDocument={allLinksOfSelectedDocument}
@@ -204,7 +252,7 @@ export default function ListDocuments({ shouldRefresh, loggedIn, isUrbanPlanner,
           </Row>
         ) : (
           <Row xs={1} sm={2} md={3} lg={4} className="g-4 mx-auto">
-            {allDocuments.map((document) => (
+            {filteredDocuments.map((document) => (
               <DocumentSnippetCardComponent
                 key={document.id}
                 document={document}
