@@ -8,11 +8,11 @@ import jakarta.validation.constraints.Size;
 
 public record DocumentTypeRequestDTO(
 
-    @Null(groups = {PostDocumentType.class})
+    @Null(groups = {PostDocumentType.class}, message = "must be null")
     Long id,
 
     @NotNull
-    @Size(min = 2, max = 64)
+    @Size(min = 2, max = 64, message = "size must be between 2 and 64")
     String name
 ) {
 
