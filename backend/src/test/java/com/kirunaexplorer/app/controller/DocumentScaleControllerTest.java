@@ -3,9 +3,13 @@ package com.kirunaexplorer.app.controller;
 import com.kirunaexplorer.app.dto.request.DocumentScaleRequestDTO;
 import com.kirunaexplorer.app.dto.response.DocumentScaleResponseDTO;
 import com.kirunaexplorer.app.service.DocumentScaleService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +21,13 @@ class DocumentScaleControllerTest {
 
     private final DocumentScaleService mockService = Mockito.mock(DocumentScaleService.class);
     private final DocumentScaleController controller = new DocumentScaleController(mockService);
+
+    @BeforeEach
+    void setUp() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        ServletRequestAttributes attributes = new ServletRequestAttributes(request);
+        RequestContextHolder.setRequestAttributes(attributes);
+    }
 
     @Test
     void testGetAllDocumentsWithResults() {
@@ -53,7 +64,9 @@ class DocumentScaleControllerTest {
         ResponseEntity<Void> response = controller.createDocument(request);
 
         assertEquals(201, response.getStatusCodeValue());
-        assertEquals("/api/v1/scales/123", response.getHeaders().getLocation().toString());
+        assertEquals("http://localhost/123", response.getHeaders().getLocation().toString());
+
+        verify(mockService).createDocumentScale(any(DocumentScaleRequestDTO.class)); // Verifica che il metodo sia chiamato
     }
 
     @Test

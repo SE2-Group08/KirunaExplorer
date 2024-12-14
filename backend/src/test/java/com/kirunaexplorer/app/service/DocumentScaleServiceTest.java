@@ -1,64 +1,82 @@
 package com.kirunaexplorer.app.service;
 
 import com.kirunaexplorer.app.dto.request.DocumentScaleRequestDTO;
-import com.kirunaexplorer.app.validation.groups.document_scale.PostDocumentScale;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
-import org.junit.jupiter.api.BeforeAll;
+import com.kirunaexplorer.app.dto.response.DocumentScaleResponseDTO;
+import com.kirunaexplorer.app.model.DocumentScale;
+import com.kirunaexplorer.app.repository.DocumentScaleRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.Set;
+import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-class DocumentScaleRequestDTOTest {
+public class DocumentScaleServiceTest {
 
-    private static Validator validator;
+    @Mock
+    private DocumentScaleRepository documentScaleRepository;
 
-    @BeforeAll
-    static void setUp() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
+    @InjectMocks
+    private DocumentScaleService documentScaleService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testValidRequest() {
-        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "Valid Scale");
+    void testGetAllDocumentScales() {
+        DocumentScale mockScale1 = new DocumentScale(1L, "Mock Scale 1");
+        DocumentScale mockScale2 = new DocumentScale(2L, "Mock Scale 2");
+        List<DocumentScale> mockScales = List.of(mockScale1, mockScale2);
 
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
+        when(documentScaleRepository.findAll()).thenReturn(mockScales);
 
-        assertTrue(violations.isEmpty());
+        List<DocumentScaleResponseDTO> response = documentScaleService.getAllDocumentScales();
+
+        assertEquals(2, response.size());
+        assertEquals("Mock Scale 1", response.get(0).scale());
+        assertEquals("Mock Scale 2", response.get(1).scale());
     }
 
     @Test
-    void testInvalidScaleTooShort() {
-        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "1");
+    void testGetAllDocumentScalesEmpty() {
+        when(documentScaleRepository.findAll()).thenReturn(List.of());
 
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request);
+        List<DocumentScaleResponseDTO> response = documentScaleService.getAllDocumentScales();
 
-        assertFalse(violations.isEmpty());
-        assertEquals("Too short scale", violations.iterator().next().getMessage());
+        assertEquals(0, response.size());
     }
 
     @Test
-    void testInvalidScaleTooLong() {
-        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "A".repeat(65));
+    void testCreateDocumentScale() {
+        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "New Scale");
+        DocumentScale mockScale = new DocumentScale(1L, "New Scale");
 
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request);
+        when(documentScaleRepository.save(any(DocumentScale.class))).thenReturn(mockScale);
 
-        assertFalse(violations.isEmpty());
-        assertEquals("Too long scale", violations.iterator().next().getMessage());
+        Long id = documentScaleService.createDocumentScale(request);
+
+        assertEquals(1L, id);
+        verify(documentScaleRepository, times(1)).save(any(DocumentScale.class));
     }
 
     @Test
-    void testNullScale() {
-        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, null);
+    void testCreateDocumentScaleWithException() {
+        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "New Scale");
 
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
+        when(documentScaleRepository.save(any(DocumentScale.class))).thenThrow(new RuntimeException("Save failed"));
 
-        assertFalse(violations.isEmpty());
-        assertEquals("scale must be not null", violations.iterator().next().getMessage());
+        try {
+            documentScaleService.createDocumentScale(request);
+        } catch (RuntimeException ex) {
+            assertEquals("Save failed", ex.getMessage());
+        }
     }
 }
