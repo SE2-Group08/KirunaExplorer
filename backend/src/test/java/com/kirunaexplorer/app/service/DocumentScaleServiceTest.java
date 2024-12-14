@@ -36,20 +36,20 @@ class DocumentScaleRequestDTOTest {
     void testInvalidScaleTooShort() {
         DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "1");
 
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
+        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request);
 
         assertFalse(violations.isEmpty());
-        assertEquals("scala troppo corta", violations.iterator().next().getMessage());
+        assertEquals("Too short scale", violations.iterator().next().getMessage());
     }
 
     @Test
     void testInvalidScaleTooLong() {
         DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "A".repeat(65));
 
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
+        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request);
 
         assertFalse(violations.isEmpty());
-        assertEquals("scala troppo lunga", violations.iterator().next().getMessage());
+        assertEquals("Too long scale", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -59,6 +59,6 @@ class DocumentScaleRequestDTOTest {
         Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
 
         assertFalse(violations.isEmpty());
-        assertEquals("must not be null", violations.iterator().next().getMessage());
+        assertEquals("scale must be not null", violations.iterator().next().getMessage());
     }
 }
