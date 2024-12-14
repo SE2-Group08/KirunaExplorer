@@ -5,11 +5,12 @@ import com.kirunaexplorer.app.validation.groups.document_scale.PostDocumentScale
 import jakarta.validation.constraints.*;
 
 public record DocumentScaleRequestDTO(
-    @Null(groups = {PostDocumentScale.class}, message = "id must be not null")
+    @Null(groups = {PostDocumentScale.class})
     Long id,
 
-    @NotNull(message = "scale must be not null")
-    @Size(min = 2, max = 64, message = "invalid size for scale")
+    @NotNull(message = "scale must be not null", groups = {PostDocumentScale.class})
+    @Min(message = "Too short scale", value = 2)
+    @Max(message = "Too long scale", value = 64)
     String scale
 ) {
 

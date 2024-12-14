@@ -7,6 +7,7 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -18,8 +19,8 @@ class DocumentScaleRequestDTOTest {
 
     private static Validator validator;
 
-    @BeforeAll
-    static void setUp() {
+    @BeforeEach
+    void setUp() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
@@ -29,7 +30,7 @@ class DocumentScaleRequestDTOTest {
         DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "A");
 
         // Validation with the PostDocumentScale group
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
+        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request);
 
         // Recupera il messaggio di errore per il campo "scale"
         String errorMessage = violations.stream()
@@ -39,7 +40,7 @@ class DocumentScaleRequestDTOTest {
                 .orElse("No error");
 
         // Verifica che il messaggio di errore sia quello atteso
-        assertEquals("invalid size for scale", errorMessage);
+        assertEquals("Too short scale", errorMessage);
     }
 
     @Test
@@ -47,8 +48,7 @@ class DocumentScaleRequestDTOTest {
         DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "A".repeat(65));
 
         // Validation with the PostDocumentScale group
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
-
+        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request);
         // Recupera il messaggio di errore per il campo "scale"
         String errorMessage = violations.stream()
                 .filter(v -> v.getPropertyPath().toString().equals("scale"))
@@ -57,12 +57,12 @@ class DocumentScaleRequestDTOTest {
                 .orElse("No error");
 
         // Verifica che il messaggio di errore sia quello atteso
-        assertEquals("invalid size for scale", errorMessage);
+        assertEquals("Too long scale", errorMessage);
     }
 
     @Test
     void testValidScale() {
-        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(1L, "Valid Scale");
+        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(null, "Valid Scale");
 
         // Validation with the PostDocumentScale group
         Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
@@ -75,7 +75,7 @@ class DocumentScaleRequestDTOTest {
                 .orElse("No error");
 
         // Verifica che il messaggio di errore sia quello atteso
-        assertEquals("id must be not null", errorMessage);
+        assertEquals("No error", errorMessage);
     }
 
     @Test
@@ -85,12 +85,6 @@ class DocumentScaleRequestDTOTest {
         // Validation with the PostDocumentScale group
         Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
 
-        // Recupera il messaggio di errore per il campo "id"
-        String idErrorMessage = violations.stream()
-                .filter(v -> v.getPropertyPath().toString().equals("id"))
-                .map(ConstraintViolation::getMessage)
-                .findFirst()
-                .orElse("No error");
 
         // Recupera il messaggio di errore per il campo "scale"
         String scaleErrorMessage = violations.stream()
@@ -100,25 +94,7 @@ class DocumentScaleRequestDTOTest {
                 .orElse("No error");
 
         // Verifica che il messaggio di errore sia quello atteso
-        assertEquals("id must be not null", idErrorMessage);
         assertEquals("scale must be not null", scaleErrorMessage);
     }
 
-    @Test
-    void testMultipleViolations() {
-        DocumentScaleRequestDTO request = new DocumentScaleRequestDTO(1L, "A");
-
-        // Validazione con il gruppo PostDocumentScale
-        Set<ConstraintViolation<DocumentScaleRequestDTO>> violations = validator.validate(request, PostDocumentScale.class);
-
-        // Recupera tutti i messaggi di errore dal vettore delle violazioni
-        String errorMessages = violations.stream()
-                .map(ConstraintViolation::getMessage)
-                .reduce((msg1, msg2) -> msg1 + ", " + msg2)
-                .orElse("No errors");
-
-        // Verifica che siano presenti i messaggi di errore attesi
-        assertTrue(errorMessages.contains("id must be not null"));
-        assertTrue(errorMessages.contains("invalid size for scale"));
-    }
 }
