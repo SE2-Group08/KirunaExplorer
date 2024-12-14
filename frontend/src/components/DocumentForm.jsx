@@ -581,7 +581,9 @@ function DocumentFormFields({
                 />
               ))
             ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.stakeholders
               .filter(
@@ -644,27 +646,27 @@ function DocumentFormFields({
             <Form.Label>Scale *</Form.Label>
             <div className="divider" />
             {scaleOptions ? (
-              <>
-                <Form.Control
-                  as="select"
-                  value={document.scale}
-                  onChange={(e) => handleChange("scale", e.target.value)}
-                  isInvalid={!!errors.scale}
-                  required
-                  ref={refs.scaleRef}
-                >
-                  <option value="">Select scale</option>
-                  {scaleOptions.map((scaleOption) => (
-                    <option key={scaleOption.id} value={scaleOption.name}>
-                      {scaleOption.name}
-                    </option>
-                  ))}
-                  <option value="Architectural">Architectural</option>
-                  <option value="Other">Other</option>
-                </Form.Control>
-              </>
+              <Form.Control
+                as="select"
+                value={document.scale}
+                onChange={(e) => handleChange("scale", e.target.value)}
+                isInvalid={!!errors.scale}
+                required
+                ref={refs.scaleRef}
+              >
+                <option value="">Select scale</option>
+                {scaleOptions.map((scaleOption) => (
+                  <option key={scaleOption.id} value={scaleOption.name}>
+                    {scaleOption.name}
+                  </option>
+                ))}
+                <option value="Architectural">Architectural</option>
+                <option value="Other">Other</option>
+              </Form.Control>
             ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.scale === "Other" && (
               <div className="d-flex mt-2">
@@ -679,7 +681,11 @@ function DocumentFormFields({
                 <Button
                   variant="primary"
                   disabled={
-                    scaleOptions.some((s) => s.name.toLowerCase() === document.customScale.trim().toLowerCase()) ||
+                    scaleOptions.some(
+                      (s) =>
+                        s.name.toLowerCase() ===
+                        document.customScale.trim().toLowerCase()
+                    ) ||
                     scaleOptions.some(
                       (s) => s.name === `1:${document.customScale}`
                     )
@@ -808,7 +814,9 @@ function DocumentFormFields({
                 <option value="Other">Other</option>
               </Form.Control>
             ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.type === "Other" && (
               <div className="d-flex mt-2">
@@ -824,7 +832,11 @@ function DocumentFormFields({
                   variant="primary"
                   disabled={
                     document.customType &&
-                    allDocumentTypes.some((t) => t.name.toLowerCase() === document.customType.trim().toLowerCase())
+                    allDocumentTypes.some(
+                      (t) =>
+                        t.name.toLowerCase() ===
+                        document.customType.trim().toLowerCase()
+                    )
                   }
                   onClick={() => {
                     setAllDocumentTypes((prevTypes) => [
