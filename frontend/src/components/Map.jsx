@@ -17,7 +17,7 @@ import DocumentSidePanel from "./DocumentSidePanel";
 import getKirunaArea from "./KirunaArea";
 import MapStyleToggle from "./MapStyleToggle";
 import FeedbackContext from "../contexts/FeedbackContext";
-import { getIconForDocument } from "../utils/iconMapping";
+// import { getIconForDocument } from "../utils/iconMapping";
 import LegendModal from "./Legend";
 import SearchBar from './SearchBar.jsx';
 
@@ -164,7 +164,7 @@ const MapKiruna = () => {
                               <Marker
                                   key={index}
                                   position={position}
-                                  icon={getIconForDocument(doc.type, doc.stakeholders)}
+                                //   icon={getIconForDocument(doc.type, doc.stakeholders)}
                                   eventHandlers={{
                                       click: () => handleDocumentClick(doc),
                                       mouseover: (e) => {

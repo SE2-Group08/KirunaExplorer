@@ -15,7 +15,7 @@ import API from "../API";
 import LinkModal from "./LinkModal";
 import FeedbackContext from "../contexts/FeedbackContext";
 import Pagination from "./Pagination";
-import { getIconUrlForDocument } from "../utils/iconMapping";
+import DocumentIcon from "./DocumentIcon";
 import LegendModal from "./Legend";
 import DocumentFormComponent from "./DocumentForm";
 import DocumentDescriptionComponent from "./DocumentDescription";
@@ -325,13 +325,17 @@ function DocumentSnippetTableComponent({
             }}
           >
             <td>
-              <img
+              {/* <img
                 src={getIconUrlForDocument(
                   document.type,
                   document.stakeholders
                 )}
                 alt={`${document.type} icon`}
                 style={{ width: "40px", height: "40px" }}
+              /> */}
+              <DocumentIcon
+                documentType={document.type}
+                stakeholders={document.stakeholders}
               />
             </td>
             <td>
@@ -437,11 +441,11 @@ const DocumentSnippetCardComponent = ({
             </div>
           )}
           <Card.Title className="document-card-title">
-            <img
+            {/* <img
               src={getIconUrlForDocument(document.type, document.stakeholders)}
               alt={`${document.type} icon`}
               style={{ width: "40px", height: "40px" }}
-            />
+            /> */}
             {document.title}
           </Card.Title>
           <div className="divider" />

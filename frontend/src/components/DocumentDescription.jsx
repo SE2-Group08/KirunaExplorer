@@ -14,7 +14,7 @@ import ListDocumentLinks from "./ListDocumentLinks";
 import FeedbackContext from "../contexts/FeedbackContext";
 import DocumentFormComponent from "./DocumentForm";
 import API from "../API";
-import { getIconUrlForDocument } from "../utils/iconMapping";
+// import { getIconUrlForDocument } from "../utils/iconMapping";
 
 export default function DocumentDescriptionComponent({
   document,
@@ -58,11 +58,11 @@ export default function DocumentDescriptionComponent({
     >
       <Modal.Header closeButton className="modal-header">
         <Modal.Title>
-          <img
+          {/* <img
             src={getIconUrlForDocument(document.type, document.stakeholders)}
             alt={`${document.type} icon`}
             style={{ width: "40px", height: "40px", marginRight: "10px" }}
-          />
+          /> */}
           {document.title}
         </Modal.Title>
       </Modal.Header>
