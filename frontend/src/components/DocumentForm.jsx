@@ -904,6 +904,12 @@ function DocumentFormFields({
                   <Polygon positions={kirunaBorderCoordinates} />
                 ) : null}
                 <MapClickHandler />
+                <Polygon
+                    positions={kirunaBorderCoordinates}
+                    color="purple"
+                    weight={3}
+                    fillOpacity={0}
+                />
               </MapContainer>
             </div>
             <Form.Text className="text-muted">
@@ -939,7 +945,7 @@ function DocumentFormFields({
         <Col md={12}>
           <Form.Group className="mb-3" controlId="formDocumentDescription">
             <Form.Label>Description</Form.Label>
-            <div className="form-divider" />
+            <div className="divider" />
             <Form.Control
               as="textarea"
               rows={3}
@@ -1045,8 +1051,8 @@ function UploadFilesComponent({
       <Row className="mb-4">
         <Col md={12}>
           <Form.Group controlId="formDocumentFiles">
-            <Form.Label>Upload files</Form.Label>
-            <div className="form-divider" />
+            <Form.Label>Upload resources</Form.Label>
+            <div className="divider" />
             <div className="d-flex align-items-center">
               <Form.Control
                 type="file"

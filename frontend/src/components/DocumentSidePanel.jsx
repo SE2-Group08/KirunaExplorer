@@ -77,12 +77,12 @@ const DocumentSidePanel = ({ document, onClose }) => {
 
             <div className="d-flex justify-content-between align-items-center mb-3">
               <strong>Resources: </strong>
-              <Button
+              {resources.length ? <Button
                   onClick={() => setViewMode((prev) => (prev === "list" ? "grid" : "list"))}
                   title={`Switch to ${viewMode === "list" ? "grid" : "list"} view`}
               >
                 <i className={`bi ${viewMode === "list" ? "bi-grid" : "bi-list-task"}`}></i>
-              </Button>
+              </Button> : ( <Card.Text>None</Card.Text>)}
             </div>
 
             <div className="resources-section">

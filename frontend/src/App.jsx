@@ -35,7 +35,6 @@ function App() {
 
   useEffect(() => {
     const verifyUserLoggedIn = async () => {
-      console.log(authToken);
       const isUserLoggedIn = await API.getUserInfo(authToken);
       if (isUserLoggedIn) {
         setLoggedIn(true);
@@ -76,9 +75,9 @@ function App() {
       <FeedbackContext.Provider
           value={{ setFeedback, setFeedbackFromError, setShouldRefresh }}
       >
-        <div>
+        <div className="d-flex flex-column min-vh-100">
           <Header loggedIn={loggedIn} logout={handleLogout} isUrbanPlanner={isUrbanPlanner} />
-          <Container fluid className="d-flex flex-column min-vh-100 p-0 mt-5">
+          <Container fluid className="flex-grow-1 p-0 mt-5">
             <Routes>
               <Route element={<Outlet />}>
 

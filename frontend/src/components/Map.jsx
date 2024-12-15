@@ -4,7 +4,8 @@ import {
   MapContainer,
   TileLayer,
   Marker,
-  useMap
+  useMap,
+  Polygon
 } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import "leaflet/dist/leaflet.css";
@@ -42,7 +43,6 @@ const MapKiruna = () => {
   const [documents, setDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showDocumentSidePanel, setShowDocumentSidePanel] = useState(true);
-    const [show, setShow] = useState(true);
   const [showLegend, setShowLegend] = useState(false);
   const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
@@ -68,14 +68,12 @@ const MapKiruna = () => {
     API.getDocumentById(document.id)
       .then((response) => {
         setSelectedDocument(response);
-          setShow(true);
           setShowDocumentSidePanel(true);
       })
       .catch((error) => setFeedbackFromError(error));
   };
 
   const closeSidePanel = () => {
-      setShow(false);
     setShowDocumentSidePanel(false);
     setSelectedDocument(null);
   };
