@@ -12,12 +12,15 @@ import {
 import {
   MapContainer,
   TileLayer,
-  Marker,
   Polygon,
+  FeatureGroup,
+  Marker,
   useMapEvents,
 } from "react-leaflet";
+import { EditControl } from "react-leaflet-draw";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-draw/dist/leaflet.draw.css";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
@@ -35,6 +38,9 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
   const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
   const [filesToUpload, setFilesToUpload] = useState([]);
   const [errors, setErrors] = useState({});
+  const [allKnownAreas, setAllKnownAreas] = useState([]);
+  const [allKnownPoints, setAllKnownPoints] = useState([]);
+
   const [formDocument, setFormDocument] = useState(
     document || {
       title: "",
@@ -52,6 +58,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         latitude: "",
         longitude: "",
         municipality: "Entire municipality",
+        shapes: [],
       },
       description: "",
     }
@@ -108,6 +115,12 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         },
         description: document.description || "",
       });
+      if(document.geolocation?.shapes)
+        setLocationMode("area")
+      else if(document.geolocation?.municipality)
+        setLocationMode("entire_municipality")
+      else
+        setLocationMode("point")
 
       API.getDocumentFiles(document.id)
         .then((files) => {
@@ -115,6 +128,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
           setDeletedExistingFiles([]);
         })
         .catch((error) => setFeedbackFromError(error));
+
     }
 
     API.getAllKnownAreas()
@@ -470,6 +484,14 @@ function DocumentFormFields({
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {
+    if (locationMode === "area") {
+      setMarkerPosition([]);
+      handleChange("geolocation", { latitude: "", longitude: "" });
+    }
+  }, [locationMode]); // This ensures the effect runs only when locationMode changes
+
+
+  useEffect(() => {
     // Fetch all stakeholders
     API.getAllStakeholders()
       .then((stakeholders) => {
@@ -796,6 +818,155 @@ function DocumentFormFields({
             )}
             <Form.Control.Feedback type="invalid">
               {errors.scale}
+            </Form.Control.Feedback>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      <Row className={"mb-4"}>
+        <Col md={6}>
+          {/* ISSUANCE DATE */}
+          <Form.Group className="mb-3" controlId="formDocumentIssuanceDate">
+            <Form.Label>Issuance Date *</Form.Label>
+            <div className="divider" />
+            <div className="d-flex">
+              <Form.Control
+                  type="text"
+                  value={document.day}
+                  onChange={(e) => handleDayChange(e)}
+                  isInvalid={!!errors.issuanceDate}
+                  placeholder="DD"
+                  className="me-1"
+                  ref={refs.dayRef}
+                  style={{ width: "80px" }}
+              />
+              <span>/</span>
+              <Form.Control
+                  type="text"
+                  value={document.month}
+                  onChange={(e) => handleMonthChange(e)}
+                  isInvalid={!!errors.issuanceDate}
+                  placeholder="MM"
+                  className="mx-1"
+                  ref={refs.monthRef}
+                  style={{ width: "80px" }}
+              />
+              <span>/</span>
+              <Form.Control
+                  type="text"
+                  value={document.year}
+                  onChange={(e) => handleYearChange(e)}
+                  isInvalid={!!errors.issuanceDate}
+                  placeholder="YYYY"
+                  className="ms-1"
+                  ref={refs.yearRef}
+                  style={{ width: "100px" }}
+              />
+            </div>
+            <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+              {errors.issuanceDate}
+            </div>
+          </Form.Group>
+        </Col>
+
+        <Col md={6}>
+          {/* TYPE */}
+          <Form.Group className="mb-3" controlId="formDocumentType">
+            <Form.Label>Type *</Form.Label>
+            <div className="divider" />
+            {allDocumentTypes ? (
+                <Form.Control
+                    as="select"
+                    value={document.type}
+                    onChange={(e) => handleChange("type", e.target.value)}
+                    isInvalid={!!errors.type}
+                    required
+                    ref={refs.typeRef}
+                >
+                  <option value="">Select type</option>
+                  {allDocumentTypes.map((typeOption) => (
+                      <option key={typeOption.id} value={typeOption.name}>
+                        {typeOption.name}
+                      </option>
+                  ))}
+                  <option value="Other">Other</option>
+                </Form.Control>
+            ) : (
+                <Spinner animation="border" role="status" className="mx-auto" />
+            )}
+            {document.type === "Other" && (
+                <div className="d-flex mt-2">
+                  <Form.Control
+                      type="text"
+                      placeholder="Enter custom type"
+                      value={document.customType || ""}
+                      onChange={(e) => handleChange("customType", e.target.value)}
+                      isInvalid={!!errors.type}
+                      className="me-2"
+                  />
+                  <Button
+                      variant="primary"
+                      onClick={() => {
+                        if (
+                            document.customType &&
+                            !allDocumentTypes.some(
+                                (t) => t.name === document.customType
+                            )
+                        ) {
+                          allDocumentTypes.push({
+                            id: Date.now(),
+                            name: document.customType,
+                          });
+                          handleChange("type", document.customType);
+                        }
+                      }}
+                      title="Add custom type"
+                  >
+                    <i className="bi bi-plus-square"></i>
+                  </Button>
+                </div>
+            )}
+          </Form.Group>
+          <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+            {errors.type}
+          </div>
+        </Col>
+      </Row>
+
+      {/* LANGUAGE */}
+      <Row className={"mb-4"}>
+        <Col md={6}>
+          <Form.Group className="mb-3" controlId="formDocumentLanguage">
+            <Form.Label>Language</Form.Label>
+            <div className="divider" />
+            <Form.Control
+                type="text"
+                value={document.language}
+                onChange={(e) => handleChange("language", e.target.value)}
+                placeholder="English"
+                isInvalid={!!errors.language}
+                ref={refs.languageRef}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.language}
+            </Form.Control.Feedback>
+          </Form.Group>
+        </Col>
+        <Col md={6}>
+          {/* PAGES */}
+          <Form.Group className="mb-3" controlId="formDocumentNrPages">
+            <Form.Label>Pages</Form.Label>
+            <div className="divider" />
+            <Form.Control
+                type="number"
+                value={document.nrPages}
+                min={0}
+                onChange={(e) => handleChange("nrPages", Number(e.target.value))}
+                isInvalid={!!errors.nrPages}
+                ref={refs.nrPagesRef}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.nrPages}
             </Form.Control.Feedback>
           </Form.Group>
         </Col>
