@@ -72,6 +72,11 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
   const longitudeRef = useRef(null);
   const municipalityRef = useRef(null);
   const descriptionRef = useRef(null);
+  const areaNameRef = useRef(null);
+  const [locationMode, setLocationMode] = useState("");
+  const [selectedAreaId, setSelectedAreaId] = useState("");
+  const [selectedPointId, setSelectedPointId] = useState("");
+  const [areaModified, setAreaModified] = useState(false);
 
   useEffect(() => {
     if (document?.id) {
@@ -99,6 +104,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
           municipality: document.geolocation
             ? document.geolocation.municipality
             : "Entire municipality",
+          //shapes: document.geolocation?.shapes || [],
         },
         description: document.description || "",
       });
@@ -110,6 +116,15 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         })
         .catch((error) => setFeedbackFromError(error));
     }
+
+    API.getAllKnownAreas()
+        .then(setAllKnownAreas)
+        .catch(setFeedbackFromError);
+
+    API.getAllKnownPoints()
+        .then(setAllKnownPoints)
+        .catch(setFeedbackFromError);
+
   }, [document, setFeedbackFromError]);
 
   // Initialize Leaflet marker icon defaults
@@ -148,6 +163,8 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
       municipalityRef.current.focus();
     } else if (validationErrors.description) {
       descriptionRef.current.focus();
+    } else if (validationErrors.areaName) {
+      areaNameRef.current.focus();
     }
   };
 
@@ -226,10 +243,20 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
       formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
     }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
+    // Validation for areaName if needed
+    if ((locationMode === "area") && formDocument.geolocation.shapes.length > 0) {
+      if (!formDocument.areaName || formDocument.areaName.trim() === "") {
+        setErrors({ areaName: "Name for the area is required." });
+        return;
+      }
+    }
+
     const sanitizedGeolocation = {
       latitude: formDocument.geolocation.latitude || null,
       longitude: formDocument.geolocation.longitude || null,
+      // municipality: locationMode === "entire_municipality" ? "Entire municipality" : null,
       municipality: formDocument.geolocation.municipality || null,
+      //shapes: formDocument.geolocation.shapes || [],
     };
 
     const validationErrors = validateForm(
@@ -353,6 +380,34 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
               municipalityRef,
               descriptionRef,
             }}
+              allKnownAreas={allKnownAreas}
+              allKnownPoints={allKnownPoints}
+              locationMode={locationMode}
+              setLocationMode={(val) => {
+                setLocationMode(val);
+                setSelectedAreaId("");
+                setSelectedPointId("");
+                setAreaModified(false);
+                if (val === "entire_municipality") {
+                  handleChange("geolocation", {
+                    latitude: null,
+                    longitude: null,
+                    shapes: [],
+                    municipality: "Entire municipality"
+                  });
+                } else {
+                  handleChange("geolocation", {
+                    municipality: "",
+                    // Clear coords/shapes if needed
+                  });
+                }
+              }}
+              selectedAreaId={selectedAreaId}
+              setSelectedAreaId={setSelectedAreaId}
+              selectedPointId={selectedPointId}
+              setSelectedPointId={setSelectedPointId}
+              areaModified={areaModified}
+              setAreaModified={setAreaModified}
           />
           <UploadFilesComponent
             updateFilesToUpload={updateFilesToUpload}
@@ -388,6 +443,16 @@ function DocumentFormFields({
   handleChange,
   kirunaBorderCoordinates,
   refs,
+  allKnownAreas,
+  allKnownPoints,
+  locationMode,
+  setLocationMode,
+  selectedAreaId,
+  setSelectedAreaId,
+  selectedPointId,
+  setSelectedPointId,
+  areaModified,
+  setAreaModified,
 }) {
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
@@ -465,22 +530,48 @@ function DocumentFormFields({
     }
   };
 
-  const handleMapClick = (e) => {
-    const { lat, lng } = e.latlng;
-    setMarkerPosition([lat, lng]);
+  const onCreated = (e) => {
+    setAreaModified(true);
+    const layer = e.layer;
+    const shape = layer.toGeoJSON();
+    shape.properties = { name: `New Shape` };
+
     handleChange("geolocation", {
-      latitude: lat,
-      longitude: lng,
-      municipality: null,
+      shapes: [shape],
     });
   };
 
-  const MapClickHandler = () => {
+/*  const onEdited = (e) => {
+    setAreaModified(true);
+    const layers = e.layers;
+    const updatedShapes = [...document.geolocation.shapes];
+
+    layers.eachLayer((layer) => {
+      const shape = layer.toGeoJSON();
+      updatedShapes[0] = shape;
+    });
+
+    handleChange("geolocation", { shapes: updatedShapes });
+  };
+*/
+  const onDeleted = (e) => {
+    setAreaModified(true);
+    handleChange("geolocation", { shapes: [] });
+  };
+
+  function MapClickHandlerForNewPoint() {
     useMapEvents({
-      click: handleMapClick,
+      click: (e) => {
+        if (locationMode === "point") {
+          handleChange("geolocation", {
+            latitude: e.latlng.lat,
+            longitude: e.latlng.lng
+          });
+        }
+      },
     });
     return null;
-  };
+  }
 
   const handleLatitudeChange = (e) => {
     const value = e.target.value;
@@ -507,6 +598,38 @@ function DocumentFormFields({
       setMarkerPosition([document.geolocation.latitude, lng]);
     }
   };
+
+  const handleSelectExistingArea = (e) => {
+    const val = e.target.value;
+    setSelectedAreaId(val);
+    if (val) {
+      const area = allKnownAreas.find((a) => a.id.toString() === val);
+      if (area) {
+        handleChange("geolocation", { shapes: [area], latitude: null, longitude: null });
+        setAreaModified(false);
+      } else {
+        handleChange("geolocation", { shapes: [], latitude: null, longitude: null });
+      }
+    } else {
+      handleChange("geolocation", { shapes: [] });
+    }
+  };
+
+  const handleSelectExistingPoint = (e) => {
+    const val = e.target.value;
+    setSelectedPointId(val);
+    if (val) {
+      const point = allKnownPoints.find((p) => p.id.toString() === val);
+      if (point) {
+        handleChange("geolocation", { shapes: [], latitude: point.latitude, longitude: point.longitude });
+      } else {
+        handleChange("geolocation", { latitude: null, longitude: null });
+      }
+    } else {
+      handleChange("geolocation", { latitude: null, longitude: null });
+    }
+  };
+
   return (
     <>
       {/* TITLE*/}
@@ -678,158 +801,59 @@ function DocumentFormFields({
         </Col>
       </Row>
 
-      <Row className={"mb-4"}>
-        <Col md={6}>
-          {/* ISSUANCE DATE */}
-          <Form.Group className="mb-3" controlId="formDocumentIssuanceDate">
-            <Form.Label>Issuance Date *</Form.Label>
-            <div className="divider" />
-            <div className="d-flex">
-              <Form.Control
-                type="text"
-                value={document.day}
-                onChange={(e) => handleDayChange(e)}
-                isInvalid={!!errors.issuanceDate}
-                placeholder="DD"
-                className="me-1"
-                ref={refs.dayRef}
-                style={{ width: "80px" }}
-              />
-              <span>/</span>
-              <Form.Control
-                type="text"
-                value={document.month}
-                onChange={(e) => handleMonthChange(e)}
-                isInvalid={!!errors.issuanceDate}
-                placeholder="MM"
-                className="mx-1"
-                ref={refs.monthRef}
-                style={{ width: "80px" }}
-              />
-              <span>/</span>
-              <Form.Control
-                type="text"
-                value={document.year}
-                onChange={(e) => handleYearChange(e)}
-                isInvalid={!!errors.issuanceDate}
-                placeholder="YYYY"
-                className="ms-1"
-                ref={refs.yearRef}
-                style={{ width: "100px" }}
-              />
-            </div>
-            <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-              {errors.issuanceDate}
-            </div>
-          </Form.Group>
-        </Col>
-
-        <Col md={6}>
-          {/* TYPE */}
-          <Form.Group className="mb-3" controlId="formDocumentType">
-            <Form.Label>Type *</Form.Label>
-            <div className="divider" />
-            {allDocumentTypes ? (
+      {/* Dropdown for location mode */}
+      <Row className="mb-4">
+        <Col md={3}>
+          <Form.Group style={{display: "flex", alignItems: "center"}}>
+            <Form.Label style={{marginRight: "10px"}}>Geolocation</Form.Label>
+            <div className="divider"
+                 style={{width: "1px", height: "20px", backgroundColor: "#ccc", margin: "0 10px"}}/>
               <Form.Control
                 as="select"
-                value={document.type}
-                onChange={(e) => handleChange("type", e.target.value)}
-                isInvalid={!!errors.type}
-                required
-                ref={refs.typeRef}
+                value={locationMode}
+                onChange={(e) => setLocationMode(e.target.value)}
+                style={{flex: 1}}
               >
-                <option value="">Select type</option>
-                {allDocumentTypes.map((typeOption) => (
-                  <option key={typeOption.id} value={typeOption.name}>
-                    {typeOption.name}
-                  </option>
-                ))}
-                <option value="Other">Other</option>
+                <option value="entire_municipality">Entire municipality</option>
+                <option value="area">Area</option>
+                <option value="point">Coordinates</option>
               </Form.Control>
-            ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
-            )}
-            {document.type === "Other" && (
-              <div className="d-flex mt-2">
-                <Form.Control
-                  type="text"
-                  placeholder="Enter custom type"
-                  value={document.customType || ""}
-                  onChange={(e) => handleChange("customType", e.target.value)}
-                  isInvalid={!!errors.type}
-                  className="me-2"
-                />
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    if (
-                      document.customType &&
-                      !allDocumentTypes.some(
-                        (t) => t.name === document.customType
-                      )
-                    ) {
-                      allDocumentTypes.push({
-                        id: Date.now(),
-                        name: document.customType,
-                      });
-                      handleChange("type", document.customType);
-                    }
-                  }}
-                  title="Add custom type"
-                >
-                  <i className="bi bi-plus-square"></i>
-                </Button>
-              </div>
-            )}
-          </Form.Group>
-          <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-            {errors.type}
-          </div>
-        </Col>
-      </Row>
+            </Form.Group>
 
-      {/* LANGUAGE */}
-      <Row className={"mb-4"}>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="formDocumentLanguage">
-            <Form.Label>Language</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              type="text"
-              value={document.language}
-              onChange={(e) => handleChange("language", e.target.value)}
-              placeholder="English"
-              isInvalid={!!errors.language}
-              ref={refs.languageRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.language}
-            </Form.Control.Feedback>
+        </Col>
+      {locationMode === "area" && (
+        <Col md={3}>
+          <Form.Group>
+            <Form.Control as="select" value={selectedAreaId} onChange={handleSelectExistingArea}>
+                    <option value="">-- Select an existing area --</option>
+                    {allKnownAreas.map((area) => (
+                  <option key={area.id} value={area.id}>{area.properties?.name || `Area ${area.id}`}</option>
+                    ))}
+            </Form.Control>
           </Form.Group>
         </Col>
-        <Col md={6}>
-          {/* PAGES */}
-          <Form.Group className="mb-3" controlId="formDocumentNrPages">
-            <Form.Label>Pages</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              type="number"
-              value={document.nrPages}
-              min={0}
-              onChange={(e) => handleChange("nrPages", Number(e.target.value))}
-              isInvalid={!!errors.nrPages}
-              ref={refs.nrPagesRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.nrPages}
-            </Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-      </Row>
+        )}
 
-      <Row className={"mb-4"}>
+        {locationMode === "point" && (
+            <>
+        <Col md={3}>
+          <Form.Group>
+            <Form.Control as="select" value={selectedPointId} onChange={handleSelectExistingPoint}>
+                      <option value="">-- Select an existing point --</option>
+                      {allKnownPoints.map((point) => (
+                          <option key={point.id} value={point.id}>{point.name || `Point ${point.id}`}</option>
+                      ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+      </>
+
+          )}
+
+        {locationMode === "point" && (
+          <>
+            <Col md={3}>
         <Form.Group className="mb-3">
-          <Col md={12}>
             <Form.Label>Latitude</Form.Label>
             <div className="divider" />
             <Form.Control
@@ -844,7 +868,7 @@ function DocumentFormFields({
                 document.geolocation.municipality === "Entire municipality"
               }
               isInvalid={!!errors.latitude}
-              refs={refs.latitudeRef}
+                  ref={refs.latitudeRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.latitude}
@@ -859,8 +883,10 @@ function DocumentFormFields({
                 document.geolocation.municipality === "Entire municipality"
               }
             />
+          </Form.Group>
           </Col>
-          <Col md={12}>
+          <Col md={3}>
+            <Form.Group className="mb-3">
             <Form.Label>Longitude</Form.Label>
             <div className="divider" />
             <Form.Control
@@ -875,7 +901,7 @@ function DocumentFormFields({
               disabled={
                 document.geolocation.municipality === "Entire municipality"
               }
-              refs={refs.longitudeRef}
+              ref={refs.longitudeRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.longitude}
@@ -890,54 +916,101 @@ function DocumentFormFields({
                 document.geolocation.municipality === "Entire municipality"
               }
             />
-          </Col>
+            </Form.Group>
+            </Col>
+          </>
+        )}
+
+        </Row>
+
+
+      {(locationMode === "area") && areaModified && (
+            <Row className="mb-4">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Area name</Form.Label>
+                  <div className="divider"/>
+                  <Form.Control
+                      type="text"
+                      value={document.areaName || ""}
+                      onChange={(e) => handleChange("areaName", e.target.value)}
+                      isInvalid={!!errors.areaName}
+                  />
+                  <Form.Control.Feedback type="invalid">{errors.areaName}</Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+        )}
+
+        {/* MAP */}
+        <Row className="mb-4">
           <Col md={12}>
-            <div style={{ height: "300px", marginBottom: "15px" }}>
+            <Form.Group>
+            <div style={{ height: "400px", marginBottom: "15px" }}>
+              {locationMode === "point" &&
+                  <Form.Text className="text-muted">
+                    Click on the map to set the location. Latitude and Longitude
+                    fields will update automatically.
+                  </Form.Text>}
               <MapContainer
                 center={markerPosition}
-                zoom={13}
+                zoom={10}
                 style={{ height: "100%", width: "100%" }}
               >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <Marker position={markerPosition} />
-                {document.geolocation.municipality === "Entire municipality" ? (
+                {(locationMode === "point" && markerPosition && markerPosition.length === 2) && (
+                    <Marker position={markerPosition} />
+                )}
+                {locationMode === "entire_municipality" && (
                   <Polygon positions={kirunaBorderCoordinates} />
-                ) : null}
-                <MapClickHandler />
+                )}
+
                 <Polygon
                     positions={kirunaBorderCoordinates}
                     color="purple"
                     weight={3}
                     fillOpacity={0}
                 />
+                {locationMode === "point" && <MapClickHandlerForNewPoint />}
+                  {(locationMode === "area") && (
+                      <FeatureGroup>
+                        <EditControl
+                            position="topright"
+                            onCreated={onCreated}
+                            onDeleted={onDeleted}
+                            draw={{
+                              rectangle: false,
+                              polygon: true,
+                              polyline: false,
+                              circle: false,
+                              circlemarker: false,
+                              marker: false,
+                            }}
+                            edit={{
+                              remove: true,
+                            }}
+                        />
+                    {document.geolocation.shapes?.map((shape, idx) => {
+                          if (shape.geometry.type === "Polygon") {
+                            const coords = shape.geometry.coordinates[0].map(c => [c[1], c[0]]);
+                            return <Polygon key={idx} positions={coords} color="purple" />;
+                          }
+                          return null;
+                        })}
+                  </FeatureGroup>
+                )}
+
+                  {(locationMode === "point") &&
+                      document.geolocation.latitude != null && document.geolocation.longitude != null && (
+                          <Marker position={[document.geolocation.latitude, document.geolocation.longitude]} />
+                      )}
+
+
               </MapContainer>
             </div>
-            <Form.Text className="text-muted">
-              Click on the map to set the location. Latitude and Longitude
-              fields will update automatically.
-            </Form.Text>
-            <Form.Check
-              type="checkbox"
-              label="Entire municipality"
-              checked={
-                document.geolocation.municipality === "Entire municipality"
-              }
-              onChange={(e) => {
-                const isChecked = e.target.checked;
-                setMarkerPosition(defaultPosition);
-                handleChange("geolocation", {
-                  latitude: isChecked ? "" : document.geolocation.latitude,
-                  longitude: isChecked ? "" : document.geolocation.longitude,
-                  municipality: isChecked ? "Entire municipality" : "",
-                });
-              }}
-              className="mt-2"
-              feedback={errors.municipality}
-              feedbackType="invalid"
-              ref={refs.municipalityRef}
-            />
-          </Col>
-        </Form.Group>
+
+          </Form.Group>
+        </Col>
       </Row>
 
       {/* DESCRIPTION */}
@@ -971,6 +1044,16 @@ DocumentFormFields.propTypes = {
   handleChange: PropTypes.func.isRequired,
   kirunaBorderCoordinates: PropTypes.array.isRequired,
   refs: PropTypes.object.isRequired,
+  allKnownAreas: PropTypes.array.isRequired,
+  allKnownPoints: PropTypes.array.isRequired,
+  locationMode: PropTypes.string.isRequired,
+  setLocationMode: PropTypes.func.isRequired,
+  selectedAreaId: PropTypes.string.isRequired,
+  setSelectedAreaId: PropTypes.func.isRequired,
+  selectedPointId: PropTypes.string.isRequired,
+  setSelectedPointId: PropTypes.func.isRequired,
+  areaModified: PropTypes.bool.isRequired,
+  setAreaModified: PropTypes.func.isRequired,
 };
 
 function UploadFilesComponent({

@@ -314,6 +314,78 @@ const searchDocuments = async (keyword) => {
 
   return response;
 };
+// /* ************************** *
+//  *      Areas APIs            *
+//  * ************************** */
+
+const getAllKnownAreas = async () => {
+  return [
+    {
+      id: 1,
+      type: "Feature",
+      properties: { name: "Area A" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [20.25, 67.85],
+            [20.30, 67.85],
+            [20.30, 67.90],
+            [20.25, 67.90],
+            [20.25, 67.85],
+          ],
+        ],
+      },
+    },
+    {
+      id: 2,
+      type: "Feature",
+      properties: { name: "Area B" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [20.22, 67.83],
+            [20.27, 67.83],
+            [20.27, 67.88],
+            [20.22, 67.88],
+            [20.22, 67.83],
+          ],
+        ],
+      },
+    },
+    {
+      id: 3,
+      type: "Feature",
+      properties: { name: "Mining Area" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [20.20, 67.80],
+            [20.25, 67.80],
+            [20.25, 67.82],
+            [20.20, 67.82],
+            [20.20, 67.80],
+          ],
+        ],
+      },
+    },
+  ];
+}
+
+// /* ************************** *
+//  *      Points APIs           *
+//  * ************************** */
+
+const getAllKnownPoints = async () => {
+  return [
+    { id: 1, name: "Point A", latitude: 67.85, longitude: 20.25 },
+    { id: 2, name: "Point B", latitude: 67.87, longitude: 20.27 },
+    { id: 3, name: "Downtown", latitude: 67.84, longitude: 20.22 },
+    { id: 4, name: "Station", latitude: 67.86, longitude: 20.23 },
+  ];
+}
 
 // /* ************************** *
 //  *      Stakeholders APIs     *
@@ -496,5 +568,9 @@ const API = {
   logOut,
   getUsers,
   getUserById,
+  /* Area */
+  getAllKnownAreas,
+  /* Point */
+  getAllKnownPoints,
 };
 export default API;
