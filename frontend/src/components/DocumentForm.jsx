@@ -29,6 +29,7 @@ import "../App.scss";
 import getKirunaArea from "./KirunaArea.jsx";
 import { Document } from "../model/Document.mjs";
 import { validateForm } from "../utils/formValidation.js";
+import { allowedLanguages } from "../utils/allowedLanguages.js";
 
 export default function DocumentFormComponent({ document, show, onHide }) {
   const kirunaBorderCoordinates = getKirunaArea();
@@ -234,6 +235,13 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       longitude: formDocument.geolocation.longitude || null,
       municipality: formDocument.geolocation.municipality || null,
     };
+
+    // Validate language against the allowed languages set
+    if (!allowedLanguages.has(formDocument.language)) {
+      setErrors({ language: "Invalid language selected." });
+      languageRef.current.focus();
+      return;
+    }
 
     const validationErrors = validateForm(
       formDocument,
