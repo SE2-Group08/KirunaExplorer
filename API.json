@@ -42,17 +42,8 @@
           "scale": {
             "description": "The scale of the document",
             "type": "string",
-            "oneOf": [
-              {
-                "pattern": "text"
-              },
-              {
-                "pattern": "blueprint/material effects"
-              },
-              {
-                "pattern": "^1:[1-9][0-9]*$"
-              }
-            ]
+            "minLength": 2,
+            "maxLength": 64
           },
           "issuanceDate": {
             "type": "string",
@@ -75,13 +66,8 @@
           "type": {
             "type": "string",
             "description": "The type of the document",
-            "enum": [
-              "Design document",
-              "Material effect",
-              "Technical document",
-              "Prescriptive document",
-              "Informative document"
-            ]
+            "minLength": 2,
+            "maxLength": 64
           },
           "nrConnections": {
             "type": "integer",
@@ -153,17 +139,8 @@
           "scale": {
             "description": "The scale of the document",
             "type": "string",
-            "oneOf": [
-              {
-                "pattern": "text"
-              },
-              {
-                "pattern": "blueprint/material effects"
-              },
-              {
-                "pattern": "^1:[1-9][0-9]*$"
-              }
-            ]
+            "minLength": 2,
+            "maxLength": 64
           },
           "issuanceDate": {
             "type": "string",
@@ -186,13 +163,8 @@
           "type": {
             "type": "string",
             "description": "The type of the document",
-            "enum": [
-              "Design document",
-              "Material effect",
-              "Technical document",
-              "Prescriptive document",
-              "Informative document"
-            ]
+            "minLength": 2,
+            "maxLength": 64
           },
           "geolocation": {
            "oneOf":[
@@ -208,8 +180,8 @@
           "type"
         ]
       },
-      "documentSnippets": {
-        "title": "documentSnippets",
+      "listPage": {
+        "title": "ListPage",
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -529,7 +501,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/documentSnippets"
+                    "$ref": "#/components/schemas/listPage"
                   }
                 }
               }
