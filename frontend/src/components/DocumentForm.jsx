@@ -15,7 +15,7 @@ import {
   Polygon,
   FeatureGroup,
   Marker,
-  useMapEvents,
+  useMapEvents, Circle, Rectangle,
 } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 import L from "leaflet";
@@ -472,24 +472,30 @@ function DocumentFormFields({
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
   const [allScales, setAllScales] = useState([]);
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
-  const [markerPosition, setMarkerPosition] = useState([
-    document.geolocation.latitude
-      ? document.geolocation.latitude
-      : defaultPosition[0],
-    document.geolocation.longitude
-      ? document.geolocation.longitude
-      : defaultPosition[1],
-  ]);
+  const safeLatitude = document.geolocation.latitude === "" || document.geolocation.latitude == null
+      ? null
+      : parseFloat(document.geolocation.latitude);
+  const safeLongitude = document.geolocation.longitude === "" || document.geolocation.longitude == null
+      ? null
+      : parseFloat(document.geolocation.longitude);
 
-  const { setFeedbackFromError } = useContext(FeedbackContext);
+  const finalPosition = (Number.isFinite(safeLatitude) && Number.isFinite(safeLongitude))
+      ? [safeLatitude, safeLongitude]
+      : defaultPosition;
 
+  const [markerPosition, setMarkerPosition] = useState(finalPosition);
+  const [pointName, setPointName] = useState("");
+  const [newPoint, setNewPoint] = useState(false)
   useEffect(() => {
     if (locationMode === "area") {
-      setMarkerPosition([]);
+      // If in area mode, we do not rely on a marker, but ensure map still has a valid center.
+      setMarkerPosition(defaultPosition);
       handleChange("geolocation", { latitude: "", longitude: "" });
+      setPointName("")
     }
-  }, [locationMode]); // This ensures the effect runs only when locationMode changes
+  }, [locationMode]);
 
+  const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {
     // Fetch all stakeholders
@@ -551,7 +557,6 @@ function DocumentFormFields({
       handleChange("year", value);
     }
   };
-
   const onCreated = (e) => {
     setAreaModified(true);
     const layer = e.layer;
@@ -559,36 +564,47 @@ function DocumentFormFields({
     shape.properties = { name: `New Shape` };
 
     handleChange("geolocation", {
+      ...document.geolocation,
       shapes: [shape],
     });
   };
 
-/*  const onEdited = (e) => {
+  const onEdited = (e) => {
     setAreaModified(true);
-    const layers = e.layers;
-    const updatedShapes = [...document.geolocation.shapes];
-
-    layers.eachLayer((layer) => {
+    const updatedShapes = [];
+    e.layers.eachLayer((layer) => {
       const shape = layer.toGeoJSON();
-      updatedShapes[0] = shape;
+      updatedShapes.push(shape);
+      setSelectedAreaId("")
     });
-
-    handleChange("geolocation", { shapes: updatedShapes });
+    handleChange("geolocation", { ...document.geolocation, shapes: updatedShapes });
   };
-*/
+
   const onDeleted = (e) => {
     setAreaModified(true);
-    handleChange("geolocation", { shapes: [] });
+    const remainingShapes = document.geolocation.shapes.filter((shape) => {
+      return !e.layers.getLayers().some((layer) => {
+        const layerShape = layer.toGeoJSON();
+        return JSON.stringify(layerShape) === JSON.stringify(shape);
+      });
+    });
+
+    handleChange("geolocation", { ...document.geolocation, shapes: remainingShapes });
   };
 
   function MapClickHandlerForNewPoint() {
     useMapEvents({
       click: (e) => {
-        if (locationMode === "point") {
+        if (locationMode === "point" && e.latlng) {
           handleChange("geolocation", {
+            ...document.geolocation,
             latitude: e.latlng.lat,
-            longitude: e.latlng.lng
+            longitude: e.latlng.lng,
           });
+          setMarkerPosition([e.latlng.lat, e.latlng.lng]);
+          setPointName(""); // Clear point name when selecting a new location
+          setNewPoint(true);
+          setSelectedPointId("")
         }
       },
     });
@@ -603,8 +619,10 @@ function DocumentFormFields({
       latitude: lat,
       municipality: null,
     });
-    if (lat != null && document.geolocation.longitude != null) {
-      setMarkerPosition([lat, document.geolocation.longitude]);
+    if (lat != null && Number.isFinite(lat) && document.geolocation.longitude != null && Number.isFinite(parseFloat(document.geolocation.longitude))) {
+      setMarkerPosition([lat, parseFloat(document.geolocation.longitude)]);
+    } else {
+      setMarkerPosition(defaultPosition);
     }
   };
 
@@ -616,39 +634,105 @@ function DocumentFormFields({
       longitude: lng,
       municipality: null,
     });
-    if (document.geolocation.latitude != null && lng != null) {
-      setMarkerPosition([document.geolocation.latitude, lng]);
+    if (Number.isFinite(lng) && document.geolocation.latitude != null && Number.isFinite(parseFloat(document.geolocation.latitude))) {
+      setMarkerPosition([parseFloat(document.geolocation.latitude), lng]);
+    } else {
+      setMarkerPosition(defaultPosition);
     }
   };
 
   const handleSelectExistingArea = (e) => {
-    const val = e.target.value;
-    setSelectedAreaId(val);
-    if (val) {
-      const area = allKnownAreas.find((a) => a.id.toString() === val);
-      if (area) {
-        handleChange("geolocation", { shapes: [area], latitude: null, longitude: null });
-        setAreaModified(false);
-      } else {
-        handleChange("geolocation", { shapes: [], latitude: null, longitude: null });
-      }
-    } else {
-      handleChange("geolocation", { shapes: [] });
+    const areaId = e.target.value;
+    const area = allKnownAreas.find((a) => a.id.toString() === areaId);
+
+    setSelectedAreaId(areaId);
+    if (area) {
+      handleChange("geolocation", {
+        ...document.geolocation,
+        shapes: [area],
+        latitude: null,
+        longitude: null,
+      });
+      zoomOnArea(area); // Use updated function to zoom on centroid
     }
   };
 
   const handleSelectExistingPoint = (e) => {
-    const val = e.target.value;
-    setSelectedPointId(val);
-    if (val) {
-      const point = allKnownPoints.find((p) => p.id.toString() === val);
-      if (point) {
-        handleChange("geolocation", { shapes: [], latitude: point.latitude, longitude: point.longitude });
-      } else {
-        handleChange("geolocation", { latitude: null, longitude: null });
+    const pointId = e.target.value;
+    const point = allKnownPoints.find((p) => p.id.toString() === pointId);
+
+    setSelectedPointId(pointId);
+    if (point) {
+      handleChange("geolocation", {
+        ...document.geolocation,
+        latitude: point.latitude,
+        longitude: point.longitude,
+        shapes: [],
+      });
+      zoomOnPoint(point); // Zoom sul punto selezionato
+    }
+  };
+
+  const mapRef = useRef(null);
+
+  const zoomOnArea = (area) => {
+    if (!mapRef.current || !area?.geometry?.type) return;
+
+    const { type, coordinates } = area.geometry;
+
+    if (type === "Polygon" || type === "MultiPolygon") {
+      let latlngs = [];
+      if (type === "Polygon") {
+        latlngs = coordinates[0].map(([lng, lat]) => [lat, lng]);
+      } else if (type === "MultiPolygon") {
+        latlngs = coordinates.flatMap((polygon) =>
+            polygon[0].map(([lng, lat]) => [lat, lng])
+        );
       }
+
+      // Calculate centroid of the polygon
+      const numPoints = latlngs.length;
+      let centroidLat = 0;
+      let centroidLng = 0;
+
+      latlngs.forEach(([lat, lng]) => {
+        centroidLat += lat;
+        centroidLng += lng;
+      });
+
+      centroidLat /= numPoints;
+      centroidLng /= numPoints;
+
+      // Fly to the centroid
+      mapRef.current.flyTo([centroidLat, centroidLng], 16); // Adjust zoom level as needed
+    } else if (type === "Circle") {
+      const [lng, lat] = coordinates;
+      mapRef.current.flyTo([lat, lng], 8); // Adjust zoom for circle
+    } else if (type === "Rectangle") {
+      const latlngs = coordinates[0].map(([lng, lat]) => [lat, lng]);
+
+      // Get bounds from rectangle
+      const bounds = L.latLngBounds(latlngs);
+
+      // Fit map to rectangle bounds
+      mapRef.current.fitBounds(bounds, { padding: [20, 20] }); // Adjust padding as needed
     } else {
-      handleChange("geolocation", { latitude: null, longitude: null });
+      console.warn("Unsupported geometry type:", type);
+    }
+  };
+
+
+
+  const zoomOnMunicipality = () => {
+    if (mapRef.current && kirunaBorderCoordinates?.length) {
+      const bounds = L.latLngBounds(kirunaBorderCoordinates);
+      mapRef.current.flyToBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+    }
+  };
+
+  const zoomOnPoint = (point) => {
+    if (mapRef.current && point.latitude && point.longitude) {
+      mapRef.current.flyTo([point.latitude, point.longitude], 14);
     }
   };
 
@@ -975,22 +1059,45 @@ function DocumentFormFields({
       {/* Dropdown for location mode */}
       <Row className="mb-4">
         <Col md={3}>
+        <Row>
           <Form.Group style={{display: "flex", alignItems: "center"}}>
             <Form.Label style={{marginRight: "10px"}}>Geolocation</Form.Label>
             <div className="divider"
                  style={{width: "1px", height: "20px", backgroundColor: "#ccc", margin: "0 10px"}}/>
-              <Form.Control
+            <Form.Control
                 as="select"
                 value={locationMode}
-                onChange={(e) => setLocationMode(e.target.value)}
+                onChange={(e) => {
+                  setLocationMode(e.target.value)
+                  if(e.target.value === "entire_municipality")
+                    zoomOnMunicipality();
+                }}
                 style={{flex: 1}}
               >
+                <option value=""> -- select --</option>
                 <option value="entire_municipality">Entire municipality</option>
                 <option value="area">Area</option>
                 <option value="point">Coordinates</option>
               </Form.Control>
             </Form.Group>
-
+          </Row>
+          {locationMode === "point" && newPoint && !selectedPointId &&(
+              <Row className="mb-2 mt-3">
+                <Col md={24}>
+                  <Form.Group controlId="formDocumentPointName">
+                    <Form.Control
+                        type="text"
+                        value={pointName}
+                        onChange={(e) => setPointName(e.target.value)}
+                        placeholder="Enter the point name"
+                    />
+                    <Form.Text className="text-muted">
+                      This name will help identify the point.
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+              </Row>
+          )}
         </Col>
       {locationMode === "area" && (
         <Col md={3}>
@@ -1113,23 +1220,25 @@ function DocumentFormFields({
             </Row>
         )}
 
-        {/* MAP */}
-        <Row className="mb-4">
-          <Col md={12}>
-            <Form.Group>
+      {/* MAP */}
+      <Row className="mb-4">
+        <Col md={12}>
+          <Form.Group>
             <div style={{ height: "400px", marginBottom: "15px" }}>
-              {locationMode === "point" &&
+              {locationMode === "point" && (
                   <Form.Text className="text-muted">
-                    Click on the map to set the location. Latitude and Longitude
-                    fields will update automatically.
-                  </Form.Text>}
+                    Click on the map to set the location. Latitude and Longitude fields will update automatically.
+                  </Form.Text>
+              )}
               <MapContainer
-                center={markerPosition}
-                zoom={10}
-                style={{ height: "100%", width: "100%" }}
+                  ref={mapRef}
+                  center={markerPosition}
+                  zoom={10}
+                  style={{ height: "100%", width: "100%" }}
+                  key={JSON.stringify(document.geolocation.shapes)}
               >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {(locationMode === "point" && markerPosition && markerPosition.length === 2) && (
+                {locationMode === "point" && markerPosition && markerPosition.length === 2 && Number.isFinite(markerPosition[0]) && Number.isFinite(markerPosition[1]) && (
                     <Marker position={markerPosition} />
                 )}
                 {locationMode === "entire_municipality" && (
@@ -1143,23 +1252,22 @@ function DocumentFormFields({
                     fillOpacity={0}
                 />
                 {locationMode === "point" && <MapClickHandlerForNewPoint />}
-                  {(locationMode === "area") && (
-                      <FeatureGroup>
-                        <EditControl
-                            position="topright"
-                            onCreated={onCreated}
-                            onDeleted={onDeleted}
-                            draw={{
-                              rectangle: false,
-                              polygon: true,
-                              polyline: false,
-                              circle: false,
-                              circlemarker: false,
-                              marker: false,
-                            }}
-                            edit={{
-                              remove: true,
-                            }}
+                {locationMode === "area" && (
+                    <FeatureGroup>
+                      <EditControl
+                          position="topright"
+                          onCreated={onCreated}
+                          onEdited={onEdited}
+                          onDeleted={onDeleted}
+                          draw={{
+                            rectangle: false,
+                            polygon: true,
+                            polyline: false,
+                            circle: false,
+                            circlemarker: false,
+                            marker: false,
+                          }}
+                          edit={{ remove: true }}
                         />
                     {document.geolocation.shapes?.map((shape, idx) => {
                           if (shape.geometry.type === "Polygon") {
@@ -1171,15 +1279,13 @@ function DocumentFormFields({
                   </FeatureGroup>
                 )}
 
-                  {(locationMode === "point") &&
-                      document.geolocation.latitude != null && document.geolocation.longitude != null && (
-                          <Marker position={[document.geolocation.latitude, document.geolocation.longitude]} />
-                      )}
-
-
+                {locationMode === "point" &&
+                    Number.isFinite(safeLatitude) &&
+                    Number.isFinite(safeLongitude) && (
+                        <Marker position={[safeLatitude, safeLongitude]} />
+                    )}
               </MapContainer>
             </div>
-
           </Form.Group>
         </Col>
       </Row>
