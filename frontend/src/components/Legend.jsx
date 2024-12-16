@@ -3,7 +3,7 @@ import { Modal, Row, Col } from "react-bootstrap";
 import { getIconUrlForDocument } from "../utils/iconMapping";
 import "../App.scss";
 
-export default function LegendModal({ show, onHide }) {
+export default function LegendModal({ diagram, show, onHide }) {
   return (
     <Modal show={show} onHide={onHide} centered backdrop keyboard size="lg">
       <Modal.Header closeButton>
@@ -147,7 +147,54 @@ export default function LegendModal({ show, onHide }) {
           </Row>
           <Row>
             <ul style={{ listStyleType: "none", padding: 0 }}>
-              <li style={{ display: "flex", alignItems: "center" }}>
+            {diagram ? (
+                <>
+                  <li style={{ display: "flex", alignItems: "center" }}>
+                    <div
+                      style={{
+                        width: "50px",
+                        borderTop: "2px solid black",
+                      }}
+                      className="me-1"
+                    ></div>
+                    Direct Consequence
+                  </li>
+                  <li style={{ display: "flex", alignItems: "center" }}>
+                    <div
+                      style={{
+                        width: "50px",
+                        borderTop: "2px dashed black",
+                      }}
+                      className="me-1"
+                    ></div>
+                    Collateral Consequence
+                  </li>
+                  <li style={{ display: "flex", alignItems: "center" }}>
+                    <div
+                      style={{
+                        width: "50px",
+                        borderTop: "2px dotted black",
+                      }}
+                      className="me-1"
+                    ></div>
+                    Projection
+                  </li>
+                  <li style={{ display: "flex", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "50px",
+                      height: "2px",
+                      backgroundImage:
+                        "repeating-linear-gradient(to right, black 10px, black 15px, transparent 15px, transparent 20px, black 20px, black 21px, transparent 21px, transparent 25px)",
+                    }}
+                    className="me-1"
+                  ></div>
+                  Update 
+                </li>
+                </>
+              ) : (
+                <>
+                <li style={{ display: "flex", alignItems: "center" }}>
                 <strong
                   style={{
                     backgroundColor: "#e9ecef",
@@ -207,6 +254,8 @@ export default function LegendModal({ show, onHide }) {
                 </strong>
                 Update
               </li>
+              </>
+              )}
             </ul>
           </Row>
         </Col>

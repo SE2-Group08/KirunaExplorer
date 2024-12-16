@@ -2,15 +2,17 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import API from "../api";
 import { getIconUrlForDocument } from "../utils/iconMapping";
+import { Button } from "react-bootstrap";
+import LegendModal from "./Legend";
 
 const FullPageChart = () => {
   const svgRef = useRef();
   const [documentsToShow, setDocumentsToShow] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
-
+  const [showLegend, setShowLegend] = useState(false);
 
   useEffect(() => {
-    const margin = { top: 50, right: 50, bottom: 50, left: 100 };
+    const margin = { top: 70, right: 80, bottom: 50, left: 100 };
     const width = window.innerWidth - margin.left - margin.right;
     const height = window.innerHeight * 0.85 - margin.top - margin.bottom;
 
@@ -52,28 +54,39 @@ const FullPageChart = () => {
       return match ? parseInt(match[1]) : null;
     };
 
-    const yScale = d3.scalePoint().domain(fixedYDomain).range([0, height]).padding(0.2);
-    const xScale = d3.scaleLinear().domain([2004, 2024]).range([0, width]);
-
     const svg = d3
       .select(svgRef.current)
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
       .style("background", "#ffffff")
-      .append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+      /*.append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);*/
+
+    // Contenitore del grafico con margini
+    const mainGroup = svg
+    .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    // Creazione degli scale
+    const xScale = d3.scaleLinear().domain([2004, 2024]).range([0, width]);
+    const yScale = d3
+      .scalePoint()
+      .domain([" ", "Text", "Concept", "1:100000", "1:10000", "1:5000", "1:1000", "Blueprints/effects", ""])
+      .range([0, height])
+      .padding(0.2);
 
     const xAxis = d3.axisBottom(xScale).ticks(21).tickFormat(d3.format("d"));
     const yAxis = d3.axisLeft(yScale);
 
-    svg.append("g").call(yAxis);
-    svg
+    // Aggiunta degli assi
+    mainGroup.append("g").call(yAxis);
+    mainGroup
       .append("g")
       .attr("transform", `translate(0, ${height})`)
       .call(xAxis);
 
     // Griglie orizzontali
-    svg
+    mainGroup
       .append("g")
       .attr("class", "grid grid-horizontal")
       .call(d3.axisLeft(yScale).tickSize(-width).tickFormat(""))
@@ -82,7 +95,7 @@ const FullPageChart = () => {
       .attr("stroke-dasharray", "4,4");
 
     // Griglie verticali
-    svg
+    mainGroup
       .append("g")
       .attr("class", "grid grid-vertical")
       .call(d3.axisBottom(xScale).ticks(21).tickSize(height).tickFormat(""))
@@ -101,11 +114,26 @@ const FullPageChart = () => {
     .style("border-radius", "4px")
     .style("pointer-events", "none")
     .style("font-size", "12px")
-    .style("height", "60px")
+    .style("height", "auto")
+
+     // **ZOOM: Definizione e gestione**
+     const zoom = d3.zoom()
+     .scaleExtent([1, 5]) // Minimo zoom = 1 (posizione iniziale), massimo zoom = 10
+     .translateExtent([
+       [-50, -50], // Limiti di pan: posizione iniziale in alto a sinistra
+       [width+30, height+30], // Limiti di pan: posizione iniziale in basso a destra
+     ])
+     .on("zoom", (event) => {
+       mainGroup.attr("transform", event.transform); // Applica la trasformazione dello zoom
+       setZoomLevel(event.transform.k); // Aggiorna lo stato con il livello di zoom corrente
+     });
+
+    // Applica lo zoom all'intero SVG
+    svg.call(zoom);
 
     // Calcolare le posizioni dei documenti
     const documentPositions = {};
-    svg
+    mainGroup
       .selectAll(".document-icon")
       .data(documentsToShow)
       .enter()
@@ -211,7 +239,7 @@ const FullPageChart = () => {
             const controlPointY = (startY + endY) / 2 - Math.abs(curveOffset) / 2; // Controlla la posizione dell'arco
     
             // Crea una curva con il path, applicando il tipo di linea
-            svg
+            mainGroup
               .append("path")
               .attr(
                 "d",
@@ -227,7 +255,7 @@ const FullPageChart = () => {
     });
 
     // Alza le icone dei documenti sopra le linee
-    svg.selectAll(".document-icon").raise();
+    mainGroup.selectAll(".document-icon").raise();
 
     // Cleanup
     return () => {
@@ -242,10 +270,21 @@ const FullPageChart = () => {
   }, []);
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
+      <LegendModal diagram={true} show={showLegend} onHide={() => setShowLegend(false)} />
+      <Button
+        title={"legend"}
+        className="position-absolute top-0 end-0 m-3"
+        variant="secondary"
+        onClick={() => {
+          setShowLegend(!showLegend);
+        }}
+      >
+        <i className="bi bi-question-circle"></i>
+      </Button>
       <svg ref={svgRef}></svg>
     </div>
   );
-};
+}  
 
 export default FullPageChart;
