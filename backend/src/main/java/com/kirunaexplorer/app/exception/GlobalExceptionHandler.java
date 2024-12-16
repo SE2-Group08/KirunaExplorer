@@ -86,6 +86,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    // Handle Duplicate Area Exception (400)
+    @ExceptionHandler(DuplicateAreaException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateAreaException(DuplicateAreaException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            ex.getMessage(),
+            request.getDescription(false),
+            LocalDateTime.now());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     // Handle File Read Exception (500)
     @ExceptionHandler(FileReadException.class)
     public ResponseEntity<ErrorResponse> handleFileReadException(FileReadException ex, WebRequest request) {

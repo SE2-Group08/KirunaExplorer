@@ -2,6 +2,7 @@ package com.kirunaexplorer.app.service;
 
 import com.kirunaexplorer.app.dto.request.PointCoordinatesRequestDTO;
 import com.kirunaexplorer.app.dto.response.PointCoordinatesResponseDTO;
+import com.kirunaexplorer.app.exception.DuplicatePointException;
 import com.kirunaexplorer.app.model.PointCoordinates;
 import com.kirunaexplorer.app.repository.PointCoordinatesRepository;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class PointCoordinatesService {
      */
     public List<PointCoordinatesResponseDTO> getAllPoints() {
         return pointCoordinatesRepository.findAll().stream()
-            .map(PointCoordinates::fromPointCoordinates)
+            .map(PointCoordinates::toPointCoordinatesResponseDTO)
             .toList();
     }
 
@@ -31,7 +32,7 @@ public class PointCoordinatesService {
 
         // Check if point already exists
         if (pointCoordinatesRepository.existsPointCoordinatesByName(pointCoordinatesRequestDTO.pointName())) {
-            throw new IllegalArgumentException("Point already exists with same name");
+            throw new DuplicatePointException("Point already exists with same name");
         }
 
         // Save point

@@ -23,7 +23,7 @@ public class PointCoordinates {
     private Double latitude;
     private Double longitude;
 
-    public PointCoordinatesResponseDTO fromPointCoordinates() {
+    public PointCoordinatesResponseDTO toPointCoordinatesResponseDTO() {
         return new PointCoordinatesResponseDTO(id, name, latitude, longitude);
     }
 }
