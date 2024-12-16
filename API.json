@@ -100,30 +100,11 @@
             "minimum": 0
           },
           "geolocation": {
-            "description": "The coordinates of the document",
-            "type": "object",
-            "properties": {
-              "latitude": {
-                "type": "number",
-                "description": "The latitude of the document",
-                "minimum": 67.82295,
-                "maximum": 67.88398
-              },
-              "longitude": {
-                "type": "number",
-                "description": "The longitude of the document",
-                "minimum": 20.14402,
-                "maximum": 20.3687
-              },
-              "area": {
-                "type": "string",
-                "description": "The area of the document",
-                "pattern": "Entire municipality",
-                "minLength": 2,
-                "maxLength": 64
-              }
-            }
-          },
+            "oneOf":[
+             { "$ref": "#/components/schemas/AreaSnippet" },
+             { "$ref": "#/components/schemas/PointCoordinates" }
+            ]
+           },
           "description": {
             "type": "string",
             "description": "The description of the document",
@@ -214,29 +195,10 @@
             ]
           },
           "geolocation": {
-            "description": "The coordinates of the document",
-            "type": "object",
-            "properties": {
-              "latitude": {
-                "type": "number",
-                "description": "The latitude of the document",
-                "minimum": 67.82295,
-                "maximum": 67.88398
-              },
-              "longitude": {
-                "type": "number",
-                "description": "The longitude of the document",
-                "minimum": 20.14402,
-                "maximum": 20.3687
-              },
-              "area": {
-                "type": "string",
-                "description": "The area of the document",
-                "pattern": "Entire municipality",
-                "minLength": 2,
-                "maxLength": 64
-              }
-            }
+           "oneOf":[
+            { "$ref": "#/components/schemas/AreaSnippet" },
+            { "$ref": "#/components/schemas/PointCoordinates" }
+           ]
           }
         },
         "required": [
@@ -403,6 +365,140 @@
         "required": [
           "fileId",
           "fileName"
+        ]
+      },
+      "PointCoordinates": {
+        "title": "PointCoordinates",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pointId": {
+            "type": "integer",
+            "description": "The unique identifier of the point"
+          },
+          "pointName": {
+            "type": "string",
+            "description": "The name of the point",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "latitude": {
+            "type": "number",
+            "description": "The latitude of the point",
+            "minimum": 67.82295,
+            "maximum": 67.88398
+          },
+          "longitude": {
+            "type": "number",
+            "description": "The longitude of the point",
+            "minimum": 20.14402,
+            "maximum": 20.3687
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "AreaSnippet": {
+        "title": "Area",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "areaId": {
+            "type": "integer",
+            "description": "The unique identifier of the area"
+          },
+          "areaName": {
+            "type": "string",
+            "description": "The name of the area",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "areaCentroid": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "description": "The latitude of the area centroid",
+                "minimum": 67.82295,
+                "maximum": 67.88398
+              },
+              "longitude": {
+                "type": "number",
+                "description": "The longitude of the area centroid",
+                "minimum": 20.14402,
+                "maximum": 20.3687
+              }
+            }
+          }
+        },
+        "required": [
+          "areaCentroid",
+          "geometry"
+        ]
+      },
+      "Area": {
+        "title": "Area",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "areaId": {
+            "type": "integer",
+            "description": "The unique identifier of the area"
+          },
+          "areaName": {
+            "type": "string",
+            "description": "The name of the area",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "areaCentroid": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "description": "The latitude of the area centroid",
+                "minimum": 67.82295,
+                "maximum": 67.88398
+              },
+              "longitude": {
+                "type": "number",
+                "description": "The longitude of the area centroid",
+                "minimum": 20.14402,
+                "maximum": 20.3687
+              }
+            }
+          },
+          "geometry": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The type of the geometry",
+                "enum": [
+                  "Polygon",
+                  "MultiPolygon"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "description": "The coordinates of the geometry",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "areaCentroid",
+          "geometry"
         ]
       }
     }
@@ -1117,6 +1213,173 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/areas": {
+      "get": {
+        "summary": "Get all areas",
+        "tags": [
+          "area"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AreaSnippet"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new area",
+        "tags": [
+          "area"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Area"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/areas/{areaId}": {
+      "get": {
+        "summary": "Get the {areaId} area",
+        "tags": [
+          "area"
+        ],
+        "parameters": [
+          {
+            "name": "areaId",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Area"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/points": {
+      "get": {
+        "summary": "Get all saved points",
+        "tags": [
+          "point"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PointCoordinates"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new point to be saved",
+        "tags": [
+          "point"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PointCoordinates"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "500": {
             "description": "Internal server error"
