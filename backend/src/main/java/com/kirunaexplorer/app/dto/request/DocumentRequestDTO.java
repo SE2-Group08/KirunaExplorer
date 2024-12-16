@@ -57,7 +57,7 @@ public record DocumentRequestDTO(
 
     @Override
     public GeoReferenceDTO geolocation() {
-        return Objects.requireNonNullElseGet(this.geolocation, () -> new GeoReferenceDTO(null, null, null));    // some idiomatic shit right here, I like it
+        return Objects.requireNonNullElseGet(this.geolocation, () -> new GeoReferenceDTO(null, null));
     }
 
     /**

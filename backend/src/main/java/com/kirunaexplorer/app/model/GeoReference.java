@@ -24,37 +24,37 @@ public class GeoReference {
     @JoinColumn(name = "document_id")
     private Document document;
 
-    private boolean isEntireMunicipality; // True if it refers to the whole municipality
+    @ManyToOne
+    @JoinColumn(name = "area_id")
+    private Area area;
 
-    @Column(columnDefinition = "geography(Point, 4326)", nullable = true)
-    private Point location; // Nullable, used only for specific point
+    @ManyToOne
+    @JoinColumn(name = "point_coordinates_id")
+    private PointCoordinates pointCoordinates;
 
-    public GeoReference(Long documentId, Document document) {
-        this.documentId = documentId;
+
+    public GeoReference(Document document, Area area, PointCoordinates pointCoordinates) {
+        this.document = document;
+        this.area = area;
+        this.pointCoordinates = pointCoordinates;
+    }
+
+    public GeoReference(Long id, Document document) {
+        this.documentId = id;
         this.document = document;
     }
 
-    public GeoReference(Document document, boolean isEntireMunicipality, Point location) {
-        this.document = document;
-        this.isEntireMunicipality = isEntireMunicipality;
-        this.location = location;
+    public void updateFromDTO(GeoReferenceDTO geolocation) {
+        // TODO
     }
 
-    /**
-     * Converts the GeoReference object to a GeoReferenceDTO object.
-     *
-     * @return GeoReferenceDTO object
-     */
     public GeoReferenceDTO toGeolocationDTO() {
-        return new GeoReferenceDTO(
-            location != null ? location.getY() : null,
-            location != null ? location.getX() : null,
-            isEntireMunicipality ? "Entire municipality" : null
-        );
-    }
-
-    public void updateFromDTO(GeoReferenceDTO geoDTO) {
-        this.isEntireMunicipality = geoDTO.municipality() != null;
-        this.location = geoDTO.municipality() == null ? geoDTO.createPoint(geoDTO.latitude(), geoDTO.longitude()) : null;
+        if (area != null) {
+            return new GeoReferenceDTO(area.toAreaBriefDTO(), null);
+        }
+        if (pointCoordinates != null) {
+            return new GeoReferenceDTO(null, pointCoordinates.toPointCoordinatesDTO());
+        }
+        return new GeoReferenceDTO(null, null);
     }
 }

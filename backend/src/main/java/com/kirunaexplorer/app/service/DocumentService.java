@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.sound.midi.SysexMessage;
 import java.util.List;
 
 @Service
@@ -23,6 +24,8 @@ public class DocumentService {
     private final DocumentScaleRepository documentScaleRepository;
     private final StakeholderRepository stakeholderRepository;
     private final DocumentTypeRepository documentTypeRepository;
+    private final AreaRepository areaRepository;
+    private final PointCoordinatesRepository pointCoordinatesRepository;
 
     private static final int PAGE_SIZE = 16;
 
@@ -32,7 +35,9 @@ public class DocumentService {
         DocumentLinkRepository documentLinkRepository,
         StakeholderRepository stakeholderRepository,
         DocumentTypeRepository documentTypeRepository,
-        DocumentScaleRepository documentScaleRepository
+        DocumentScaleRepository documentScaleRepository,
+        AreaRepository areaRepository,
+        PointCoordinatesRepository pointCoordinatesRepository
     ) {
         this.geoReferenceRepository = geoReferenceRepository;
         this.documentRepository = documentRepository;
@@ -40,6 +45,8 @@ public class DocumentService {
         this.stakeholderRepository = stakeholderRepository;
         this.documentTypeRepository = documentTypeRepository;
         this.documentScaleRepository = documentScaleRepository;
+        this.areaRepository = areaRepository;
+        this.pointCoordinatesRepository = pointCoordinatesRepository;
     }
 
     /**
@@ -75,7 +82,7 @@ public class DocumentService {
 
         return documentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + id))
-            .toResponseDTO(documentLinkRepository.countByDocumentId(id));
+            .toDocumentResponseDTO(documentLinkRepository.countByDocumentId(id));
     }
 
     /**
@@ -94,9 +101,11 @@ public class DocumentService {
         Document document = documentRequest.toDocument();
         document = documentRepository.save(document);
 
+        storeGeolocation(documentRequest, document);
+
         // Save geolocation
-        GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
-        geoReferenceRepository.save(geoReference);
+//        GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
+//        geoReferenceRepository.save(geoReference);
 
         return document.getId();
     }
@@ -170,5 +179,29 @@ public class DocumentService {
             documentScaleRepository.save(newScale);
         }
     }
-}
 
+    private void storeGeolocation(DocumentRequestDTO documentRequest, Document document) {
+        if (documentRequest.geolocation().area() != null) {
+            Area existingArea = areaRepository.findById(documentRequest.geolocation().area().areaId())              // Area specified in the request
+                .orElseThrow(() -> new ResourceNotFoundException("Area not found with ID " + documentRequest.geolocation().area().areaId()));
+
+            GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
+            geoReference.setArea(existingArea);
+            geoReferenceRepository.save(geoReference);
+            return;
+        }
+
+        if (documentRequest.geolocation().pointCoordinates() != null) {                                             // PointCoordinates specified in the request
+            PointCoordinates existingPointCoordinates = pointCoordinatesRepository.findById(documentRequest.geolocation().pointCoordinates().pointId())
+                .orElseThrow(() -> new ResourceNotFoundException("PointCoordinates not found with ID " + documentRequest.geolocation().pointCoordinates().pointId()));
+
+            GeoReference newGeoReference = new GeoReference(document, null, existingPointCoordinates);
+            geoReferenceRepository.save(newGeoReference);
+
+            return;
+        }
+
+        GeoReference geoReference = new GeoReference(document.getId(), document);                                 // No geolocation specified in the request
+        geoReferenceRepository.save(geoReference);
+    }
+}

@@ -1,13 +1,12 @@
 package com.kirunaexplorer.app.dto.request;
 
+import com.kirunaexplorer.app.dto.inout.AreaBriefDTO;
 import com.kirunaexplorer.app.dto.inout.CoordinatesDTO;
 import com.kirunaexplorer.app.dto.inout.GeometryDTO;
 import com.kirunaexplorer.app.model.Area;
 
 public record AreaRequestDTO(
-    Long areaId,
-    String areaName,
-    CoordinatesDTO centroid,
+    AreaBriefDTO area,
     GeometryDTO geometry
 ) {
     /**
@@ -16,6 +15,6 @@ public record AreaRequestDTO(
      * @return Area
      */
     public Area toArea() {
-        return new Area(areaId, areaName, centroid.toCoordinates(), geometry.toGeometry());
+        return new Area(area.areaId(), area.areaName(), area.areaCentroid().toCoordinates(), geometry.toGeometry());
     }
 }

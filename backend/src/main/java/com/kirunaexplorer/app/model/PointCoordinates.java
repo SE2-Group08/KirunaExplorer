@@ -1,5 +1,6 @@
 package com.kirunaexplorer.app.model;
 
+import com.kirunaexplorer.app.dto.inout.PointCoordinatesDTO;
 import com.kirunaexplorer.app.dto.response.PointCoordinatesResponseDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,5 +26,9 @@ public class PointCoordinates {
 
     public PointCoordinatesResponseDTO toPointCoordinatesResponseDTO() {
         return new PointCoordinatesResponseDTO(id, name, latitude, longitude);
+    }
+
+    public PointCoordinatesDTO toPointCoordinatesDTO() {
+        return new PointCoordinatesDTO(id, name, latitude, longitude);
     }
 }
