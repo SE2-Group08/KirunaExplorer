@@ -8,6 +8,11 @@ public record AreaBriefDTO(
     CoordinatesDTO areaCentroid
 ) {
     public Area toArea() {
-        return null; //TODO
+        return new Area(
+            areaId,
+            areaName,
+            areaCentroid.toCoordinates(),
+            null
+        );
     }
 }

@@ -56,6 +56,13 @@ public class DataInitializer implements CommandLineRunner {
             new Geometry(GeometryType.POLYGON, List.of(new Coordinates(69.0, 20.0), new Coordinates(69.0, 21.0), new Coordinates(70.0, 21.0), new Coordinates(70.0, 20.0)))
         ));
 
+        areaRepository.save(new Area(
+            null,
+            "BBBBB",
+            new Coordinates(68.0, 21.0),
+            new Geometry(GeometryType.POLYGON, List.of(new Coordinates(69.0, 20.0), new Coordinates(69.0, 21.0), new Coordinates(70.0, 21.0), new Coordinates(70.0, 20.0)))
+        ));
+
         pointCoordinatesRepository.save(new PointCoordinates(
             null,
             "Cool new point",

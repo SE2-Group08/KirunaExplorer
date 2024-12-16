@@ -44,8 +44,14 @@ public class GeoReference {
         this.document = document;
     }
 
-    public void updateFromDTO(GeoReferenceDTO geolocation) {
-        // TODO
+    public void setArea(Area area) {
+        this.area = area;
+        this.pointCoordinates = null;
+    }
+
+    public void setPointCoordinates(PointCoordinates pointCoordinates) {
+        this.pointCoordinates = pointCoordinates;
+        this.area = null;
     }
 
     public GeoReferenceDTO toGeolocationDTO() {

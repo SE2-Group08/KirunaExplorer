@@ -103,10 +103,6 @@ public class DocumentService {
 
         storeGeolocation(documentRequest, document);
 
-        // Save geolocation
-//        GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
-//        geoReferenceRepository.save(geoReference);
-
         return document.getId();
     }
 
@@ -132,8 +128,7 @@ public class DocumentService {
         GeoReference geoReference = geoReferenceRepository.findById(document.getId())
             .orElseGet(() -> new GeoReference(document.getId(), document)); // Create new if not exist
 
-        geoReference.updateFromDTO(documentRequest.geolocation()); // Update geolocation
-        geoReferenceRepository.save(geoReference);
+        updateGeolocation(documentRequest, geoReference);
     }
 
     public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
@@ -203,5 +198,23 @@ public class DocumentService {
 
         GeoReference geoReference = new GeoReference(document.getId(), document);                                 // No geolocation specified in the request
         geoReferenceRepository.save(geoReference);
+    }
+
+    private void updateGeolocation(DocumentRequestDTO documentRequest, GeoReference geoReference) {
+        if (documentRequest.geolocation().area() != null) {
+            Area existingArea = areaRepository.findById(documentRequest.geolocation().area().areaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Area not found with ID " + documentRequest.geolocation().area().areaId()));
+
+            geoReference.setArea(existingArea);
+            geoReferenceRepository.save(geoReference);
+        } else if (documentRequest.geolocation().pointCoordinates() != null) {
+            PointCoordinates existingPointCoordinates = pointCoordinatesRepository.findById(documentRequest.geolocation().pointCoordinates().pointId())
+                .orElseThrow(() -> new ResourceNotFoundException("PointCoordinates not found with ID " + documentRequest.geolocation().pointCoordinates().pointId()));
+
+            geoReference.setPointCoordinates(existingPointCoordinates);
+            geoReferenceRepository.save(geoReference);
+        } else {
+            geoReference.setArea(null);
+        }
     }
 }

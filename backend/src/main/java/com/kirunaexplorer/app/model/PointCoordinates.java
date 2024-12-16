@@ -21,14 +21,19 @@ public class PointCoordinates {
     private Long id;
 
     private String name;
-    private Double latitude;
-    private Double longitude;
+
+    @Embedded
+    private Coordinates coordinates;
+
+    public PointCoordinates(Long id, String name, double latitude, double longitude) {
+        this(id, name, new Coordinates(latitude, longitude));
+    }
 
     public PointCoordinatesResponseDTO toPointCoordinatesResponseDTO() {
-        return new PointCoordinatesResponseDTO(id, name, latitude, longitude);
+        return new PointCoordinatesResponseDTO(id, name, coordinates.getLatitude(), coordinates.getLongitude());
     }
 
     public PointCoordinatesDTO toPointCoordinatesDTO() {
-        return new PointCoordinatesDTO(id, name, latitude, longitude);
+        return new PointCoordinatesDTO(id, name, coordinates.getLatitude(), coordinates.getLongitude());
     }
 }
