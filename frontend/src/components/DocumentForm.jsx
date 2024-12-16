@@ -454,10 +454,12 @@ function DocumentFormFields({
       !languageOptions.includes(document.language) &&
       document.language !== "Other"
     ) {
-      setLanguageOptions((prevLanguageOptions) => [
-        ...prevLanguageOptions,
-        document.language,
-      ]);
+      setLanguageOptions((prevLanguageOptions) => {
+        if (!prevLanguageOptions.includes(document.language)) {
+          return [...prevLanguageOptions, document.language];
+        }
+        return prevLanguageOptions;
+      });
     }
   }, [
     document.geolocation.latitude,
