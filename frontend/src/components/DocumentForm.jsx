@@ -416,6 +416,7 @@ function DocumentFormFields({
       : defaultPosition[1],
   ]);
   const [filteredLanguages, setFilteredLanguages] = useState([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
@@ -556,6 +557,7 @@ function DocumentFormFields({
         language.toLowerCase().startsWith(value.toLowerCase())
       );
       setFilteredLanguages(filtered);
+      setHighlightedIndex(-1);
     } else {
       setFilteredLanguages([]);
     }
@@ -564,6 +566,26 @@ function DocumentFormFields({
   const handleLanguageSelect = (language) => {
     handleChange("customLanguage", language);
     setFilteredLanguages([]);
+    setHighlightedIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (filteredLanguages.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1
+        );
+      } else if (e.key === "Enter" && highlightedIndex >= 0) {
+        e.preventDefault();
+        handleLanguageSelect(filteredLanguages[highlightedIndex]);
+      }
+    }
   };
 
   return (
@@ -928,6 +950,7 @@ function DocumentFormFields({
                   onChange={handleLanguageInputChange}
                   isInvalid={!!errors.language}
                   className="me-2"
+                  onKeyDown={handleKeyDown}
                 />
                 <Button
                   variant="primary"
@@ -952,10 +975,12 @@ function DocumentFormFields({
             {filteredLanguages.length > 0 && (
               <div className="mt-2 position-relative">
                 <div className="dropdown-menu show">
-                  {filteredLanguages.map((language) => (
+                  {filteredLanguages.map((language, index) => (
                     <button
                       key={language}
-                      className="dropdown-item"
+                      className={`dropdown-item ${
+                        index === highlightedIndex ? "active" : ""
+                      }`}
                       onClick={() => handleLanguageSelect(language)}
                     >
                       {language}
