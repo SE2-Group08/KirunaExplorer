@@ -449,8 +449,15 @@ function DocumentFormFields({
       ]);
     }
 
-    if (document.language && !languageOptions.includes(document.language)) {
-      setLanguageOptions([...languageOptions, document.language]);
+    if (
+      document.language &&
+      !languageOptions.includes(document.language) &&
+      document.language !== "Other"
+    ) {
+      setLanguageOptions((prevLanguageOptions) => [
+        ...prevLanguageOptions,
+        document.language,
+      ]);
     }
   }, [
     document.geolocation.latitude,
@@ -681,6 +688,7 @@ function DocumentFormFields({
                 <Button
                   variant="primary"
                   disabled={
+                    !document.customScale?.trim() ||
                     scaleOptions.some(
                       (s) =>
                         s.name.toLowerCase() ===
@@ -720,6 +728,7 @@ function DocumentFormFields({
                 <Button
                   variant="primary"
                   disabled={
+                    !document.customScale?.trim() ||
                     scaleOptions.some((s) => s.name === document.customScale) ||
                     scaleOptions.some(
                       (s) => s.name === `1:${document.customScale}`
@@ -831,12 +840,13 @@ function DocumentFormFields({
                 <Button
                   variant="primary"
                   disabled={
-                    document.customType &&
-                    allDocumentTypes.some(
-                      (t) =>
-                        t.name.toLowerCase() ===
-                        document.customType.trim().toLowerCase()
-                    )
+                    !document.customType?.trim() ||
+                    (document.customType &&
+                      allDocumentTypes.some(
+                        (t) =>
+                          t.name.toLowerCase() ===
+                          document.customType.trim().toLowerCase()
+                      ))
                   }
                   onClick={() => {
                     setAllDocumentTypes((prevTypes) => [
@@ -893,17 +903,17 @@ function DocumentFormFields({
                 />
                 <Button
                   variant="primary"
+                  disabled={
+                    !document.customLanguage?.trim() ||
+                    (document.customLanguage &&
+                      languageOptions.includes(document.customLanguage))
+                  }
                   onClick={() => {
-                    if (
-                      document.customLanguage &&
-                      !languageOptions.includes(document.customLanguage)
-                    ) {
-                      setLanguageOptions([
-                        ...languageOptions,
-                        document.customLanguage,
-                      ]);
-                      handleChange("language", document.customLanguage);
-                    }
+                    setLanguageOptions([
+                      ...languageOptions,
+                      document.customLanguage,
+                    ]);
+                    handleChange("language", document.customLanguage);
                   }}
                   title="Add custom language"
                 >
