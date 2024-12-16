@@ -42,17 +42,8 @@
           "scale": {
             "description": "The scale of the document",
             "type": "string",
-            "oneOf": [
-              {
-                "pattern": "text"
-              },
-              {
-                "pattern": "blueprint/material effects"
-              },
-              {
-                "pattern": "^1:[1-9][0-9]*$"
-              }
-            ]
+            "minLength": 2,
+            "maxLength": 64
           },
           "issuanceDate": {
             "type": "string",
@@ -75,13 +66,8 @@
           "type": {
             "type": "string",
             "description": "The type of the document",
-            "enum": [
-              "Design document",
-              "Material effect",
-              "Technical document",
-              "Prescriptive document",
-              "Informative document"
-            ]
+            "minLength": 2,
+            "maxLength": 64
           },
           "nrConnections": {
             "type": "integer",
@@ -105,15 +91,11 @@
             "properties": {
               "latitude": {
                 "type": "number",
-                "description": "The latitude of the document",
-                "minimum": 67.82295,
-                "maximum": 67.88398
+                "description": "The latitude of the document"
               },
               "longitude": {
                 "type": "number",
-                "description": "The longitude of the document",
-                "minimum": 20.14402,
-                "maximum": 20.3687
+                "description": "The longitude of the document"
               },
               "area": {
                 "type": "string",
@@ -172,17 +154,8 @@
           "scale": {
             "description": "The scale of the document",
             "type": "string",
-            "oneOf": [
-              {
-                "pattern": "text"
-              },
-              {
-                "pattern": "blueprint/material effects"
-              },
-              {
-                "pattern": "^1:[1-9][0-9]*$"
-              }
-            ]
+            "minLength": 2,
+            "maxLength": 64
           },
           "issuanceDate": {
             "type": "string",
@@ -205,13 +178,8 @@
           "type": {
             "type": "string",
             "description": "The type of the document",
-            "enum": [
-              "Design document",
-              "Material effect",
-              "Technical document",
-              "Prescriptive document",
-              "Informative document"
-            ]
+            "minLength": 2,
+            "maxLength": 64
           },
           "geolocation": {
             "description": "The coordinates of the document",
@@ -219,15 +187,11 @@
             "properties": {
               "latitude": {
                 "type": "number",
-                "description": "The latitude of the document",
-                "minimum": 67.82295,
-                "maximum": 67.88398
+                "description": "The latitude of the document"
               },
               "longitude": {
                 "type": "number",
-                "description": "The longitude of the document",
-                "minimum": 20.14402,
-                "maximum": 20.3687
+                "description": "The longitude of the document"
               },
               "area": {
                 "type": "string",
@@ -246,8 +210,8 @@
           "type"
         ]
       },
-      "documentSnippets": {
-        "title": "documentSnippets",
+      "listPage": {
+        "title": "ListPage",
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -433,7 +397,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/documentSnippets"
+                    "$ref": "#/components/schemas/listPage"
                   }
                 }
               }
