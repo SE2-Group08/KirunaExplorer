@@ -63,6 +63,20 @@ public class DataInitializer implements CommandLineRunner {
             20.0
         ));
 
+        pointCoordinatesRepository.save(new PointCoordinates(
+            null,
+            "Cool new point 2",
+            69.0,
+            20.0
+        ));
+
+        pointCoordinatesRepository.save(new PointCoordinates(
+            null,
+            null,
+            69.0,
+            20.0
+        ));
+
 //        initializeStakeholders();
 //        initializeDocumentType();
 //        initializeDocumentScale();

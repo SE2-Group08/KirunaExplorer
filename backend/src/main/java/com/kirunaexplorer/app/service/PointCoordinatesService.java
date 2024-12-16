@@ -23,7 +23,7 @@ public class PointCoordinatesService {
      * @return list of all points
      */
     public List<PointCoordinatesResponseDTO> getAllPoints() {
-        return pointCoordinatesRepository.findAll().stream()
+        return pointCoordinatesRepository.findAllByNameNotNull().stream()
             .map(PointCoordinates::toPointCoordinatesResponseDTO)
             .toList();
     }
