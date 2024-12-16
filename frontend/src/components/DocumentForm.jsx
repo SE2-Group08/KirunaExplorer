@@ -415,6 +415,7 @@ function DocumentFormFields({
       ? document.geolocation.longitude
       : defaultPosition[1],
   ]);
+  const [filteredLanguages, setFilteredLanguages] = useState([]);
 
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
@@ -544,6 +545,25 @@ function DocumentFormFields({
     if (document.geolocation.latitude != "" && lng != "") {
       setMarkerPosition([document.geolocation.latitude, lng]);
     }
+  };
+
+  const handleLanguageInputChange = (e) => {
+    const value = e.target.value;
+    handleChange("customLanguage", value);
+
+    if (value.length > 0) {
+      const filtered = Array.from(allowedLanguages).filter((language) =>
+        language.toLowerCase().startsWith(value.toLowerCase())
+      );
+      setFilteredLanguages(filtered);
+    } else {
+      setFilteredLanguages([]);
+    }
+  };
+
+  const handleLanguageSelect = (language) => {
+    handleChange("customLanguage", language);
+    setFilteredLanguages([]);
   };
 
   return (
@@ -905,9 +925,7 @@ function DocumentFormFields({
                   type="text"
                   placeholder="Enter custom language"
                   value={document.customLanguage || ""}
-                  onChange={(e) =>
-                    handleChange("customLanguage", e.target.value)
-                  }
+                  onChange={handleLanguageInputChange}
                   isInvalid={!!errors.language}
                   className="me-2"
                 />
@@ -929,6 +947,21 @@ function DocumentFormFields({
                 >
                   <i className="bi bi-plus-square"></i>
                 </Button>
+              </div>
+            )}
+            {filteredLanguages.length > 0 && (
+              <div className="mt-2 position-relative">
+                <div className="dropdown-menu show">
+                  {filteredLanguages.map((language) => (
+                    <button
+                      key={language}
+                      className="dropdown-item"
+                      onClick={() => handleLanguageSelect(language)}
+                    >
+                      {language}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             <Form.Control.Feedback type="invalid">
