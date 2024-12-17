@@ -334,18 +334,16 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
     let updatedGeolocation = { ...formDocument.geolocation };
 
     try {
-      // Step 1: Handle the pointCoordinates logic
       if (locationMode === "point") {
         if (formDocument.geolocation.pointCoordinates?.pointId) {
-          // Se il punto esiste già, includi solo l'ID
           updatedGeolocation = {
             ...formDocument.geolocation,
             pointCoordinates: {
               pointId: formDocument.geolocation.pointCoordinates.pointId,
+              pointName: null
             },
           };
         } else {
-          // Se è un nuovo punto, crea il punto e ottieni l'ID
           const sanitizedPointName =
               formDocument.geolocation.pointCoordinates.pointName?.trim() === ""
                   ? null
@@ -360,19 +358,17 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
             ...formDocument.geolocation,
             pointCoordinates: {
               pointId: newPointId,
-              pointName: sanitizedPointName,
+              pointName: null,
             },
           };
         }
       }
 
-      // Step 2: Prepare sanitized geolocation
       const sanitizedGeolocation = {
         area: locationMode === "area" ? formDocument.geolocation.area : null,
         pointCoordinates: locationMode === "point" ? updatedGeolocation.pointCoordinates : null,
       };
 
-      // Step 3: Validate form
       const validationErrors = validateForm(
           formDocument,
           combinedIssuanceDate,
@@ -384,7 +380,6 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         return;
       }
 
-      // Step 4: Submit document
       if (!document) {
         const newDocId = await createDocument(
             formDocument,
@@ -646,7 +641,23 @@ function DocumentFormFields({
         .catch(setFeedbackFromError);
 
     API.getAllGeolocatedPoints(authToken)
-        .then(setAllKnownPoints)
+        .then((points) => {
+          setAllKnownPoints(points);
+
+          // Se il documento ha un punto esistente, imposta il selectedPointId
+          if (document.geolocation?.pointCoordinates?.pointId) {
+            const existingPoint = points.find(
+                (p) => p.id === document.geolocation.pointCoordinates.pointId
+            );
+
+            if (existingPoint) {
+              setSelectedPointId(existingPoint.id.toString());
+
+              // Imposta la posizione del marcatore sulla mappa
+              setMarkerPosition([existingPoint.latitude, existingPoint.longitude]);
+            }
+          }
+        })
         .catch(setFeedbackFromError);
     // Fetch all stakeholders
     API.getAllStakeholders()
@@ -1513,10 +1524,12 @@ function DocumentFormFields({
         <Col md={3}>
           <Form.Group>
             <Form.Control as="select" value={selectedPointId} onChange={handleSelectExistingPoint}>
-                      <option value="">-- Select an existing point --</option>
-                      {allKnownPoints.map((point) => (
-                          <option key={point.id} value={point.id}>{point.name || `Point ${point.id}`}</option>
-                      ))}
+              <option value="">-- Select an existing point --</option>
+              {allKnownPoints.map((point) => (
+                  <option key={point.id} value={point.id}>
+                    {point.name || `Point ${point.id}`}
+                  </option>
+              ))}
             </Form.Control>
           </Form.Group>
         </Col>
