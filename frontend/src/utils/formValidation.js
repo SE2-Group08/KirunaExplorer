@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import {allowedLanguages} from "./allowedLanguages";
 
 dayjs.extend(customParseFormat);
 
@@ -143,6 +144,9 @@ const validateLanguage = (language) => {
     }
     if (language.trim().length < 2 || language.length > 64) {
       return "Language must be between 2 and 64 characters.";
+    }
+    if (!allowedLanguages.has(language.trim())) {
+      return `The language '${language}' is not supported.`;
     }
   }
   return null;
