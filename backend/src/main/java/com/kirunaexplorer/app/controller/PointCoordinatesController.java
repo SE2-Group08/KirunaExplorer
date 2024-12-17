@@ -3,7 +3,9 @@ package com.kirunaexplorer.app.controller;
 import com.kirunaexplorer.app.dto.request.PointCoordinatesRequestDTO;
 import com.kirunaexplorer.app.dto.response.PointCoordinatesResponseDTO;
 import com.kirunaexplorer.app.service.PointCoordinatesService;
+import com.kirunaexplorer.app.validation.groups.point_coordinates.PostPointCoordinates;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -36,7 +38,7 @@ public class PointCoordinatesController {
      * @return ResponseEntity<Void>
      */
     @PostMapping
-    public ResponseEntity<Void> createPoint(@RequestBody PointCoordinatesRequestDTO pointCoordinatesRequestDTO) {
+    public ResponseEntity<Void> createPoint(@RequestBody @Validated({PostPointCoordinates.class}) PointCoordinatesRequestDTO pointCoordinatesRequestDTO) {
         System.out.println(pointCoordinatesRequestDTO);
         Long pointId = pointCoordinatesService.createPoint(pointCoordinatesRequestDTO);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()

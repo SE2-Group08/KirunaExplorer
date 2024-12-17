@@ -1,19 +1,20 @@
 package com.kirunaexplorer.app.dto.inout;
 
 import com.kirunaexplorer.app.model.PointCoordinates;
+import com.kirunaexplorer.app.validation.groups.point_coordinates.PostPointCoordinates;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record PointCoordinatesDTO(
+    @Null(groups = {PostPointCoordinates.class})
     Long pointId,
 
     @NotNull
-    @Size(min = 2, max = 64)
+    @Size(min = 2, max = 64, groups = {PostPointCoordinates.class})
     String pointName,
 
+    @Valid
+    @NotNull(groups = {PostPointCoordinates.class})
     CoordinatesDTO coordinates
 ) {
 
