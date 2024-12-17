@@ -180,9 +180,9 @@ public class DocumentService {
             Area existingArea = areaRepository.findById(documentRequest.geolocation().area().areaId())              // Area specified in the request
                 .orElseThrow(() -> new ResourceNotFoundException("Area not found with ID " + documentRequest.geolocation().area().areaId()));
 
-            GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
-            geoReference.setArea(existingArea);
-            geoReferenceRepository.save(geoReference);
+            GeoReference newGeoReference = new GeoReference(document, existingArea, null);
+            geoReferenceRepository.save(newGeoReference);
+
             return;
         }
 

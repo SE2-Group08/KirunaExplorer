@@ -481,11 +481,11 @@ const getAreaById = async (id, authToken) => {
 };
 
 
-// /* ************************** *
-//  *      Stakeholders APIs     *
-//  * ************************** */
+/* ************************** *
+ *      Stakeholders APIs     *
+ * ************************** */
 
-// // Retrieve all stakeholders
+// Retrieve all stakeholders
 const getAllStakeholders = async () => {
   const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
     .then(handleInvalidResponse)
@@ -633,6 +633,7 @@ async function mapAPISnippetsToSnippet(apiSnippets) {
 const API = {
   /* Document */
   getAllDocumentSnippets,
+  getDocumentsByPageNumber,
   addDocument,
   getDocumentById,
   updateDocument,
@@ -652,7 +653,7 @@ const API = {
   searchDocuments,
   getAllScales,
   addScale,
-  getDocumentsByPageNumber,
+  /* File */
   uploadFiles,
   deleteFile,
   getDocumentFiles,

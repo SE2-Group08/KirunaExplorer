@@ -8,6 +8,7 @@ import {
   Button,
   Spinner,
   ListGroup,
+  InputGroup,
 } from "react-bootstrap";
 import {
   MapContainer,
@@ -48,6 +49,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
       title: "",
       stakeholders: [],
       scale: "",
+      customScale: "",
       issuanceDate: "",
       day: "",
       month: "",
@@ -87,6 +89,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         title: document.title || "",
         stakeholders: document.stakeholders || [],
         scale: document.scale || "",
+        customScale: "",
         issuanceDate: document.issuanceDate || "",
         day: document.issuanceDate
           ? document.issuanceDate.split("-")[2] || ""
@@ -121,7 +124,6 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
           setDeletedExistingFiles([]);
         })
         .catch((error) => setFeedbackFromError(error));
-
     }
 
   }, [authToken,document, setFeedbackFromError]);
@@ -363,33 +365,31 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         pointCoordinates: locationMode === "point" ? updatedGeolocation.pointCoordinates : null,
       };
 
-      // Step 3: Validate form
-      const validationErrors = validateForm(
-          formDocument,
-          combinedIssuanceDate,
-          kirunaBorderCoordinates
-      );
-      setErrors(validationErrors);
-
-      if (Object.keys(validationErrors).length > 0) {
-        handleValidationErrors(validationErrors);
-        return;
-      }
+    const validationErrors = validateForm(
+      formDocument,
+      combinedIssuanceDate,
+      kirunaBorderCoordinates
+    );
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      handleValidationErrors(validationErrors);
+      return;
+    }
 
       // Step 4: Submit document
       if (!document) {
         const newDocId = await createDocument(
-            formDocument,
-            combinedIssuanceDate,
-            sanitizedGeolocation
+          formDocument,
+          combinedIssuanceDate,
+          sanitizedGeolocation
         );
         await uploadFiles(newDocId, filesToUpload);
       } else {
         await updateDocument(
-            document,
-            formDocument,
-            combinedIssuanceDate,
-            sanitizedGeolocation
+          document,
+          formDocument,
+          combinedIssuanceDate,
+          sanitizedGeolocation
         );
         await uploadFiles(document.id, filesToUpload);
         await deleteFiles(deletedExistingFiles);
@@ -403,7 +403,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
       setFilesToUpload([]);
       onHide();
     } catch (error) {
-      console.error("Error during form submission:", error);
+      setFeedbackFromError(error);
     }
   };
 
@@ -568,7 +568,11 @@ function DocumentFormFields({
 }) {
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
-  const [allScales, setAllScales] = useState([]);
+  const [scaleOptions, setScaleOptions] = useState([]);
+  const [languageOptions, setLanguageOptions] = useState([
+    "Swedish",
+    "English",
+  ]);
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const safeLatitude = document?.geolocation?.pointCoordinates?.coordinates?.latitude === "" || document?.geolocation?.pointCoordinates?.coordinates?.latitude == null
       ? null
@@ -584,6 +588,8 @@ function DocumentFormFields({
   const [markerPosition, setMarkerPosition] = useState(finalPosition);
   const [pointName, setPointName] = useState("");
   const [newPoint, setNewPoint] = useState(false)
+  const [filteredLanguages, setFilteredLanguages] = useState([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   useEffect(() => {
     if (locationMode === "area") {
@@ -651,10 +657,19 @@ function DocumentFormFields({
     // Fetch all scales
     API.getAllScales()
       .then((scales) => {
-        setAllScales(scales);
+        if (document.scale && !scales.some((s) => s.name === document.scale)) {
+          setScaleOptions([
+            ...scales,
+            { id: Date.now(), name: document.scale },
+          ]);
+        } else {
+          setScaleOptions(scales);
+        }
       })
       .catch((e) => setFeedbackFromError(e));
+  }, [setFeedbackFromError]);
 
+  useEffect(() => {
     // Set marker position if geolocation is available
     if (document.geolocation.pointCoordinates) {
       setMarkerPosition([
@@ -662,9 +677,23 @@ function DocumentFormFields({
         document.geolocation.pointCoordinates.coordinates.longitude,
       ]);
     }
+
+    if (
+      document.language &&
+      !languageOptions.includes(document.language) &&
+      document.language !== "Other"
+    ) {
+      setLanguageOptions((prevLanguageOptions) => {
+        if (!prevLanguageOptions.includes(document.language)) {
+          return [...prevLanguageOptions, document.language];
+        }
+        return prevLanguageOptions;
+      });
+    }
   }, [
     document?.geolocation?.pointCoordinates?.coordinates,
-    setFeedbackFromError,
+      document.language,
+      languageOptions,
   ]);
 
   const handleDayChange = (e) => {
@@ -932,6 +961,32 @@ function DocumentFormFields({
     }
   };
 
+  const handleLanguageSelect = (language) => {
+    handleChange("customLanguage", language);
+    setFilteredLanguages([]);
+    setHighlightedIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (filteredLanguages.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1
+        );
+      } else if (e.key === "Enter" && highlightedIndex >= 0) {
+        e.preventDefault();
+        handleLanguageSelect(filteredLanguages[highlightedIndex]);
+      }
+    }
+  };
+
+
 
   const zoomOnMunicipality = () => {
     if (mapRef.current && kirunaBorderCoordinates?.length) {
@@ -998,15 +1053,17 @@ function DocumentFormFields({
                 />
               ))
             ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.stakeholders
               .filter(
                 (stakeholder) =>
                   !allStakeholders.map((s) => s.name).includes(stakeholder)
               )
-              .map((stakeholder) => (
-                <div key={stakeholder.id} className="d-flex mb-2">
+              .map((stakeholder, index) => (
+                <div key={index} className="d-flex mb-2">
                   <Form.Control
                     type="text"
                     value={stakeholder}
@@ -1060,7 +1117,7 @@ function DocumentFormFields({
           <Form.Group className="mb-3" controlId="formDocumentScale">
             <Form.Label>Scale *</Form.Label>
             <div className="divider" />
-            {allScales ? (
+            {scaleOptions ? (
               <Form.Control
                 as="select"
                 value={document.scale}
@@ -1070,15 +1127,18 @@ function DocumentFormFields({
                 ref={refs.scaleRef}
               >
                 <option value="">Select scale</option>
-                {allScales.map((scaleOption) => (
+                {scaleOptions.map((scaleOption) => (
                   <option key={scaleOption.id} value={scaleOption.name}>
                     {scaleOption.name}
                   </option>
                 ))}
+                <option value="Architectural">Architectural</option>
                 <option value="Other">Other</option>
               </Form.Control>
             ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.scale === "Other" && (
               <div className="d-flex mt-2">
@@ -1092,19 +1152,61 @@ function DocumentFormFields({
                 />
                 <Button
                   variant="primary"
+                  disabled={
+                    !document.customScale?.trim() ||
+                    scaleOptions.some(
+                      (s) =>
+                        s.name.toLowerCase() ===
+                        document.customScale.trim().toLowerCase()
+                    ) ||
+                    scaleOptions.some(
+                      (s) => s.name === `1:${document.customScale}`
+                    )
+                  }
                   onClick={() => {
-                    if (
-                      document.customScale &&
-                      !allScales.some((s) => s.name === document.customScale)
-                    ) {
-                      allScales.push({
-                        id: Date.now(),
-                        name: document.customScale,
-                      });
-                      handleChange("scale", document.customScale);
-                    }
+                    setScaleOptions([
+                      ...scaleOptions,
+                      { id: Date.now(), name: document.customScale },
+                    ]);
+                    handleChange("scale", document.customScale);
                   }}
-                  title="Add custom scale"
+                  title="Add a custom scale"
+                >
+                  <i className="bi bi-plus-square"></i>
+                </Button>
+              </div>
+            )}
+            {document.scale === "Architectural" && (
+              <div className="d-flex mt-2">
+                <InputGroup className="me-2">
+                  <InputGroup.Text>1 :</InputGroup.Text>
+                  <Form.Control
+                    type="number"
+                    value={document.customScale}
+                    onChange={(e) =>
+                      handleChange("customScale", e.target.value)
+                    }
+                    isInvalid={!!errors.scale}
+                    placeholder="Enter the scale value"
+                  />
+                </InputGroup>
+                <Button
+                  variant="primary"
+                  disabled={
+                    !document.customScale?.trim() ||
+                    scaleOptions.some((s) => s.name === document.customScale) ||
+                    scaleOptions.some(
+                      (s) => s.name === `1:${document.customScale}`
+                    )
+                  }
+                  onClick={() => {
+                    setScaleOptions([
+                      ...scaleOptions,
+                      { id: Date.now(), name: `1:${document.customScale}` },
+                    ]);
+                    handleChange("scale", `1:${document.customScale}`);
+                  }}
+                  title="Add an architectural scale"
                 >
                   <i className="bi bi-plus-square"></i>
                 </Button>
@@ -1125,36 +1227,36 @@ function DocumentFormFields({
             <div className="divider" />
             <div className="d-flex">
               <Form.Control
-                  type="text"
-                  value={document.day}
-                  onChange={(e) => handleDayChange(e)}
-                  isInvalid={!!errors.issuanceDate}
-                  placeholder="DD"
-                  className="me-1"
-                  ref={refs.dayRef}
-                  style={{ width: "80px" }}
+                type="text"
+                value={document.day}
+                onChange={(e) => handleDayChange(e)}
+                isInvalid={!!errors.issuanceDate}
+                placeholder="DD"
+                className="me-1"
+                ref={refs.dayRef}
+                style={{ width: "80px" }}
               />
               <span>/</span>
               <Form.Control
-                  type="text"
-                  value={document.month}
-                  onChange={(e) => handleMonthChange(e)}
-                  isInvalid={!!errors.issuanceDate}
-                  placeholder="MM"
-                  className="mx-1"
-                  ref={refs.monthRef}
-                  style={{ width: "80px" }}
+                type="text"
+                value={document.month}
+                onChange={(e) => handleMonthChange(e)}
+                isInvalid={!!errors.issuanceDate}
+                placeholder="MM"
+                className="mx-1"
+                ref={refs.monthRef}
+                style={{ width: "80px" }}
               />
               <span>/</span>
               <Form.Control
-                  type="text"
-                  value={document.year}
-                  onChange={(e) => handleYearChange(e)}
-                  isInvalid={!!errors.issuanceDate}
-                  placeholder="YYYY"
-                  className="ms-1"
-                  ref={refs.yearRef}
-                  style={{ width: "100px" }}
+                type="text"
+                value={document.year}
+                onChange={(e) => handleYearChange(e)}
+                isInvalid={!!errors.issuanceDate}
+                placeholder="YYYY"
+                className="ms-1"
+                ref={refs.yearRef}
+                style={{ width: "100px" }}
               />
             </div>
             <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
@@ -1169,56 +1271,60 @@ function DocumentFormFields({
             <Form.Label>Type *</Form.Label>
             <div className="divider" />
             {allDocumentTypes ? (
-                <Form.Control
-                    as="select"
-                    value={document.type}
-                    onChange={(e) => handleChange("type", e.target.value)}
-                    isInvalid={!!errors.type}
-                    required
-                    ref={refs.typeRef}
-                >
-                  <option value="">Select type</option>
-                  {allDocumentTypes.map((typeOption) => (
-                      <option key={typeOption.id} value={typeOption.name}>
-                        {typeOption.name}
-                      </option>
-                  ))}
-                  <option value="Other">Other</option>
-                </Form.Control>
+              <Form.Control
+                as="select"
+                value={document.type}
+                onChange={(e) => handleChange("type", e.target.value)}
+                isInvalid={!!errors.type}
+                required
+                ref={refs.typeRef}
+              >
+                <option value="">Select type</option>
+                {allDocumentTypes.map((typeOption) => (
+                  <option key={typeOption.id} value={typeOption.name}>
+                    {typeOption.name}
+                  </option>
+                ))}
+                <option value="Other">Other</option>
+              </Form.Control>
             ) : (
-                <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.type === "Other" && (
-                <div className="d-flex mt-2">
-                  <Form.Control
-                      type="text"
-                      placeholder="Enter custom type"
-                      value={document.customType || ""}
-                      onChange={(e) => handleChange("customType", e.target.value)}
-                      isInvalid={!!errors.type}
-                      className="me-2"
-                  />
-                  <Button
-                      variant="primary"
-                      onClick={() => {
-                        if (
-                            document.customType &&
-                            !allDocumentTypes.some(
-                                (t) => t.name === document.customType
-                            )
-                        ) {
-                          allDocumentTypes.push({
-                            id: Date.now(),
-                            name: document.customType,
-                          });
-                          handleChange("type", document.customType);
-                        }
-                      }}
-                      title="Add custom type"
-                  >
-                    <i className="bi bi-plus-square"></i>
-                  </Button>
-                </div>
+              <div className="d-flex mt-2">
+                <Form.Control
+                  type="text"
+                  placeholder="Enter custom type"
+                  value={document.customType || ""}
+                  onChange={(e) => handleChange("customType", e.target.value)}
+                  isInvalid={!!errors.type}
+                  className="me-2"
+                />
+                <Button
+                  variant="primary"
+                  disabled={
+                    !document.customType?.trim() ||
+                    (document.customType &&
+                      allDocumentTypes.some(
+                        (t) =>
+                          t.name.toLowerCase() ===
+                          document.customType.trim().toLowerCase()
+                      ))
+                  }
+                  onClick={() => {
+                    setAllDocumentTypes((prevTypes) => [
+                      ...prevTypes,
+                      { id: Date.now(), name: document.customType },
+                    ]);
+                    handleChange("type", document.customType);
+                  }}
+                  title="Add custom type"
+                >
+                  <i className="bi bi-plus-square"></i>
+                </Button>
+              </div>
             )}
           </Form.Group>
           <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
@@ -1234,13 +1340,71 @@ function DocumentFormFields({
             <Form.Label>Language</Form.Label>
             <div className="divider" />
             <Form.Control
-                type="text"
-                value={document.language}
-                onChange={(e) => handleChange("language", e.target.value)}
-                placeholder="English"
-                isInvalid={!!errors.language}
-                ref={refs.languageRef}
-            />
+              as="select"
+              value={document.language}
+              onChange={(e) => handleChange("language", e.target.value)}
+              isInvalid={!!errors.language}
+              ref={refs.languageRef}
+            >
+              <option value="">Select language</option>
+              {languageOptions.map((languageOption) => (
+                <option key={languageOption} value={languageOption}>
+                  {languageOption}
+                </option>
+              ))}
+              <option value="Other">Other</option>
+              <option value="">None</option>
+            </Form.Control>
+            {document.language === "Other" && (
+              <div className="d-flex mt-2">
+                <Form.Control
+                  type="text"
+                  placeholder="Enter custom language"
+                  value={document.customLanguage || ""}
+                  onChange={(e) =>
+                    handleChange("customLanguage", e.target.value)
+                  }
+                  isInvalid={!!errors.language}
+                  className="me-2"
+                  onKeyDown={handleKeyDown}
+                />
+                <Button
+                  variant="primary"
+                  disabled={
+                    !document.customLanguage?.trim() ||
+                    (document.customLanguage &&
+                      languageOptions.includes(document.customLanguage))
+                  }
+                  onClick={() => {
+                    setLanguageOptions([
+                      ...languageOptions,
+                      document.customLanguage,
+                    ]);
+                    handleChange("language", document.customLanguage);
+                  }}
+                  title="Add custom language"
+                >
+                  <i className="bi bi-plus-square"></i>
+                </Button>
+              </div>
+            )}
+            {filteredLanguages.length > 0 && (
+              <div className="mt-2 position-relative">
+                <div className="dropdown-menu show">
+                  {filteredLanguages.map((language, index) => (
+                    <button
+                      key={language}
+                      className={`dropdown-item ${
+                        index === highlightedIndex ? "active" : ""
+                      }`}
+                      onClick={() => handleLanguageSelect(language)}
+                    >
+                      {language}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <Form.Control.Feedback type="invalid">
               {errors.language}
             </Form.Control.Feedback>
@@ -1252,12 +1416,12 @@ function DocumentFormFields({
             <Form.Label>Pages</Form.Label>
             <div className="divider" />
             <Form.Control
-                type="number"
-                value={document.nrPages}
-                min={0}
-                onChange={(e) => handleChange("nrPages", Number(e.target.value))}
-                isInvalid={!!errors.nrPages}
-                ref={refs.nrPagesRef}
+              type="number"
+              value={document.nrPages}
+              min={0}
+              onChange={(e) => handleChange("nrPages", Number(e.target.value))}
+              isInvalid={!!errors.nrPages}
+              ref={refs.nrPagesRef}
             />
             <Form.Control.Feedback type="invalid">
               {errors.nrPages}

@@ -4,8 +4,11 @@ import com.kirunaexplorer.app.dto.request.AreaRequestDTO;
 import com.kirunaexplorer.app.dto.response.AreaBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.AreaResponseDTO;
 import com.kirunaexplorer.app.service.AreaService;
+import com.kirunaexplorer.app.validation.groups.area.PostArea;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -50,7 +53,7 @@ public class AreaController {
      * @return ResponseEntity<Void>
      */
     @PostMapping
-    public ResponseEntity<Void> createArea(@RequestBody @Valid AreaRequestDTO area) {
+    public ResponseEntity<Void> createArea(@RequestBody @Validated({PostArea.class}) AreaRequestDTO area) {
         Long documentId = areaService.createArea(area);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
             .path("/{id}")

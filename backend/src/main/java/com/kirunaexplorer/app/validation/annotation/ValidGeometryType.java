@@ -1,6 +1,6 @@
 package com.kirunaexplorer.app.validation.annotation;
 
-import com.kirunaexplorer.app.validation.validator.OneOfGeoReferenceValidator;
+import com.kirunaexplorer.app.validation.validator.GeometryTypeValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -9,11 +9,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE})
+@Constraint(validatedBy = GeometryTypeValidator.class)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = OneOfGeoReferenceValidator.class)
-public @interface OneOfGeoReference {
-    String message() default "Geolocation must match one of the specified formats";
+public @interface ValidGeometryType {
+    String message() default "Invalid geometry type";
 
     Class<?>[] groups() default {};
 

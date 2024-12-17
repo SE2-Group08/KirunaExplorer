@@ -236,9 +236,9 @@ export default function ListDocuments({
         </Row>
 
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
-        {filteredDocuments.length === 0 ? (
-          <Spinner animation="border" role="status" className="mx-auto">
-            <span className="visually-hidden">Loading...</span>
+        {allDocuments.length === 0 ? (
+          <Spinner animation="border" className="mx-auto">
+            <output className="visually-hidden">Loading...</output>
           </Spinner>
         ) : compactView ? (
           <Row className="g-4 mx-auto">
@@ -316,7 +316,6 @@ export default function ListDocuments({
 }
 
 ListDocuments.propTypes = {
-  thinCardLayout: PropTypes.bool,
   shouldRefresh: PropTypes.bool.isRequired,
   loggedIn: PropTypes.bool.isRequired,
   isUrbanPlanner: PropTypes.bool.isRequired,
