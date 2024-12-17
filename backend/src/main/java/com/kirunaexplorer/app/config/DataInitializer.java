@@ -281,6 +281,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initializeDocumentScale() {
         documentScaleRepository.save(new DocumentScale(null, "Text"));
-        documentScaleRepository.save(new DocumentScale(null, "blueprints/effects"));
+        documentScaleRepository.save(new DocumentScale(null, "Blueprints/Material effects"));
     }
 }

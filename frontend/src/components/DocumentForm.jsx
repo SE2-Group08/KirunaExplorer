@@ -8,6 +8,7 @@ import {
   Button,
   Spinner,
   ListGroup,
+  InputGroup,
 } from "react-bootstrap";
 import {
   MapContainer,
@@ -40,6 +41,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       title: "",
       stakeholders: [],
       scale: "",
+      customScale: "",
       issuanceDate: "",
       day: "",
       month: "",
@@ -79,6 +81,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
         title: document.title || "",
         stakeholders: document.stakeholders || [],
         scale: document.scale || "",
+        customScale: "",
         issuanceDate: document.issuanceDate || "",
         day: document.issuanceDate
           ? document.issuanceDate.split("-")[2] || ""
@@ -390,7 +393,11 @@ function DocumentFormFields({
 }) {
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
-  const [allScales, setAllScales] = useState([]);
+  const [scaleOptions, setScaleOptions] = useState([]);
+  const [languageOptions, setLanguageOptions] = useState([
+    "Swedish",
+    "English",
+  ]);
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const [markerPosition, setMarkerPosition] = useState([
     document.geolocation.latitude
@@ -400,6 +407,8 @@ function DocumentFormFields({
       ? document.geolocation.longitude
       : defaultPosition[1],
   ]);
+  const [filteredLanguages, setFilteredLanguages] = useState([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
@@ -421,9 +430,19 @@ function DocumentFormFields({
     // Fetch all scales
     API.getAllScales()
       .then((scales) => {
-        setAllScales(scales);
+        if (document.scale && !scales.some((s) => s.name === document.scale)) {
+          setScaleOptions([
+            ...scales,
+            { id: Date.now(), name: document.scale },
+          ]);
+        } else {
+          setScaleOptions(scales);
+        }
       })
       .catch((e) => setFeedbackFromError(e));
+  }, [setFeedbackFromError]);
+
+  useEffect(() => {
     // Set marker position if geolocation is available
     if (document.geolocation.latitude && document.geolocation.longitude) {
       setMarkerPosition([
@@ -431,10 +450,24 @@ function DocumentFormFields({
         document.geolocation.longitude,
       ]);
     }
+
+    if (
+      document.language &&
+      !languageOptions.includes(document.language) &&
+      document.language !== "Other"
+    ) {
+      setLanguageOptions((prevLanguageOptions) => {
+        if (!prevLanguageOptions.includes(document.language)) {
+          return [...prevLanguageOptions, document.language];
+        }
+        return prevLanguageOptions;
+      });
+    }
   }, [
     document.geolocation.latitude,
     document.geolocation.longitude,
-    setFeedbackFromError,
+    document.language,
+    languageOptions,
   ]);
 
   const handleDayChange = (e) => {
@@ -470,7 +503,7 @@ function DocumentFormFields({
     handleChange("geolocation", {
       latitude: lat,
       longitude: lng,
-      municipality: null,
+      municipality: "",
     });
   };
 
@@ -483,29 +516,55 @@ function DocumentFormFields({
 
   const handleLatitudeChange = (e) => {
     const value = e.target.value;
-    const lat = value === "" ? null : parseFloat(value);
+    const lat = value === "" ? "" : parseFloat(value);
     handleChange("geolocation", {
       ...document.geolocation,
       latitude: lat,
-      municipality: null,
+      municipality: "",
     });
-    if (lat != null && document.geolocation.longitude != null) {
+    if (lat != "" && document.geolocation.longitude != "") {
       setMarkerPosition([lat, document.geolocation.longitude]);
     }
   };
 
   const handleLongitudeChange = (e) => {
     const value = e.target.value;
-    const lng = value === "" ? null : parseFloat(value);
+    const lng = value === "" ? "" : parseFloat(value);
     handleChange("geolocation", {
       ...document.geolocation,
       longitude: lng,
-      municipality: null,
+      municipality: "",
     });
-    if (document.geolocation.latitude != null && lng != null) {
+    if (document.geolocation.latitude != "" && lng != "") {
       setMarkerPosition([document.geolocation.latitude, lng]);
     }
   };
+
+  const handleLanguageSelect = (language) => {
+    handleChange("customLanguage", language);
+    setFilteredLanguages([]);
+    setHighlightedIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (filteredLanguages.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) =>
+          prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1
+        );
+      } else if (e.key === "Enter" && highlightedIndex >= 0) {
+        e.preventDefault();
+        handleLanguageSelect(filteredLanguages[highlightedIndex]);
+      }
+    }
+  };
+
   return (
     <>
       {/* TITLE*/}
@@ -558,15 +617,17 @@ function DocumentFormFields({
                 />
               ))
             ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.stakeholders
               .filter(
                 (stakeholder) =>
                   !allStakeholders.map((s) => s.name).includes(stakeholder)
               )
-              .map((stakeholder) => (
-                <div key={stakeholder.id} className="d-flex mb-2">
+              .map((stakeholder, index) => (
+                <div key={index} className="d-flex mb-2">
                   <Form.Control
                     type="text"
                     value={stakeholder}
@@ -620,7 +681,7 @@ function DocumentFormFields({
           <Form.Group className="mb-3" controlId="formDocumentScale">
             <Form.Label>Scale *</Form.Label>
             <div className="divider" />
-            {allScales ? (
+            {scaleOptions ? (
               <Form.Control
                 as="select"
                 value={document.scale}
@@ -630,15 +691,18 @@ function DocumentFormFields({
                 ref={refs.scaleRef}
               >
                 <option value="">Select scale</option>
-                {allScales.map((scaleOption) => (
+                {scaleOptions.map((scaleOption) => (
                   <option key={scaleOption.id} value={scaleOption.name}>
                     {scaleOption.name}
                   </option>
                 ))}
+                <option value="Architectural">Architectural</option>
                 <option value="Other">Other</option>
               </Form.Control>
             ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.scale === "Other" && (
               <div className="d-flex mt-2">
@@ -652,19 +716,61 @@ function DocumentFormFields({
                 />
                 <Button
                   variant="primary"
+                  disabled={
+                    !document.customScale?.trim() ||
+                    scaleOptions.some(
+                      (s) =>
+                        s.name.toLowerCase() ===
+                        document.customScale.trim().toLowerCase()
+                    ) ||
+                    scaleOptions.some(
+                      (s) => s.name === `1:${document.customScale}`
+                    )
+                  }
                   onClick={() => {
-                    if (
-                      document.customScale &&
-                      !allScales.some((s) => s.name === document.customScale)
-                    ) {
-                      allScales.push({
-                        id: Date.now(),
-                        name: document.customScale,
-                      });
-                      handleChange("scale", document.customScale);
-                    }
+                    setScaleOptions([
+                      ...scaleOptions,
+                      { id: Date.now(), name: document.customScale },
+                    ]);
+                    handleChange("scale", document.customScale);
                   }}
-                  title="Add custom scale"
+                  title="Add a custom scale"
+                >
+                  <i className="bi bi-plus-square"></i>
+                </Button>
+              </div>
+            )}
+            {document.scale === "Architectural" && (
+              <div className="d-flex mt-2">
+                <InputGroup className="me-2">
+                  <InputGroup.Text>1 :</InputGroup.Text>
+                  <Form.Control
+                    type="number"
+                    value={document.customScale}
+                    onChange={(e) =>
+                      handleChange("customScale", e.target.value)
+                    }
+                    isInvalid={!!errors.scale}
+                    placeholder="Enter the scale value"
+                  />
+                </InputGroup>
+                <Button
+                  variant="primary"
+                  disabled={
+                    !document.customScale?.trim() ||
+                    scaleOptions.some((s) => s.name === document.customScale) ||
+                    scaleOptions.some(
+                      (s) => s.name === `1:${document.customScale}`
+                    )
+                  }
+                  onClick={() => {
+                    setScaleOptions([
+                      ...scaleOptions,
+                      { id: Date.now(), name: `1:${document.customScale}` },
+                    ]);
+                    handleChange("scale", `1:${document.customScale}`);
+                  }}
+                  title="Add an architectural scale"
                 >
                   <i className="bi bi-plus-square"></i>
                 </Button>
@@ -746,7 +852,9 @@ function DocumentFormFields({
                 <option value="Other">Other</option>
               </Form.Control>
             ) : (
-              <Spinner animation="border" role="status" className="mx-auto" />
+              <Spinner animation="border" className="mx-auto">
+                <output>Loading...</output>
+              </Spinner>
             )}
             {document.type === "Other" && (
               <div className="d-flex mt-2">
@@ -760,19 +868,21 @@ function DocumentFormFields({
                 />
                 <Button
                   variant="primary"
+                  disabled={
+                    !document.customType?.trim() ||
+                    (document.customType &&
+                      allDocumentTypes.some(
+                        (t) =>
+                          t.name.toLowerCase() ===
+                          document.customType.trim().toLowerCase()
+                      ))
+                  }
                   onClick={() => {
-                    if (
-                      document.customType &&
-                      !allDocumentTypes.some(
-                        (t) => t.name === document.customType
-                      )
-                    ) {
-                      allDocumentTypes.push({
-                        id: Date.now(),
-                        name: document.customType,
-                      });
-                      handleChange("type", document.customType);
-                    }
+                    setAllDocumentTypes((prevTypes) => [
+                      ...prevTypes,
+                      { id: Date.now(), name: document.customType },
+                    ]);
+                    handleChange("type", document.customType);
                   }}
                   title="Add custom type"
                 >
@@ -794,13 +904,71 @@ function DocumentFormFields({
             <Form.Label>Language</Form.Label>
             <div className="divider" />
             <Form.Control
-              type="text"
+              as="select"
               value={document.language}
               onChange={(e) => handleChange("language", e.target.value)}
-              placeholder="English"
               isInvalid={!!errors.language}
               ref={refs.languageRef}
-            />
+            >
+              <option value="">Select language</option>
+              {languageOptions.map((languageOption) => (
+                <option key={languageOption} value={languageOption}>
+                  {languageOption}
+                </option>
+              ))}
+              <option value="Other">Other</option>
+              <option value="">None</option>
+            </Form.Control>
+            {document.language === "Other" && (
+              <div className="d-flex mt-2">
+                <Form.Control
+                  type="text"
+                  placeholder="Enter custom language"
+                  value={document.customLanguage || ""}
+                  onChange={(e) =>
+                    handleChange("customLanguage", e.target.value)
+                  }
+                  isInvalid={!!errors.language}
+                  className="me-2"
+                  onKeyDown={handleKeyDown}
+                />
+                <Button
+                  variant="primary"
+                  disabled={
+                    !document.customLanguage?.trim() ||
+                    (document.customLanguage &&
+                      languageOptions.includes(document.customLanguage))
+                  }
+                  onClick={() => {
+                    setLanguageOptions([
+                      ...languageOptions,
+                      document.customLanguage,
+                    ]);
+                    handleChange("language", document.customLanguage);
+                  }}
+                  title="Add custom language"
+                >
+                  <i className="bi bi-plus-square"></i>
+                </Button>
+              </div>
+            )}
+            {filteredLanguages.length > 0 && (
+              <div className="mt-2 position-relative">
+                <div className="dropdown-menu show">
+                  {filteredLanguages.map((language, index) => (
+                    <button
+                      key={language}
+                      className={`dropdown-item ${
+                        index === highlightedIndex ? "active" : ""
+                      }`}
+                      onClick={() => handleLanguageSelect(language)}
+                    >
+                      {language}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <Form.Control.Feedback type="invalid">
               {errors.language}
             </Form.Control.Feedback>
@@ -836,7 +1004,7 @@ function DocumentFormFields({
               min={67.3564329180828}
               max={69.05958911620179}
               step={0.00001}
-              value={document.geolocation.latitude}
+              value={document.geolocation.latitude || ""}
               onChange={handleLatitudeChange}
               id="formDocumentGeolocationLatitude"
               disabled={
@@ -852,7 +1020,7 @@ function DocumentFormFields({
               min={67.3564329180828}
               max={69.05958911620179}
               step={0.00001}
-              value={document.geolocation.latitude}
+              value={document.geolocation.latitude || ""}
               onChange={handleLatitudeChange}
               disabled={
                 document.geolocation.municipality === "Entire municipality"
@@ -883,7 +1051,7 @@ function DocumentFormFields({
               min={17.89900836116174}
               max={23.28669305841499}
               step={0.00001}
-              value={document.geolocation.longitude}
+              value={document.geolocation.longitude || ""}
               onChange={handleLongitudeChange}
               disabled={
                 document.geolocation.municipality === "Entire municipality"
@@ -901,7 +1069,7 @@ function DocumentFormFields({
                 <Marker position={markerPosition} />
                 {document.geolocation.municipality === "Entire municipality" ? (
                   <Polygon positions={kirunaBorderCoordinates} />
-                ) : null}
+                ) : undefined}
                 <MapClickHandler />
               </MapContainer>
             </div>
