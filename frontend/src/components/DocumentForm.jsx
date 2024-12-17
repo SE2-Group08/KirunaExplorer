@@ -411,6 +411,8 @@ function DocumentFormFields({
   const [filteredLanguages, setFilteredLanguages] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
+  const languageRefs = useRef([]);
+  const dropdownRef = useRef(null);
 
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
