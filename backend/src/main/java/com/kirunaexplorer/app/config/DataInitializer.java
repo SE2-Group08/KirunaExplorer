@@ -27,13 +27,13 @@ public class DataInitializer implements CommandLineRunner {
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
     public DataInitializer(
-            DocumentRepository documentRepository,
-            GeoReferenceRepository geoReferenceRepository,
-            AreaRepository areaRepository,
-            PointCoordinatesRepository pointCoordinatesRepository,
-            StakeholderRepository stakeholderRepository,
-            DocumentTypeRepository documentTypeRepository,
-            DocumentScaleRepository documentScaleRepository) {
+        DocumentRepository documentRepository,
+        GeoReferenceRepository geoReferenceRepository,
+        AreaRepository areaRepository,
+        PointCoordinatesRepository pointCoordinatesRepository,
+        StakeholderRepository stakeholderRepository,
+        DocumentTypeRepository documentTypeRepository,
+        DocumentScaleRepository documentScaleRepository) {
         this.documentRepository = documentRepository;
         this.geoReferenceRepository = geoReferenceRepository;
         this.areaRepository = areaRepository;
@@ -46,57 +46,57 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        initializeStakeholders();
-        initializeDocumentTypes();
-        initializeDocumentScales();
+//        initializeStakeholders();
+//        initializeDocumentTypes();
+//        initializeDocumentScales();
 
         // Initialize Areas
         Area area1 = areaRepository.save(new Area(
-                null,
-                "AAAAAAAA",
-                new Coordinates(69.0, 20.0),
-                new Geometry(GeometryType.POLYGON, List.of(new Coordinates(69.0, 20.0), new Coordinates(69.0, 21.0),
-                        new Coordinates(70.0, 21.0), new Coordinates(70.0, 20.0)))));
+            null,
+            "AAAAAAAA",
+            new Coordinates(69.0, 20.0),
+            new Geometry(GeometryType.POLYGON, List.of(new Coordinates(69.0, 20.0), new Coordinates(69.0, 21.0),
+                new Coordinates(70.0, 21.0), new Coordinates(70.0, 20.0)))));
 
         PointCoordinates point1 = pointCoordinatesRepository.save(new PointCoordinates(
-                null,
-                "Cool new point",
-                69.0,
-                20.0));
+            null,
+            "Cool new point",
+            69.0,
+            20.0));
 
         PointCoordinates point2 = pointCoordinatesRepository.save(new PointCoordinates(
-                null,
-                "Cool new point 2",
-                69.0,
-                20.0));
+            null,
+            "Cool new point 2",
+            69.0,
+            20.0));
 
         PointCoordinates point3 = pointCoordinatesRepository.save(new PointCoordinates(
-                null,
-                null,
-                69.0,
-                20.0));
+            null,
+            null,
+            69.0,
+            20.0));
 
         Document document1 = documentRepository.save(new Document(
-                null,
-                "Cool new document",
-                "This is a cool new document",
-                "LKAB",
-                "Material effect",
-                "Blueprint/Material effects",
-                LocalDate.of(2019, 4, 19),
-                DatePrecision.FULL_DATE,
-                null,
-                null,
-                LocalDateTime.now(),
-                null,
-                new HashSet<>(),
-                null,
-                new HashSet<>()));
+            null,
+            "Cool new document",
+            "This is a cool new document",
+            "LKAB",
+            "Material effect",
+            "Blueprint/Material effects",
+            LocalDate.of(2019, 4, 19),
+            Document.DatePrecision.FULL_DATE,
+            null,
+            null,
+            LocalDateTime.now(),
+            null,
+            new HashSet<>(),
+            null,
+            new HashSet<>()));
 
         geoReferenceRepository.save(new GeoReference(
-                document1,
-                null,
-                point3));
+            document1,
+            null,
+            point3));
 
         // initializeStakeholders();
         // initializeDocumentType();
@@ -341,86 +341,86 @@ public class DataInitializer implements CommandLineRunner {
         // addNewDocument(i);
         // }
 
-        GeoReference geoRef1 = new GeoReference(document1, area1, null);
-        geoReferenceRepository.save(geoRef1);
-
-        Document document2 = documentRepository.save(new Document(null,
-                "Detailed plan for Bolagsomradet Gruvstadspark",
-                "Detailed transformation of residential areas into mining zones.",
-                "Kiruna kommun",
-                "Prescriptive document",
-                "1:8000",
-                LocalDate.of(2010, 10, 20),
-                Document.DatePrecision.FULL_DATE,
-                "Swedish",
-                32,
-                LocalDateTime.now(),
-                null,
-                new HashSet<>(),
-                null,
-                new HashSet<>()));
-
-        GeoReference geoRef2 = new GeoReference(document2, null, point1);
-        geoReferenceRepository.save(geoRef2);
-
-        Document document3 = documentRepository.save(new Document(null,
-                "Development Plan",
-                "Shaping the new city through strategies and diagrams.",
-                "Kiruna kommun/White Arkitekter",
-                "Design document",
-                "1:7500",
-                LocalDate.of(2014, 3, 17),
-                Document.DatePrecision.FULL_DATE,
-                "Swedish",
-                111,
-                LocalDateTime.now(),
-                null,
-                new HashSet<>(),
-                null,
-                new HashSet<>()));
-
-        GeoReference geoRef3 = new GeoReference(document3, area2, null);
-        geoReferenceRepository.save(geoRef3);
-
-        Document document4 = documentRepository.save(new Document(null,
-                "Deformation forecast",
-                "Forecast for deformation analysis in Kiruna region.",
-                "LKAB",
-                "Technical document",
-                "1:12000",
-                LocalDate.of(2014, 12, 1),
-                Document.DatePrecision.FULL_DATE,
-                "Swedish",
-                1,
-                LocalDateTime.now(),
-                null,
-                new HashSet<>(),
-                null,
-                new HashSet<>()));
-
-        GeoReference geoRef4 = new GeoReference(document4, null, point2);
-        geoReferenceRepository.save(geoRef4);
+//        GeoReference geoRef1 = new GeoReference(document1, area1, null);
+//        geoReferenceRepository.save(geoRef1);
+//
+//        Document document2 = documentRepository.save(new Document(null,
+//                "Detailed plan for Bolagsomradet Gruvstadspark",
+//                "Detailed transformation of residential areas into mining zones.",
+//                "Kiruna kommun",
+//                "Prescriptive document",
+//                "1:8000",
+//                LocalDate.of(2010, 10, 20),
+//                Document.DatePrecision.FULL_DATE,
+//                "Swedish",
+//                32,
+//                LocalDateTime.now(),
+//                null,
+//                new HashSet<>(),
+//                null,
+//                new HashSet<>()));
+//
+//        GeoReference geoRef2 = new GeoReference(document2, null, point1);
+//        geoReferenceRepository.save(geoRef2);
+//
+//        Document document3 = documentRepository.save(new Document(null,
+//                "Development Plan",
+//                "Shaping the new city through strategies and diagrams.",
+//                "Kiruna kommun/White Arkitekter",
+//                "Design document",
+//                "1:7500",
+//                LocalDate.of(2014, 3, 17),
+//                Document.DatePrecision.FULL_DATE,
+//                "Swedish",
+//                111,
+//                LocalDateTime.now(),
+//                null,
+//                new HashSet<>(),
+//                null,
+//                new HashSet<>()));
+//
+//        GeoReference geoRef3 = new GeoReference(document3, area2, null);
+//        geoReferenceRepository.save(geoRef3);
+//
+//        Document document4 = documentRepository.save(new Document(null,
+//                "Deformation forecast",
+//                "Forecast for deformation analysis in Kiruna region.",
+//                "LKAB",
+//                "Technical document",
+//                "1:12000",
+//                LocalDate.of(2014, 12, 1),
+//                Document.DatePrecision.FULL_DATE,
+//                "Swedish",
+//                1,
+//                LocalDateTime.now(),
+//                null,
+//                new HashSet<>(),
+//                null,
+//                new HashSet<>()));
+//
+//        GeoReference geoRef4 = new GeoReference(document4, null, point2);
+//        geoReferenceRepository.save(geoRef4);
 
         // Add more documents and GeoReferences as needed
     }
 
-    private void initializeStakeholders() {
-        stakeholderRepository.save(new Stakeholder(null, "Kiruna kommun"));
-        stakeholderRepository.save(new Stakeholder(null, "Residents"));
-        stakeholderRepository.save(new Stakeholder(null, "White Arkitekter"));
-        stakeholderRepository.save(new Stakeholder(null, "LKAB"));
-    }
-
-    private void initializeDocumentTypes() {
-        documentTypeRepository.save(new DocumentType(null, "Informative document"));
-        documentTypeRepository.save(new DocumentType(null, "Design document"));
-        documentTypeRepository.save(new DocumentType(null, "Technical document"));
-        documentTypeRepository.save(new DocumentType(null, "Prescriptive document"));
-        documentTypeRepository.save(new DocumentType(null, "Material effect"));
-    }
-
-    private void initializeDocumentScales() {
-        documentScaleRepository.save(new DocumentScale(null, "Text"));
-        documentScaleRepository.save(new DocumentScale(null, "Blueprints/Material effects"));
-    }
+//    private void initializeStakeholders() {
+//        stakeholderRepository.save(new Stakeholder(null, "Kiruna kommun"));
+//        stakeholderRepository.save(new Stakeholder(null, "Residents"));
+//        stakeholderRepository.save(new Stakeholder(null, "White Arkitekter"));
+//        stakeholderRepository.save(new Stakeholder(null, "LKAB"));
+//    }
+//
+//    private void initializeDocumentTypes() {
+//        documentTypeRepository.save(new DocumentType(null, "Informative document"));
+//        documentTypeRepository.save(new DocumentType(null, "Design document"));
+//        documentTypeRepository.save(new DocumentType(null, "Technical document"));
+//        documentTypeRepository.save(new DocumentType(null, "Prescriptive document"));
+//        documentTypeRepository.save(new DocumentType(null, "Material effect"));
+//    }
+//
+//    private void initializeDocumentScales() {
+//        documentScaleRepository.save(new DocumentScale(null, "Text"));
+//        documentScaleRepository.save(new DocumentScale(null, "Blueprints/Material effects"));
+//    }
 }
