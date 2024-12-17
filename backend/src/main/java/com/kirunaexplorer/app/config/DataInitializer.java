@@ -63,25 +63,49 @@ public class DataInitializer implements CommandLineRunner {
 //            new Geometry(GeometryType.POLYGON, List.of(new Coordinates(69.0, 20.0), new Coordinates(69.0, 21.0), new Coordinates(70.0, 21.0), new Coordinates(70.0, 20.0)))
 //        ));
 
-        pointCoordinatesRepository.save(new PointCoordinates(
+        PointCoordinates point1 = pointCoordinatesRepository.save(new PointCoordinates(
             null,
             "Cool new point",
             69.0,
             20.0
         ));
 
-        pointCoordinatesRepository.save(new PointCoordinates(
+        PointCoordinates point2 = pointCoordinatesRepository.save(new PointCoordinates(
             null,
             "Cool new point 2",
             69.0,
             20.0
         ));
 
-        pointCoordinatesRepository.save(new PointCoordinates(
+        PointCoordinates point3 = pointCoordinatesRepository.save(new PointCoordinates(
             null,
             null,
             69.0,
             20.0
+        ));
+
+        Document document1 = documentRepository.save(new Document(
+            null,
+            "Cool new document",
+            "This is a cool new document",
+            "LKAB",
+            "Material effect",
+            "Blueprint/Material effects",
+            LocalDate.of(2019, 4, 19),
+            DatePrecision.FULL_DATE,
+            null,
+            null,
+            LocalDateTime.now(),
+            null,
+            new HashSet<>(),
+            null,
+            new HashSet<>()
+        ));
+
+        geoReferenceRepository.save(new GeoReference(
+            document1,
+            null,
+            point3
         ));
 
 //        initializeStakeholders();
