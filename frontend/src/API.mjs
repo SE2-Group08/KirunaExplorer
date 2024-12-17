@@ -312,7 +312,7 @@ const addScale = async (scale) => {
 };
 
 /* ************************** *
- *   Point Coordinates APIs   *
+ *   Geolocation APIs   *
  * ************************** */
 // Retrieve all point coordinates
 const getAllGeolocatedPoints = async () => {
