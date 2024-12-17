@@ -29,6 +29,7 @@ import "../App.scss";
 import getKirunaArea from "./KirunaArea.jsx";
 import { Document } from "../model/Document.mjs";
 import { validateForm } from "../utils/formValidation.js";
+import { allowedLanguages } from "../utils/allowedLanguages.js";
 
 export default function DocumentFormComponent({ document, show, onHide }) {
   const kirunaBorderCoordinates = getKirunaArea();
@@ -410,6 +411,7 @@ function DocumentFormFields({
   const [filteredLanguages, setFilteredLanguages] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
+
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {
@@ -540,6 +542,28 @@ function DocumentFormFields({
     }
   };
 
+  const handleLanguageChange = (e) => {
+    const value = e.target.value;
+    handleChange("customLanguage", value);
+
+    if (value) {
+      const filtered = Array.from(allowedLanguages)
+        .filter((language) =>
+          language.toLowerCase().includes(value.toLowerCase())
+        )
+        .sort((a, b) => {
+          const aStartsWith = a.toLowerCase().startsWith(value.toLowerCase());
+          const bStartsWith = b.toLowerCase().startsWith(value.toLowerCase());
+          if (aStartsWith && !bStartsWith) return -1;
+          if (!aStartsWith && bStartsWith) return 1;
+          return a.localeCompare(b);
+        });
+      setFilteredLanguages(filtered);
+    } else {
+      setFilteredLanguages([]);
+    }
+  };
+
   const handleLanguageSelect = (language) => {
     handleChange("customLanguage", language);
     setFilteredLanguages([]);
@@ -550,20 +574,42 @@ function DocumentFormFields({
     if (filteredLanguages.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setHighlightedIndex((prevIndex) =>
-          prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0
-        );
+        setHighlightedIndex((prevIndex) => {
+          const newIndex = prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0;
+          languageRefs.current[newIndex]?.scrollIntoView({ block: "nearest" });
+          return newIndex;
+        });
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setHighlightedIndex((prevIndex) =>
-          prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1
-        );
+        setHighlightedIndex((prevIndex) => {
+          const newIndex = prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1;
+          languageRefs.current[newIndex]?.scrollIntoView({ block: "nearest" });
+          return newIndex;
+        });
       } else if (e.key === "Enter" && highlightedIndex >= 0) {
         e.preventDefault();
         handleLanguageSelect(filteredLanguages[highlightedIndex]);
       }
     }
   };
+
+  const handleClickOutside = (event) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target) &&
+      !refs.languageRef.current.contains(event.target)
+    ) {
+      setFilteredLanguages([]);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutsideEvent = (event) => handleClickOutside(event);
+    window.addEventListener("mousedown", handleClickOutsideEvent);
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutsideEvent);
+    };
+  }, []);
 
   return (
     <>
@@ -925,9 +971,10 @@ function DocumentFormFields({
                   type="text"
                   placeholder="Enter custom language"
                   value={document.customLanguage || ""}
-                  onChange={(e) =>
-                    handleChange("customLanguage", e.target.value)
-                  }
+                  onChange={(e) => {
+                    handleChange("customLanguage", e.target.value);
+                    handleLanguageChange(e);
+                  }}
                   isInvalid={!!errors.language}
                   className="me-2"
                   onKeyDown={handleKeyDown}
@@ -953,11 +1000,15 @@ function DocumentFormFields({
               </div>
             )}
             {filteredLanguages.length > 0 && (
-              <div className="mt-2 position-relative">
-                <div className="dropdown-menu show">
+              <div className="mt-2 position-relative" ref={dropdownRef}>
+                <div
+                  className="dropdown-menu show custom-scroll"
+                  style={{ maxHeight: "200px", overflowY: "auto" }}
+                >
                   {filteredLanguages.map((language, index) => (
                     <button
                       key={language}
+                      ref={(el) => (languageRefs.current[index] = el)}
                       className={`dropdown-item ${
                         index === highlightedIndex ? "active" : ""
                       }`}
