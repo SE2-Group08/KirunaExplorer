@@ -156,8 +156,9 @@ const MapKiruna = () => {
                   />
                   <MarkerClusterGroup>
                       {filteredDocuments.map((doc, index) => {
-                          const position = doc.geolocation?.latitude
-                              ? [doc.geolocation.latitude, doc.geolocation.longitude]
+                        console.log(doc.geolocation);
+                          const position = doc.geolocation.pointCoordinates?
+                              [doc.geolocation.pointCoordinates.coordinates.latitude, doc.geolocation.pointCoordinates.coordinates.longitude]
                               : kirunaPosition;
 
                           return (
@@ -179,7 +180,7 @@ const MapKiruna = () => {
                                               .openTooltip();
                                           // Showing the polygon when mouseover on the document
                                           if (
-                                              doc.geolocation?.municipality === "Entire municipality"
+                                              doc.geolocation.area?.areaName === "Entire municipality"
                                           ) {
                                               const map = marker._map;
                                               if (!kirunaPolygonRef.current) {
@@ -210,11 +211,11 @@ const MapKiruna = () => {
                           );
                       })}
                   </MarkerClusterGroup>
-                  {selectedDocument && selectedDocument.geolocation.latitude ? (
+                  {selectedDocument && selectedDocument.geolocation.pointCoordinates?  (
                       <ZoomToMarker
                           position={[
-                              selectedDocument.geolocation.latitude,
-                              selectedDocument.geolocation.longitude,
+                              selectedDocument.geolocation.pointCoordinates.coordinates.latitude,
+                              selectedDocument.geolocation.pointCoordinates.coordinates.longitude,
                           ]}
                           zoomLevel={15}
                       />
