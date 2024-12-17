@@ -595,23 +595,36 @@ function DocumentFormFields({
     }
   };
 
-  const handleClickOutside = (event) => {
-    if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target) &&
-      !refs.languageRef.current.contains(event.target)
-    ) {
-      setFilteredLanguages([]);
-    }
-  };
-
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        !refs.languageRef.current.contains(event.target)
+      ) {
+        setFilteredLanguages([]);
+      }
+    };
+
+    const handleLanguageInputClick = () => {
+      setFilteredLanguages([]);
+    };
+
     const handleClickOutsideEvent = (event) => handleClickOutside(event);
     window.addEventListener("mousedown", handleClickOutsideEvent);
+
+    const languageInput = refs.languageRef.current;
+    if (languageInput) {
+      languageInput.addEventListener("click", handleLanguageInputClick);
+    }
+
     return () => {
       window.removeEventListener("mousedown", handleClickOutsideEvent);
+      if (languageInput) {
+        languageInput.removeEventListener("click", handleLanguageInputClick);
+      }
     };
-  }, []);
+  }, [refs.languageRef]);
 
   return (
     <>
@@ -954,7 +967,10 @@ function DocumentFormFields({
             <Form.Control
               as="select"
               value={document.language}
-              onChange={(e) => handleChange("language", e.target.value)}
+              onChange={(e) => {
+                handleChange("language", e.target.value);
+                handleLanguageInputClick();
+              }}
               isInvalid={!!errors.language}
               ref={refs.languageRef}
             >
