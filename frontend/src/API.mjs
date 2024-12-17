@@ -3,6 +3,7 @@ import Stakeholder from "./model/Stakeholder.mjs";
 import Link from "./model/Link.mjs";
 import { DocumentType } from "./model/DocumentType.mjs";
 import { Scale } from "./model/Scale.mjs";
+import { GeolocatedPoint } from "./model/Geolocation.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
 
@@ -221,11 +222,11 @@ const searchDocuments = async (keyword) => {
   return response;
 };
 
-// /* ************************** *
-//  *      Stakeholders APIs     *
-//  * ************************** */
+/* ************************** *
+ *      Stakeholders APIs     *
+ * ************************** */
 
-// // Retrieve all stakeholders
+// Retrieve all stakeholders
 const getAllStakeholders = async () => {
   const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
     .then(handleInvalidResponse)
@@ -307,6 +308,32 @@ const addScale = async (scale) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(scale),
+  }).then(handleInvalidResponse);
+};
+
+/* ************************** *
+ *   Point Coordinates APIs   *
+ * ************************** */
+// Retrieve all point coordinates
+const getAllGeolocatedPoints = async () => {
+  const geolocatedPoints = await fetch(`${SERVER_URL}/points`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((geolocatedPoints) =>
+      geolocatedPoints.map((point) => GeolocatedPoint.fromJSON(point))
+    );
+
+    return geolocatedPoints;
+};
+
+// Create a new point coordinate
+const addGeolocatedPoint = async (point) => {
+  return await fetch(`${SERVER_URL}/points`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(point),
   }).then(handleInvalidResponse);
 };
 
