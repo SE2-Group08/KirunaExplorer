@@ -42,7 +42,7 @@ const MapKiruna = () => {
   const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
   const [tileLayer, setTileLayer] = useState("satellite");
-  const { setFeedbackFromError } = useContext(FeedbackContext);
+  const { setFeedbackFromError, shouldRefresh } = useContext(FeedbackContext);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
 
   // Reference for dynamic Polygon
@@ -55,7 +55,7 @@ const MapKiruna = () => {
         setFilteredDocuments(docs);
       })
       .catch((error) => setFeedbackFromError(error));
-  }, [setFeedbackFromError]);
+  }, [setFeedbackFromError, shouldRefresh]);
 
   const handleDocumentClick = (document) => {
     API.getDocumentById(document.id)
