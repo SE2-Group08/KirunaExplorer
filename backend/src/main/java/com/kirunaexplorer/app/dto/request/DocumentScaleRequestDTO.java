@@ -9,8 +9,9 @@ public record DocumentScaleRequestDTO(
     Long id,
 
     @NotNull(message = "scale must be not null", groups = {PostDocumentScale.class})
-    @Min(message = "Too short scale", value = 2)
-    @Max(message = "Too long scale", value = 64)
+    //@Min(message = "Short scale", value = 2)
+    //@Max(message = "Long scale", value = 64)
+    @Size(min = 2, max = 64, message = "Invalid scale size")
     String scale
 ) {
 

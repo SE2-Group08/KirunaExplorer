@@ -92,7 +92,7 @@ class DocumentScaleRequestDTOTest {
                 .orElse("No error");
 
         // Verifica che il messaggio di errore sia quello atteso
-        assertEquals("Too short scale", errorMessage);
+        assertEquals("Invalid scale size", errorMessage);
     }
 
     @Test
@@ -110,7 +110,7 @@ class DocumentScaleRequestDTOTest {
                 .orElse("No error");
 
         // Verifica che il messaggio di errore sia quello atteso
-        assertEquals("Too long scale", errorMessage);
+        assertEquals("Invalid scale size", errorMessage);
     }
 
 }
