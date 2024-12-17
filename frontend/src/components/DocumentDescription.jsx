@@ -162,10 +162,10 @@ function DocumentDescriptionFields({ document }) {
   };
 
   const formatGeolocation = (geolocation) => {
-    if (geolocation.latitude && geolocation.longitude) {
-      return `${geolocation.latitude}, ${geolocation.longitude}`;
-    } else if (geolocation.municipality) {
-      return geolocation.municipality;
+    if (geolocation.pointCoordinates) {
+      return `${geolocation.pointCoordinates.coordinates.latitude}, ${geolocation.pointCoordinates.coordinates.longitude}`;
+    } else if (geolocation.area) {
+      return geolocation.area.areaName;
     } else {
       return null;
     }

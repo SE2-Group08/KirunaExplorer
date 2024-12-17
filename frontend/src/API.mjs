@@ -1,6 +1,5 @@
 import { Document, DocumentSnippet } from "./model/Document.mjs";
 import Stakeholder from "./model/Stakeholder.mjs";
-import Link from "./model/Link.mjs";
 import { DocumentType } from "./model/DocumentType.mjs";
 import { Scale } from "./model/Scale.mjs";
 
@@ -314,11 +313,84 @@ const searchDocuments = async (keyword) => {
 
   return response;
 };
-// /* ************************** *
-//  *      Areas APIs            *
-//  * ************************** */
+/* ************************** *
+ *   Geolocation APIs   *
+ * ************************** */
+// Retrieve all point coordinates
+const getAllGeolocatedPoints = async (token) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/points`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
 
-const getAllKnownAreas = async (token) => {
+    // Check if the response is OK
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    // Parse the JSON data
+    const data = await response.json();
+
+    // Check if the data is an array
+    if (!Array.isArray(data)) {
+      throw new Error("Response data is not an array");
+    }
+    console.log("Api points", data);
+
+    // Map the data to the required format
+    return data.map((item) => ({
+      id: item.pointCoordinates.pointId,
+      name: item.pointCoordinates.pointName || `Point ${item.pointCoordinates.pointId}`,
+      latitude: item.pointCoordinates.coordinates.latitude,
+      longitude: item.pointCoordinates.coordinates.longitude,
+    }));
+  } catch (error) {
+    console.error("Error fetching points:", error.message);
+    throw error; // Re-throw the error so the caller can handle it
+  }
+};
+
+// Create a new point coordinate
+const addGeolocatedPoint = async (point, token) => {
+  try{
+    const response = await fetch(`${SERVER_URL}/points`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(point),
+    })
+    if (!response.ok) {
+      console.error(
+          "Failed to add the point:",
+          response.status,
+          response.statusText
+      );
+      return null;
+    }
+    const location = response.headers.get("location");
+    if (!location) {
+      console.error("Location header not found in response.");
+      return null;
+    }
+
+    const pointId = location.split("/").pop(); // Estrarre l'ID dal percorso
+
+    console.log(pointId)
+    return pointId;
+  } catch (error) {
+    console.error("Error while adding point:", error);
+    return null;
+  }
+};
+
+// Retrieve all areas snippets
+const getAllAreasSnippets = async (token) => {
   try {
     const response = await fetch(`${SERVER_URL}/areas`, {
       method: "GET",
@@ -340,12 +412,16 @@ const getAllKnownAreas = async (token) => {
     if (!Array.isArray(data)) {
       throw new Error("Response data is not an array");
     }
+    console.log("API areas", data);
 
     // Map the data to the required format
-    return data.map((area) => ({
-      id: area.id, // Unique area identifier
-      name: area.name, // Area name
-      centroid: area.centroid, // Centroid for map zooming
+    return data.map((item) => ({
+      id: item.area.areaId, // Unique area identifier
+      name: item.area.areaName || `Area ${item.area.areaId}`, // Area name with fallback
+      centroid: {
+        latitude: item.area.areaCentroid.latitude,
+        longitude: item.area.areaCentroid.longitude,
+      }, // Extract centroid coordinates
     }));
   } catch (error) {
     console.error("Error fetching areas:", error.message);
@@ -354,29 +430,19 @@ const getAllKnownAreas = async (token) => {
 };
 
 
-const createArea = async (area, authToken) => {
-  try {
-    console.log("Payload for new area:", JSON.stringify(area, null, 2));
+// Create a new area
+const addGeolocatedArea = async (area, token) => {
+  return await fetch(`${SERVER_URL}/areas`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify(area),
+  }).then(handleInvalidResponse);
+};
 
-    const response = await fetch(`${SERVER_URL}/areas`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`,
-      },
-      body: JSON.stringify(area),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Error creating area: ${error.message || response.statusText}`);
-    }
-// Return the created area response
-  } catch (error) {
-    throw new Error(`Failed to create area: ${error.message}`);
-  }
-}
-
+// Retrieve the geometry of a specific area
 const getAreaById = async (id, authToken) => {
   try {
     const response = await fetch(`${SERVER_URL}/areas/${id}`, {
@@ -398,7 +464,7 @@ const getAreaById = async (id, authToken) => {
     // Map the response to the required format
     return {
       id: data.id, // Unique area identifier
-      name: data.name, // Area name
+      name: data.name || `Area ${data.name}`, // Area name with fallback
       centroid: {
         latitude: data.centroid.latitude,
         longitude: data.centroid.longitude,
@@ -414,18 +480,6 @@ const getAreaById = async (id, authToken) => {
   }
 };
 
-// /* ************************** *
-//  *      Points APIs           *
-//  * ************************** */
-
-const getAllKnownPoints = async () => {
-  return [
-    { id: 1, name: "Point A", latitude: 67.85, longitude: 20.25 },
-    { id: 2, name: "Point B", latitude: 67.87, longitude: 20.27 },
-    { id: 3, name: "Downtown", latitude: 67.84, longitude: 20.22 },
-    { id: 4, name: "Station", latitude: 67.86, longitude: 20.23 },
-  ];
-}
 
 // /* ************************** *
 //  *      Stakeholders APIs     *
@@ -608,11 +662,11 @@ const API = {
   logOut,
   getUsers,
   getUserById,
-  /* Area */
-  getAllKnownAreas,
-  createArea,
+  /* Geolocation */
+  getAllGeolocatedPoints,
+  addGeolocatedPoint,
+  getAllAreasSnippets,
+  addGeolocatedArea,
   getAreaById,
-  /* Point */
-  getAllKnownPoints,
 };
 export default API;
