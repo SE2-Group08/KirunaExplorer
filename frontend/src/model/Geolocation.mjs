@@ -19,9 +19,9 @@ export class GeolocatedAreaSnippet {
 
   static fromJSON(json) {
     return new GeolocatedAreaSnippet(
-      json.areaId,
-      json.areaName,
-      json.areaCentroid
+      json.area.areaId,
+      json.area.areaName,
+      json.area.areaCentroid
     );
   }
 }
