@@ -77,6 +77,9 @@ public class SecurityConfiguration {
                         .requestMatchers(POST, "/api/v1/stakeholders").hasAuthority(Role.URBAN_PLANNER.name())
                         .requestMatchers(POST, "/api/v1/document-types").hasAuthority(Role.URBAN_PLANNER.name())
                         .requestMatchers(POST, "/api/v1/scales").hasAuthority(Role.URBAN_PLANNER.name())
+                        .requestMatchers(GET, "/api/v1/areas").hasAuthority(Role.URBAN_PLANNER.name())
+                        .requestMatchers(POST, "/api/v1/areas").hasAuthority(Role.URBAN_PLANNER.name())
+                        .requestMatchers(GET, "/api/v1/areas/{id}").hasAuthority(Role.URBAN_PLANNER.name())
 
                         .anyRequest().authenticated()
                 )

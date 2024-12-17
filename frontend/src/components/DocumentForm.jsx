@@ -15,7 +15,7 @@ import {
   Polygon,
   FeatureGroup,
   Marker,
-  useMapEvents, Circle, Rectangle,
+  useMapEvents,
 } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 import L from "leaflet";
@@ -38,8 +38,6 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
   const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
   const [filesToUpload, setFilesToUpload] = useState([]);
   const [errors, setErrors] = useState({});
-  const [allKnownAreas, setAllKnownAreas] = useState([]);
-  const [allKnownPoints, setAllKnownPoints] = useState([]);
 
   const [formDocument, setFormDocument] = useState(
     document || {
@@ -58,9 +56,10 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         latitude: "",
         longitude: "",
         municipality: "Entire municipality",
-        shapes: [],
       },
       description: "",
+      areaName: "",
+      area: "",
     }
   );
   const { setFeedbackFromError, setShouldRefresh, setFeedback } =
@@ -111,11 +110,11 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
           municipality: document.geolocation
             ? document.geolocation.municipality
             : "Entire municipality",
-          //shapes: document.geolocation?.shapes || [],
+          area: document.geolocation?.area || [],
         },
         description: document.description || "",
       });
-      if(document.geolocation?.shapes)
+      if(document.geolocation?.area)
         setLocationMode("area")
       else if(document.geolocation?.municipality)
         setLocationMode("entire_municipality")
@@ -131,15 +130,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
 
     }
 
-    API.getAllKnownAreas()
-        .then(setAllKnownAreas)
-        .catch(setFeedbackFromError);
-
-    API.getAllKnownPoints()
-        .then(setAllKnownPoints)
-        .catch(setFeedbackFromError);
-
-  }, [document, setFeedbackFromError]);
+  }, [authToken,document, setFeedbackFromError]);
 
   // Initialize Leaflet marker icon defaults
   delete L.Icon.Default.prototype._getIconUrl;
@@ -250,33 +241,89 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
     }
   };
 
+  function calculateCentroid(coordinates) {
+    let latSum = 0, lngSum = 0, numPoints = coordinates.length;
+
+    coordinates.forEach(([lat, lng]) => {
+      latSum += lat;
+      lngSum += lng;
+    });
+
+    return {
+      latitude: latSum / numPoints,
+      longitude: lngSum / numPoints,
+    };
+  }
+
+  async function createArea(name, area) {
+    if (!area.geometry || !area.geometry.coordinates || area.geometry.coordinates.length === 0) {
+      throw new Error("Invalid geometry data for the area.");
+    }
+
+    // Format coordinates properly for backend expectations
+    const formattedCoordinates = area.geometry.coordinates[0].map(([lng, lat]) => ({
+      latitude: lat,
+      longitude: lng,
+    }));
+
+    // Calculate the centroid
+    const centroid = calculateCentroid(
+        formattedCoordinates.map(({ latitude, longitude }) => [latitude, longitude])
+    );
+
+    // Construct the payload
+    const newArea = {
+      areaId: null, // Assuming null for new areas
+      areaName: name,
+      centroid: {
+        latitude: centroid.latitude,
+        longitude: centroid.longitude,
+      },
+      geometry: {
+        type: area.geometry.type,
+        coordinates: formattedCoordinates,
+      },
+    };
+
+
+      API.createArea(newArea, authToken)
+      .then(() => setShouldRefresh(true))
+            .then(() =>
+                setFeedback({
+                  type: "success",
+                  message: "Area created successfully",
+                })
+            )
+            .catch((error) => setFeedbackFromError(error));
+        onHide();
+  }
+
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const combinedIssuanceDate = `${formDocument.year}${
-      formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
+        formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
     }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
-    // Validation for areaName if needed
-    if ((locationMode === "area") && formDocument.geolocation.shapes.length > 0) {
-      if (!formDocument.areaName || formDocument.areaName.trim() === "") {
-        setErrors({ areaName: "Name for the area is required." });
-        return;
-      }
+    // Validate geometry data
+    if (locationMode === "area" && (!formDocument.area || !formDocument.area.geometry)) {
+      setErrors({ areaName: "Please draw or select a valid area." });
+      return;
     }
 
     const sanitizedGeolocation = {
       latitude: formDocument.geolocation.latitude || null,
       longitude: formDocument.geolocation.longitude || null,
-      // municipality: locationMode === "entire_municipality" ? "Entire municipality" : null,
       municipality: formDocument.geolocation.municipality || null,
-      //shapes: formDocument.geolocation.shapes || [],
     };
 
     const validationErrors = validateForm(
-      formDocument,
-      combinedIssuanceDate,
-      kirunaBorderCoordinates
+        formDocument,
+        combinedIssuanceDate,
+        kirunaBorderCoordinates
     );
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -287,27 +334,36 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
     try {
       if (!document) {
         const newDocId = await createDocument(
-          formDocument,
-          combinedIssuanceDate,
-          sanitizedGeolocation
+            formDocument,
+            combinedIssuanceDate,
+            sanitizedGeolocation
         );
         await uploadFiles(newDocId, filesToUpload);
+
+        if (locationMode === "area" && formDocument.areaName) {
+          await createArea(formDocument.areaName, formDocument.area);
+        }
       } else {
         await updateDocument(
-          document,
-          formDocument,
-          combinedIssuanceDate,
-          sanitizedGeolocation
+            document,
+            formDocument,
+            combinedIssuanceDate,
+            sanitizedGeolocation
         );
         await uploadFiles(document.id, filesToUpload);
         await deleteFiles(deletedExistingFiles);
       }
+      if (locationMode === "area" && formDocument.areaName) {
+        await createArea(formDocument.areaName, formDocument.area);
+      }
       setFilesToUpload([]);
       onHide();
     } catch (error) {
-      setFeedbackFromError(error);
+      console.error("Error during form submission:", error);
+      // Do not close the form; errors will be displayed
     }
   };
+
 
   const handleDeleteExistingFile = (fileId) => {
     setDeletedExistingFiles((prev) => {
@@ -377,6 +433,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         <Form style={{ width: "100%" }} className="mx-auto">
           <DocumentFormFields
             document={formDocument}
+            setDocument={setFormDocument}
             errors={errors}
             handleChange={handleChange}
             kirunaBorderCoordinates={kirunaBorderCoordinates}
@@ -394,8 +451,6 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
               municipalityRef,
               descriptionRef,
             }}
-              allKnownAreas={allKnownAreas}
-              allKnownPoints={allKnownPoints}
               locationMode={locationMode}
               setLocationMode={(val) => {
                 setLocationMode(val);
@@ -406,13 +461,13 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
                   handleChange("geolocation", {
                     latitude: null,
                     longitude: null,
-                    shapes: [],
+                    area: null,
                     municipality: "Entire municipality"
                   });
                 } else {
                   handleChange("geolocation", {
                     municipality: "",
-                    // Clear coords/shapes if needed
+                    // Clear coords/area if needed
                   });
                 }
               }}
@@ -422,6 +477,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
               setSelectedPointId={setSelectedPointId}
               areaModified={areaModified}
               setAreaModified={setAreaModified}
+              authToken={authToken}
           />
           <UploadFilesComponent
             updateFilesToUpload={updateFilesToUpload}
@@ -453,12 +509,11 @@ DocumentFormComponent.propTypes = {
 
 function DocumentFormFields({
   document,
+  setDocument,
   errors,
   handleChange,
   kirunaBorderCoordinates,
   refs,
-  allKnownAreas,
-  allKnownPoints,
   locationMode,
   setLocationMode,
   selectedAreaId,
@@ -467,6 +522,7 @@ function DocumentFormFields({
   setSelectedPointId,
   areaModified,
   setAreaModified,
+  authToken
 }) {
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
@@ -494,10 +550,28 @@ function DocumentFormFields({
       setPointName("")
     }
   }, [locationMode]);
+  useEffect(() => {
+    if (mapRef.current && document.area?.geometry) {
+      const { coordinates } = document.area.geometry;
+      const polygonCoords = coordinates[0].map(([lng, lat]) => [lat, lng]);
+      const bounds = L.latLngBounds(polygonCoords);
+      mapRef.current.fitBounds(bounds);
+    }
+  }, [document.area]);
 
+  const [allKnownAreas, setAllKnownAreas] = useState([]);
+  const [allKnownPoints, setAllKnownPoints] = useState([]);
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {
+    console.log(authToken)
+    API.getAllKnownAreas(authToken)
+        .then(setAllKnownAreas)
+        .catch(setFeedbackFromError);
+
+    API.getAllKnownPoints()
+        .then(setAllKnownPoints)
+        .catch(setFeedbackFromError);
     // Fetch all stakeholders
     API.getAllStakeholders()
       .then((stakeholders) => {
@@ -557,39 +631,68 @@ function DocumentFormFields({
       handleChange("year", value);
     }
   };
+  function calculateCentroid(coordinates) {
+    let latSum = 0, lngSum = 0, numPoints = coordinates.length;
+
+    coordinates.forEach(([lat, lng]) => {
+      latSum += lat;
+      lngSum += lng;
+    });
+
+    return {
+      latitude: latSum / numPoints,
+      longitude: lngSum / numPoints,
+    };
+  }
   const onCreated = (e) => {
     setAreaModified(true);
     const layer = e.layer;
-    const shape = layer.toGeoJSON();
-    shape.properties = { name: `New Shape` };
+    const area = layer.toGeoJSON();
+
+    // Aggiorna il poligono nel formDocument
+    handleChange("area", area);
+
+    // Calcola il centroide per il poligono
+    const coordinates = area.geometry.coordinates[0];
+    const centroid = calculateCentroid(coordinates.map(([lng, lat]) => [lat, lng]));
 
     handleChange("geolocation", {
       ...document.geolocation,
-      shapes: [shape],
+      latitude: centroid.latitude,
+      longitude: centroid.longitude,
     });
+
+    // Aggiungi il poligono alla mappa
+    setDocument((prev) => ({
+      ...prev,
+      area: area
+    }));
   };
+
 
   const onEdited = (e) => {
-    setAreaModified(true);
-    const updatedShapes = [];
+    const updatedAreas = [];
     e.layers.eachLayer((layer) => {
-      const shape = layer.toGeoJSON();
-      updatedShapes.push(shape);
-      setSelectedAreaId("")
+      const updatedArea = layer.toGeoJSON();
+      updatedAreas.push(updatedArea);
     });
-    handleChange("geolocation", { ...document.geolocation, shapes: updatedShapes });
+
+    handleChange("area", updatedAreas[0]); // Salva il primo poligono come area principale
   };
 
-  const onDeleted = (e) => {
-    setAreaModified(true);
-    const remainingShapes = document.geolocation.shapes.filter((shape) => {
+
+  const onDeleted = () => {
+   /* setAreaModified(true);
+    const remainingArea = document.geolocation.area.filter((area) => {
       return !e.layers.getLayers().some((layer) => {
-        const layerShape = layer.toGeoJSON();
-        return JSON.stringify(layerShape) === JSON.stringify(shape);
+        const layerArea = layer.toGeoJSON();
+        return JSON.stringify(layerArea) === JSON.stringify(area);
       });
     });
 
-    handleChange("geolocation", { ...document.geolocation, shapes: remainingShapes });
+    handleChange("geolocation", { ...document.geolocation, area: remainingArea });*/
+      handleChange("area", null); // Rimuovi il poligono dall'area
+
   };
 
   function MapClickHandlerForNewPoint() {
@@ -641,21 +744,33 @@ function DocumentFormFields({
     }
   };
 
-  const handleSelectExistingArea = (e) => {
+  const handleSelectExistingArea = async (e) => {
     const areaId = e.target.value;
-    const area = allKnownAreas.find((a) => a.id.toString() === areaId);
 
-    setSelectedAreaId(areaId);
-    if (area) {
-      handleChange("geolocation", {
-        ...document.geolocation,
-        shapes: [area],
-        latitude: null,
-        longitude: null,
-      });
-      zoomOnArea(area); // Use updated function to zoom on centroid
+    try {
+      const area = await API.getAreaById(areaId, authToken);
+
+      setSelectedAreaId(areaId);
+
+      if (area) {
+        // Update the document's area field with the fetched area
+        handleChange("area", area);
+
+        // Update the geolocation to the centroid of the selected area
+        handleChange("geolocation", {
+          latitude: area.centroid.latitude,
+          longitude: area.centroid.longitude,
+        });
+
+        // Adjust the map view to the selected area
+        zoomOnArea(area);
+      }
+    } catch (error) {
+      console.error("Error selecting area:", error);
     }
   };
+
+
 
   const handleSelectExistingPoint = (e) => {
     const pointId = e.target.value;
@@ -667,7 +782,6 @@ function DocumentFormFields({
         ...document.geolocation,
         latitude: point.latitude,
         longitude: point.longitude,
-        shapes: [],
       });
       zoomOnPoint(point); // Zoom sul punto selezionato
     }
@@ -681,47 +795,17 @@ function DocumentFormFields({
     const { type, coordinates } = area.geometry;
 
     if (type === "Polygon" || type === "MultiPolygon") {
-      let latlngs = [];
-      if (type === "Polygon") {
-        latlngs = coordinates[0].map(([lng, lat]) => [lat, lng]);
-      } else if (type === "MultiPolygon") {
-        latlngs = coordinates.flatMap((polygon) =>
-            polygon[0].map(([lng, lat]) => [lat, lng])
-        );
-      }
+      const latlngs = type === "Polygon"
+          ? coordinates.map(([lng, lat]) => [lat, lng])
+          : coordinates.flatMap(polygon => polygon.map(([lng, lat]) => [lat, lng]));
 
-      // Calculate centroid of the polygon
-      const numPoints = latlngs.length;
-      let centroidLat = 0;
-      let centroidLng = 0;
-
-      latlngs.forEach(([lat, lng]) => {
-        centroidLat += lat;
-        centroidLng += lng;
-      });
-
-      centroidLat /= numPoints;
-      centroidLng /= numPoints;
-
-      // Fly to the centroid
-      mapRef.current.flyTo([centroidLat, centroidLng], 16); // Adjust zoom level as needed
-    } else if (type === "Circle") {
-      const [lng, lat] = coordinates;
-      mapRef.current.flyTo([lat, lng], 8); // Adjust zoom for circle
-    } else if (type === "Rectangle") {
-      const latlngs = coordinates[0].map(([lng, lat]) => [lat, lng]);
-
-      // Get bounds from rectangle
+      // Fly to the bounds of the polygon(s)
       const bounds = L.latLngBounds(latlngs);
-
-      // Fit map to rectangle bounds
-      mapRef.current.fitBounds(bounds, { padding: [20, 20] }); // Adjust padding as needed
+      mapRef.current.fitBounds(bounds, { padding: [20, 20] });
     } else {
       console.warn("Unsupported geometry type:", type);
     }
   };
-
-
 
   const zoomOnMunicipality = () => {
     if (mapRef.current && kirunaBorderCoordinates?.length) {
@@ -1104,8 +1188,8 @@ function DocumentFormFields({
           <Form.Group>
             <Form.Control as="select" value={selectedAreaId} onChange={handleSelectExistingArea}>
                     <option value="">-- Select an existing area --</option>
-                    {allKnownAreas.map((area) => (
-                  <option key={area.id} value={area.id}>{area.properties?.name || `Area ${area.id}`}</option>
+                    {allKnownAreas?.map((area) => (
+                  <option key={area.id} value={area.id}>{area.properties?.name || `${area.name}`}</option>
                     ))}
             </Form.Control>
           </Form.Group>
@@ -1203,22 +1287,23 @@ function DocumentFormFields({
 
 
       {(locationMode === "area") && areaModified && (
-            <Row className="mb-4">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Area name</Form.Label>
-                  <div className="divider"/>
-                  <Form.Control
-                      type="text"
-                      value={document.areaName || ""}
-                      onChange={(e) => handleChange("areaName", e.target.value)}
-                      isInvalid={!!errors.areaName}
-                  />
-                  <Form.Control.Feedback type="invalid">{errors.areaName}</Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-            </Row>
-        )}
+          <Row className="mb-4">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Area name</Form.Label>
+                <div className="divider" />
+                <Form.Control
+                    type="text"
+                    value={document.areaName || ""}
+                    onChange={(e) => handleChange("areaName", e.target.value)}
+                    isInvalid={!!errors.areaName}
+                />
+                <Form.Control.Feedback type="invalid">{errors.areaName}</Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
+
+      )}
 
       {/* MAP */}
       <Row className="mb-4">
@@ -1235,7 +1320,7 @@ function DocumentFormFields({
                   center={markerPosition}
                   zoom={10}
                   style={{ height: "100%", width: "100%" }}
-                  key={JSON.stringify(document.geolocation.shapes)}
+                  key={JSON.stringify(document.area)}
               >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 {locationMode === "point" && markerPosition && markerPosition.length === 2 && Number.isFinite(markerPosition[0]) && Number.isFinite(markerPosition[1]) && (
@@ -1269,15 +1354,30 @@ function DocumentFormFields({
                           }}
                           edit={{ remove: true }}
                         />
-                    {document.geolocation.shapes?.map((shape, idx) => {
-                          if (shape.geometry.type === "Polygon") {
-                            const coords = shape.geometry.coordinates[0].map(c => [c[1], c[0]]);
-                            return <Polygon key={idx} positions={coords} color="purple" />;
-                          }
-                          return null;
-                        })}
-                  </FeatureGroup>
+                    </FeatureGroup>
                 )}
+                {
+                  document.area?.geometry && (() => {
+                    console.log(document.area.geometry)
+                  const { type, coordinates } = document.area.geometry;
+
+                  if (type === "POLYGON" || type === "Polygon") {
+                    // Map polygon coordinates
+                    const polygonCoords = coordinates.map(([lng, lat]) => [lat, lng]);
+                    return <Polygon positions={polygonCoords} color="purple" />;
+                  } else if (type === "MULTIPOLYGON") {
+                    // Map multipolygon coordinates
+                    const multiPolygonCoords = coordinates.map(polygon =>
+                        polygon.map(([lng, lat]) => [lat, lng])
+                    );
+                    return multiPolygonCoords.map((coords, idx) => (
+                        <Polygon key={idx} positions={coords} color="purple" />
+                    ));
+                  }
+
+                  console.warn(`Unsupported geometry type: ${type}`);
+                  return null;
+                })()}
 
                 {locationMode === "point" &&
                     Number.isFinite(safeLatitude) &&
@@ -1317,12 +1417,11 @@ function DocumentFormFields({
 
 DocumentFormFields.propTypes = {
   document: PropTypes.object.isRequired,
+  setDocument: PropTypes.func.isRequired,
   errors: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   kirunaBorderCoordinates: PropTypes.array.isRequired,
   refs: PropTypes.object.isRequired,
-  allKnownAreas: PropTypes.array.isRequired,
-  allKnownPoints: PropTypes.array.isRequired,
   locationMode: PropTypes.string.isRequired,
   setLocationMode: PropTypes.func.isRequired,
   selectedAreaId: PropTypes.string.isRequired,
@@ -1331,6 +1430,7 @@ DocumentFormFields.propTypes = {
   setSelectedPointId: PropTypes.func.isRequired,
   areaModified: PropTypes.bool.isRequired,
   setAreaModified: PropTypes.func.isRequired,
+  authToken: PropTypes.string.isRequired
 };
 
 function UploadFilesComponent({

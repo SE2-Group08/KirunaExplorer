@@ -318,61 +318,101 @@ const searchDocuments = async (keyword) => {
 //  *      Areas APIs            *
 //  * ************************** */
 
-const getAllKnownAreas = async () => {
-  return [
-    {
-      id: 1,
-      type: "Feature",
-      properties: { name: "Area A" },
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [20.25, 67.85],
-            [20.30, 67.85],
-            [20.30, 67.90],
-            [20.25, 67.90],
-            [20.25, 67.85],
-          ],
-        ],
+const getAllKnownAreas = async (token) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/areas`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
       },
-    },
-    {
-      id: 2,
-      type: "Feature",
-      properties: { name: "Area B" },
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [20.22, 67.83],
-            [20.27, 67.83],
-            [20.27, 67.88],
-            [20.22, 67.88],
-            [20.22, 67.83],
-          ],
-        ],
+    });
+
+    // Check if the response is OK
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    // Parse the JSON data
+    const data = await response.json();
+
+    // Check if the data is an array
+    if (!Array.isArray(data)) {
+      throw new Error("Response data is not an array");
+    }
+
+    // Map the data to the required format
+    return data.map((area) => ({
+      id: area.id, // Unique area identifier
+      name: area.name, // Area name
+      centroid: area.centroid, // Centroid for map zooming
+    }));
+  } catch (error) {
+    console.error("Error fetching areas:", error.message);
+    throw error; // Re-throw the error so the caller can handle it
+  }
+};
+
+
+const createArea = async (area, authToken) => {
+  try {
+    console.log("Payload for new area:", JSON.stringify(area, null, 2));
+
+    const response = await fetch(`${SERVER_URL}/areas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
       },
-    },
-    {
-      id: 3,
-      type: "Feature",
-      properties: { name: "Mining Area" },
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [20.20, 67.80],
-            [20.25, 67.80],
-            [20.25, 67.82],
-            [20.20, 67.82],
-            [20.20, 67.80],
-          ],
-        ],
-      },
-    },
-  ];
+      body: JSON.stringify(area),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Error creating area: ${error.message || response.statusText}`);
+    }
+// Return the created area response
+  } catch (error) {
+    throw new Error(`Failed to create area: ${error.message}`);
+  }
 }
+
+const getAreaById = async (id, authToken) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/areas/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`,
+      },
+    });
+
+    // Check if the response is OK
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    // Parse the JSON data
+    const data = await response.json();
+
+    // Map the response to the required format
+    return {
+      id: data.id, // Unique area identifier
+      name: data.name, // Area name
+      centroid: {
+        latitude: data.centroid.latitude,
+        longitude: data.centroid.longitude,
+      },
+      geometry: {
+        type: data.geometry.type,
+        coordinates: data.geometry.coordinates.map(coord => [coord.longitude, coord.latitude]), // Convert {latitude, longitude} to [lng, lat]
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching area by ID:", error.message);
+    throw error; // Re-throw the error so the caller can handle it
+  }
+};
 
 // /* ************************** *
 //  *      Points APIs           *
@@ -570,6 +610,8 @@ const API = {
   getUserById,
   /* Area */
   getAllKnownAreas,
+  createArea,
+  getAreaById,
   /* Point */
   getAllKnownPoints,
 };
