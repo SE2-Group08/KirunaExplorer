@@ -23,6 +23,17 @@ const DocumentSidePanel = ({ document, onClose }) => {
     }
   };
 
+  const formatGeolocation = (geolocation) => {
+    if (geolocation.pointCoordinates) {
+      return geolocation.pointCoordinates.pointName || 
+         `${geolocation.pointCoordinates.coordinates.latitude}, ${geolocation.pointCoordinates.coordinates.longitude}`;
+    } else if (geolocation.area) {
+      return geolocation.area.areaName || 
+         `${geolocation.area.areaCentroid.latitude}, ${geolocation.area.areaCentroid.longitude}`;
+    }
+    return null;
+  };
+
   return (
       <div className="document-side-panel active">
         <Card className="document-card-panel">
@@ -63,9 +74,7 @@ const DocumentSidePanel = ({ document, onClose }) => {
             <Card.Text>
               <strong>Geolocation:</strong>{" "}
               <span>
-              {document.geolocation.municipality
-                  ? document.geolocation.municipality
-                  : `${document.geolocation.latitude}, ${document.geolocation.longitude}`}
+              {formatGeolocation(document.geolocation) || "-"}
             </span>
             </Card.Text>
             <div className="divider"/>
