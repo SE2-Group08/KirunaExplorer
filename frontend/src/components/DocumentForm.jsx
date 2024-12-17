@@ -252,48 +252,37 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
   }
 
   async function createArea(name, area) {
-    if (!area.geometry || !area.geometry.coordinates || area.geometry.coordinates.length === 0) {
-      throw new Error("Invalid geometry data for the area.");
-    }
-
-
-    // Format coordinates properly for backend expectations
     const formattedCoordinates = area.geometry.coordinates[0].map(([lng, lat]) => ({
       latitude: lat,
       longitude: lng,
     }));
 
-    // Calculate the centroid
     const centroid = calculateCentroid(
         formattedCoordinates.map(({ latitude, longitude }) => [latitude, longitude])
     );
 
-    // Construct the payload
     const newArea = {
-      areaId: null, // Assuming null for new areas
-      areaName: name,
-      centroid: {
-        latitude: centroid.latitude,
-        longitude: centroid.longitude,
+      area: {
+        areaId: null,
+        areaName: name,
+        areaCentroid: centroid,
       },
       geometry: {
-        type: area.geometry.type,
+        type: "Polygon",
         coordinates: formattedCoordinates,
       },
     };
 
-
-      API.addGeolocatedArea(newArea, authToken)
-      .then(() => setShouldRefresh(true))
-            .then(() =>
-                setFeedback({
-                  type: "success",
-                  message: "Area created successfully",
-                })
-            )
-            .catch((error) => setFeedbackFromError(error));
-        onHide();
+    try {
+      const areaId = await API.addGeolocatedArea(newArea, authToken);
+      setFeedback({ type: "success", message: "Area created successfully" });
+      return areaId;
+    } catch (error) {
+      setFeedbackFromError(error);
+      throw error;
+    }
   }
+
 
   async function createPoint(pointName, coordinates) {
     const newPoint = {
@@ -325,23 +314,37 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
     }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
-    // Validate geometry data
-    if (locationMode === "area" && (!formDocument.geolocation.area || !formDocument.geolocation.area.geometry)) {
-      setErrors({ areaName: "Please draw or select a valid area." });
+    if (locationMode === "area" && !formDocument.geolocation.area?.areaName) {
+      setErrors({ areaName: "Please provide a name for the area." });
       return;
     }
+
 
     let updatedGeolocation = { ...formDocument.geolocation };
 
     try {
-      if (locationMode === "point") {
+      if (locationMode === "area") {
+        if (selectedAreaId) {
+          updatedGeolocation = {
+            area: { areaId: selectedAreaId },
+            pointCoordinates: null,
+          };
+        } else if (formDocument.geolocation.area?.areaName) {
+          const newAreaId = await createArea(formDocument.geolocation.area.areaName, formDocument.geolocation.area)
+          updatedGeolocation = {
+            pointCoordinates: null,
+            area: {
+              areaId: newAreaId
+            }
+          };
+        }
+      } else if (locationMode === "point") {
         if (formDocument.geolocation.pointCoordinates?.pointId) {
           updatedGeolocation = {
-            ...formDocument.geolocation,
             pointCoordinates: {
               pointId: formDocument.geolocation.pointCoordinates.pointId,
-              pointName: null
             },
+            area: null,
           };
         } else {
           const sanitizedPointName =
@@ -355,18 +358,19 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
           );
 
           updatedGeolocation = {
-            ...formDocument.geolocation,
             pointCoordinates: {
               pointId: newPointId,
-              pointName: null,
             },
+            area: null,
           };
         }
       }
 
+      // Prepara la geolocation finale
       const sanitizedGeolocation = {
-        area: locationMode === "area" ? formDocument.geolocation.area : null,
-        pointCoordinates: locationMode === "point" ? updatedGeolocation.pointCoordinates : null,
+        area: locationMode === "area" ? updatedGeolocation.area : null,
+        pointCoordinates:
+            locationMode === "point" ? updatedGeolocation.pointCoordinates : null,
       };
 
       const validationErrors = validateForm(
@@ -397,12 +401,6 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         await uploadFiles(document.id, filesToUpload);
         await deleteFiles(deletedExistingFiles);
       }
-
-      // Step 5: Create area if necessary
-      if (locationMode === "area" && formDocument.geolocation.area?.areaName) {
-        await createArea(formDocument.geolocation.area.areaName, formDocument.geolocation.area);
-      }
-
       setFilesToUpload([]);
       onHide();
     } catch (error) {
@@ -599,7 +597,6 @@ function DocumentFormFields({
       const areaCentroid = document?.geolocation?.area?.areaCentroid;
 
       if (areaCentroid && areaCentroid.latitude && areaCentroid.longitude) {
-        // Update the marker position to the centroid of the selected area
         setMarkerPosition([areaCentroid.latitude, areaCentroid.longitude]);
       } else {
         console.warn("Area centroid is missing or invalid. Resetting marker position.");
@@ -714,6 +711,28 @@ function DocumentFormFields({
       document.language,
       languageOptions,
   ]);
+  useEffect(() => {
+    const loadAreaGeometry = async () => {
+      if (document.geolocation?.area?.areaId) {
+        try {
+          const areaDetails = await API.getAreaById(document.geolocation.area.areaId, authToken);
+
+          handleChange("geolocation", {
+            area: areaDetails,
+            pointCoordinates: null,
+          });
+          setSelectedAreaId(areaDetails.id);
+          zoomOnArea(areaDetails);
+        } catch (error) {
+          console.error("Failed to load area geometry:", error);
+        }
+      }
+    };
+
+    loadAreaGeometry();
+  }, [document, authToken]);
+
+
 
   const handleDayChange = (e) => {
     const value = e.target.value;
@@ -756,25 +775,38 @@ function DocumentFormFields({
   }
   const onCreated = (e) => {
     setAreaModified(true);
+
     const layer = e.layer;
     const area = layer.toGeoJSON();
 
-    // Calcola il centroide per il poligono
+    // Calcola il centroide
     const coordinates = area.geometry.coordinates[0];
     const centroid = calculateCentroid(coordinates.map(([lng, lat]) => [lat, lng]));
 
-    handleChange("geolocation", {
-      ...document.geolocation,
+    // Salva l'area creata temporaneamente
+    const newArea = {
+      area: {
+        areaId: null,
+        areaName: "", // L'utente la definirà
+        areaCentroid: centroid,
+        geometry: {
+          type: "Polygon",
+          coordinates: [coordinates], // Mantieni il formato GeoJSON
+        },
+      },
       pointCoordinates: null,
-      area: area
-    });
+    };
 
-    // Aggiungi il poligono alla mappa
+    handleChange("geolocation", newArea);
+
     setDocument((prev) => ({
       ...prev,
-      area: area
+      geolocation: newArea,
     }));
+
+    setSelectedAreaId(""); // Resetta l'area selezionata
   };
+
 
 
   const onEdited = (e) => {
@@ -1602,7 +1634,7 @@ function DocumentFormFields({
         </Row>
 
 
-      {(locationMode === "area") && areaModified && (
+      {locationMode === "area" && areaModified && (
           <Row className="mb-4">
             <Col md={6}>
               <Form.Group>
@@ -1610,8 +1642,18 @@ function DocumentFormFields({
                 <div className="divider" />
                 <Form.Control
                     type="text"
-                    value={document.areaName || ""}
-                    onChange={(e) => handleChange("areaName", e.target.value)}
+                    value={document.geolocation.area?.areaName || ""}
+                    onChange={(e) => {
+                      const updatedAreaName = e.target.value;
+
+                      handleChange("geolocation", {
+                        ...document.geolocation,
+                        area: {
+                          ...document.geolocation.area,
+                          areaName: updatedAreaName, // Aggiorna solo il nome dell'area
+                        },
+                      });
+                    }}
                     isInvalid={!!errors.areaName}
                 />
                 <Form.Control.Feedback type="invalid">{errors.areaName}</Form.Control.Feedback>

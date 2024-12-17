@@ -396,7 +396,6 @@ const getAllAreasSnippets = async (token) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
       },
     });
 
@@ -432,14 +431,38 @@ const getAllAreasSnippets = async (token) => {
 
 // Create a new area
 const addGeolocatedArea = async (area, token) => {
-  return await fetch(`${SERVER_URL}/areas`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-    body: JSON.stringify(area),
-  }).then(handleInvalidResponse);
+  try {
+    const response = await fetch(`${SERVER_URL}/areas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(area),
+    })
+
+    if (response.ok) {
+      const location = response.headers.get("location");
+      if (!location) {
+        console.error("Location header not found in response.");
+        return null;
+      }
+      const areaId = location.split("/").pop();
+      console.log(areaId)
+      return areaId;
+    } else {
+      console.error(
+          "Failed to add the point:",
+          response.status,
+          response.statusText
+      );
+      return null;
+    }
+  } catch (error) {
+    console.error("Error while adding point:", error);
+    return null;
+  }
+
 };
 
 // Retrieve the geometry of a specific area
@@ -449,7 +472,6 @@ const getAreaById = async (id, authToken) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${authToken}`,
       },
     });
 
