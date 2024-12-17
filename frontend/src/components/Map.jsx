@@ -15,7 +15,6 @@ import FeedbackContext from "../contexts/FeedbackContext";
 import { getIconForDocument } from "../utils/iconMapping";
 import LegendModal from "./Legend";
 import SearchBar from "./SearchBar.jsx";
-import { propTypes } from "react-bootstrap/esm/Image.js";
 
 const ZoomToMarker = ({ position, zoomLevel }) => {
   const map = useMap();
@@ -74,7 +73,12 @@ const MapKiruna = () => {
         setShow(true);
         setShowDocumentSidePanel(true);
       })
-      .then(setSelectedPosition(document.geolocation.pointCoordinates?.coordinates || document.geolocation.area.areaCentroid))
+      .then(
+        setSelectedPosition(
+          document.geolocation.pointCoordinates?.coordinates ||
+            document.geolocation.area.areaCentroid
+        )
+      )
       .catch((error) => setFeedbackFromError(error));
   };
 
@@ -180,11 +184,9 @@ const MapKiruna = () => {
             />
             <AreaMarkers areas={areas} handleAreaClick={handleAreaClick} />
           </MarkerClusterGroup>
-          {selectedDocument || selectedArea? (
+          {selectedDocument || selectedArea ? (
             <ZoomToMarker
-              position={
-                [selectedPosition.latitude, selectedPosition.longitude]
-              }
+              position={[selectedPosition.latitude, selectedPosition.longitude]}
               zoomLevel={10}
             />
           ) : (

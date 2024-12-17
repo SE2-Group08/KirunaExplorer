@@ -124,7 +124,7 @@ DocumentDescriptionComponent.propTypes = {
   onSnippetClick: PropTypes.func.isRequired,
 };
 
-function DocumentDescriptionFields({ document }) {
+export function DocumentDescriptionFields({ document, vertical }) {
   const [viewMode, setViewMode] = useState("list");
   const [existingFiles, setExistingFiles] = useState([]);
   const { setFeedbackFromError } = useContext(FeedbackContext);
@@ -159,25 +159,27 @@ function DocumentDescriptionFields({ document }) {
 
   const formatGeolocation = (geolocation) => {
     if (geolocation.pointCoordinates) {
-      return geolocation.pointCoordinates.pointName || 
-         `${geolocation.pointCoordinates.coordinates.latitude}, ${geolocation.pointCoordinates.coordinates.longitude}`;
+      return (
+        geolocation.pointCoordinates.pointName ||
+        `${geolocation.pointCoordinates.coordinates.latitude}, ${geolocation.pointCoordinates.coordinates.longitude}`
+      );
     } else if (geolocation.area) {
-      return geolocation.area.areaName || 
-         `${geolocation.area.areaCentroid.latitude}, ${geolocation.area.areaCentroid.longitude}`;
+      return (
+        geolocation.area.areaName ||
+        `${geolocation.area.areaCentroid.latitude}, ${geolocation.area.areaCentroid.longitude}`
+      );
     }
     return null;
   };
 
   return (
     <div className="modal-body-component">
-      <Row>
-        <Col md={6}>
+      <Row md={vertical ? 1 : 2}>
+        <Col>
           <div className="info-section">
             <div className="info-item">
               <label>Stakeholders:</label>
-              <span>
-                {document.stakeholders ? document.stakeholders.join(", ") : ""}
-              </span>
+              <span>{document.stakeholders?.join(", ")}</span>
             </div>
             <div className="divider"></div>
             <div className="info-item">
@@ -248,7 +250,8 @@ function DocumentDescriptionFields({ document }) {
             </div>
           </div>
         </Col>
-        <Col md={6}>
+        <Col>
+          {vertical && <div className="divider"></div>}
           <div className="description-area">
             <label>Description:</label>
             <p>{document.description}</p>
@@ -306,4 +309,5 @@ function DocumentDescriptionFields({ document }) {
 
 DocumentDescriptionFields.propTypes = {
   document: PropTypes.object.isRequired,
+  vertical: PropTypes.bool,
 };
