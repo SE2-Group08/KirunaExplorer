@@ -297,12 +297,14 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
 
   async function createPoint(pointName, coordinates) {
     const newPoint = {
-      pointId: null,
-      ...(pointName && { pointName }), // Aggiunge solo se pointName non è null
-      coordinates: {
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-      },
+     pointCoordinates: {
+       pointId: null,
+       pointName: pointName,
+       coordinates: {
+         latitude: coordinates.latitude,
+         longitude: coordinates.longitude,
+       },
+     }
     };
 
     try {
@@ -324,40 +326,45 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
     }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
     // Validate geometry data
-    if (locationMode === "area" && (!formDocument.area || !formDocument.area.geometry)) {
+    if (locationMode === "area" && (!formDocument.geolocation.area || !formDocument.geolocation.area.geometry)) {
       setErrors({ areaName: "Please draw or select a valid area." });
       return;
     }
 
     let updatedGeolocation = { ...formDocument.geolocation };
 
-    console.log(formDocument.geolocation)
     try {
-      // Step 1: Create a new point and update the geolocation with the new ID
-      if (locationMode === "point" && !formDocument.geolocation.pointCoordinates.pointId) {
-        console.log(formDocument.geolocation.pointCoordinates.pointName)
-        // Sostituisci pointName con null se è una stringa vuota
-        const sanitizedPointName =
-            formDocument.geolocation.pointCoordinates.pointName?.trim() === ""
-                ? null
-                : formDocument.geolocation.pointCoordinates.pointName;
+      // Step 1: Handle the pointCoordinates logic
+      if (locationMode === "point") {
+        if (formDocument.geolocation.pointCoordinates?.pointId) {
+          // Se il punto esiste già, includi solo l'ID
+          updatedGeolocation = {
+            ...formDocument.geolocation,
+            pointCoordinates: {
+              pointId: formDocument.geolocation.pointCoordinates.pointId,
+            },
+          };
+        } else {
+          // Se è un nuovo punto, crea il punto e ottieni l'ID
+          const sanitizedPointName =
+              formDocument.geolocation.pointCoordinates.pointName?.trim() === ""
+                  ? null
+                  : formDocument.geolocation.pointCoordinates.pointName;
 
-        // Crea il punto e ottieni il nuovo ID
-        const newPointId = await createPoint(
-            sanitizedPointName,
-            formDocument.geolocation.pointCoordinates.coordinates
-        );
+          const newPointId = await createPoint(
+              sanitizedPointName,
+              formDocument.geolocation.pointCoordinates.coordinates
+          );
 
-        updatedGeolocation = {
-          ...formDocument.geolocation,
-          pointCoordinates: {
-            ...formDocument.geolocation.pointCoordinates,
-            pointId: newPointId,
-            pointName: sanitizedPointName, // Aggiorna il nome pulito
-          },
-        };
+          updatedGeolocation = {
+            ...formDocument.geolocation,
+            pointCoordinates: {
+              pointId: newPointId,
+              pointName: sanitizedPointName,
+            },
+          };
+        }
       }
-
 
       // Step 2: Prepare sanitized geolocation
       const sanitizedGeolocation = {
@@ -365,31 +372,32 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         pointCoordinates: locationMode === "point" ? updatedGeolocation.pointCoordinates : null,
       };
 
-    const validationErrors = validateForm(
-      formDocument,
-      combinedIssuanceDate,
-      kirunaBorderCoordinates
-    );
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      handleValidationErrors(validationErrors);
-      return;
-    }
+      // Step 3: Validate form
+      const validationErrors = validateForm(
+          formDocument,
+          combinedIssuanceDate,
+          kirunaBorderCoordinates
+      );
+      setErrors(validationErrors);
+      if (Object.keys(validationErrors).length > 0) {
+        handleValidationErrors(validationErrors);
+        return;
+      }
 
       // Step 4: Submit document
       if (!document) {
         const newDocId = await createDocument(
-          formDocument,
-          combinedIssuanceDate,
-          sanitizedGeolocation
+            formDocument,
+            combinedIssuanceDate,
+            sanitizedGeolocation
         );
         await uploadFiles(newDocId, filesToUpload);
       } else {
         await updateDocument(
-          document,
-          formDocument,
-          combinedIssuanceDate,
-          sanitizedGeolocation
+            document,
+            formDocument,
+            combinedIssuanceDate,
+            sanitizedGeolocation
         );
         await uploadFiles(document.id, filesToUpload);
         await deleteFiles(deletedExistingFiles);
@@ -1461,10 +1469,24 @@ function DocumentFormFields({
                   <Form.Group controlId="formDocumentPointName">
                     <Form.Control
                         type="text"
-                        value={pointName}
-                        onChange={(e) => setPointName(e.target.value)}
+                        value={pointName || document.geolocation?.pointCoordinates?.pointName || ""}
+                        onChange={(e) => {
+                          const updatedPointName = e.target.value;
+                          setPointName(updatedPointName); // Update local state
+
+                          console.log(updatedPointName)
+                          // Synchronize with geolocation
+                          handleChange("geolocation", {
+                            ...document.geolocation,
+                            pointCoordinates: {
+                              ...document.geolocation.pointCoordinates,
+                              pointName: updatedPointName,
+                            },
+                          });
+                        }}
                         placeholder="Enter the point name"
                     />
+
                     <Form.Text className="text-muted">
                       This name will help identify the point.
                     </Form.Text>
