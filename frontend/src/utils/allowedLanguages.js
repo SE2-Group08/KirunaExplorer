@@ -1,4 +1,5 @@
 export const allowedLanguages = new Set([
+  "",
   "American English",
   "Arabic",
   "Bengali",
@@ -48,5 +49,5 @@ export const allowedLanguages = new Set([
   "Turkish",
   "Ukrainian",
   "Urdu",
-  "Vietnamese"
+  "Vietnamese",
 ]);

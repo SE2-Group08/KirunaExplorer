@@ -29,7 +29,6 @@ import "../App.scss";
 import getKirunaArea from "./KirunaArea.jsx";
 import { Document } from "../model/Document.mjs";
 import { validateForm } from "../utils/formValidation.js";
-import { allowedLanguages } from "../utils/allowedLanguages.js";
 
 export default function DocumentFormComponent({ document, show, onHide }) {
   const kirunaBorderCoordinates = getKirunaArea();
@@ -235,13 +234,6 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       longitude: formDocument.geolocation.longitude || null,
       municipality: formDocument.geolocation.municipality || null,
     };
-
-    // Validate language against the allowed languages set
-    if (!allowedLanguages.has(formDocument.language)) {
-      setErrors({ language: "Invalid language selected." });
-      languageRef.current.focus();
-      return;
-    }
 
     const validationErrors = validateForm(
       formDocument,
@@ -545,21 +537,6 @@ function DocumentFormFields({
     });
     if (document.geolocation.latitude != "" && lng != "") {
       setMarkerPosition([document.geolocation.latitude, lng]);
-    }
-  };
-
-  const handleLanguageInputChange = (e) => {
-    const value = e.target.value;
-    handleChange("customLanguage", value);
-
-    if (value.length > 0) {
-      const filtered = Array.from(allowedLanguages).filter((language) =>
-        language.toLowerCase().startsWith(value.toLowerCase())
-      );
-      setFilteredLanguages(filtered);
-      setHighlightedIndex(-1);
-    } else {
-      setFilteredLanguages([]);
     }
   };
 
@@ -940,6 +917,7 @@ function DocumentFormFields({
                 </option>
               ))}
               <option value="Other">Other</option>
+              <option value="">None</option>
             </Form.Control>
             {document.language === "Other" && (
               <div className="d-flex mt-2">
@@ -947,7 +925,9 @@ function DocumentFormFields({
                   type="text"
                   placeholder="Enter custom language"
                   value={document.customLanguage || ""}
-                  onChange={handleLanguageInputChange}
+                  onChange={(e) =>
+                    handleChange("customLanguage", e.target.value)
+                  }
                   isInvalid={!!errors.language}
                   className="me-2"
                   onKeyDown={handleKeyDown}
