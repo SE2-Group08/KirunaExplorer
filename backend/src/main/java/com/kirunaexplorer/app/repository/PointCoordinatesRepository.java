@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface PointCoordinatesRepository extends JpaRepository<PointCoordinates, Long> {
-    boolean existsPointCoordinatesByName(@NotNull String name);
+    boolean existsPointCoordinatesByNameAndNameIsNotNull(@NotNull String name);
 
     List<PointCoordinates> findAllByNameNotNull();
 }

@@ -31,7 +31,7 @@ public class PointCoordinatesService {
     public Long createPoint(PointCoordinatesRequestDTO pointCoordinatesRequestDTO) {
 
         // Check if point already exists
-        if (pointCoordinatesRepository.existsPointCoordinatesByName(pointCoordinatesRequestDTO.pointCoordinates().pointName())) {
+        if (pointCoordinatesRepository.existsPointCoordinatesByNameAndNameIsNotNull(pointCoordinatesRequestDTO.pointCoordinates().pointName())) {
             throw new DuplicatePointException("Point already exists with same name");
         }
 

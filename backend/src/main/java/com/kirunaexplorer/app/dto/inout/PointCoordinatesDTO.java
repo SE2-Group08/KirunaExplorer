@@ -12,7 +12,7 @@ public record PointCoordinatesDTO(
     @NotNull(groups = {PostDocument.class, PutDocument.class})
     Long pointId,
 
-    @NotNull(groups = {PostPointCoordinates.class})
+    //@NotNull(groups = {PostPointCoordinates.class})
     @Null(groups = {PostDocument.class, PutDocument.class})
     @Size(min = 2, max = 64, groups = {PostPointCoordinates.class})
     String pointName,

@@ -39,7 +39,6 @@ public class PointCoordinatesController {
      */
     @PostMapping
     public ResponseEntity<Void> createPoint(@RequestBody @Validated({PostPointCoordinates.class}) PointCoordinatesRequestDTO pointCoordinatesRequestDTO) {
-        System.out.println(pointCoordinatesRequestDTO);
         Long pointId = pointCoordinatesService.createPoint(pointCoordinatesRequestDTO);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
             .path("/{id}")
