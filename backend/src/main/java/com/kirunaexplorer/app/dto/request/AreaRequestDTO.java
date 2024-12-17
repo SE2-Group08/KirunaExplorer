@@ -10,11 +10,11 @@ import jakarta.validation.constraints.NotNull;
 
 public record AreaRequestDTO(
     @Valid
-    @NotNull
+    @NotNull(groups = {PostArea.class})
     AreaBriefDTO area,
 
     @Valid
-    @NotNull
+    @NotNull(groups = {PostArea.class})
     GeometryDTO geometry
 ) {
     /**
