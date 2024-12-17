@@ -1,5 +1,6 @@
 package com.kirunaexplorer.app.model;
 
+import com.kirunaexplorer.app.dto.inout.AreaBriefDTO;
 import com.kirunaexplorer.app.dto.response.AreaBriefResponseDTO;
 import com.kirunaexplorer.app.dto.response.AreaResponseDTO;
 import jakarta.persistence.*;
@@ -45,5 +46,9 @@ public class Area {
      */
     public AreaResponseDTO toAreaResponseDTO() {
         return new AreaResponseDTO(id, name, centroid.toCoordinatesDTO(), geometry.toGeometryDTO());
+    }
+
+    public AreaBriefDTO toAreaBriefDTO() {
+        return new AreaBriefDTO(id, name, centroid.toCoordinatesDTO());
     }
 }

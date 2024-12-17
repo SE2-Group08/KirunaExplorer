@@ -1,5 +1,6 @@
 package com.kirunaexplorer.app.model;
 
+import com.kirunaexplorer.app.dto.inout.PointCoordinatesDTO;
 import com.kirunaexplorer.app.dto.response.PointCoordinatesResponseDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,10 +21,19 @@ public class PointCoordinates {
     private Long id;
 
     private String name;
-    private Double latitude;
-    private Double longitude;
+
+    @Embedded
+    private Coordinates coordinates;
+
+    public PointCoordinates(Long id, String name, double latitude, double longitude) {
+        this(id, name, new Coordinates(latitude, longitude));
+    }
 
     public PointCoordinatesResponseDTO toPointCoordinatesResponseDTO() {
-        return new PointCoordinatesResponseDTO(id, name, latitude, longitude);
+        return new PointCoordinatesResponseDTO(id, name, coordinates.getLatitude(), coordinates.getLongitude());
+    }
+
+    public PointCoordinatesDTO toPointCoordinatesDTO() {
+        return new PointCoordinatesDTO(id, name, coordinates.getLatitude(), coordinates.getLongitude());
     }
 }

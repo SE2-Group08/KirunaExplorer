@@ -23,7 +23,7 @@ public class PointCoordinatesService {
      * @return list of all points
      */
     public List<PointCoordinatesResponseDTO> getAllPoints() {
-        return pointCoordinatesRepository.findAll().stream()
+        return pointCoordinatesRepository.findAllByNameNotNull().stream()
             .map(PointCoordinates::toPointCoordinatesResponseDTO)
             .toList();
     }
@@ -31,7 +31,7 @@ public class PointCoordinatesService {
     public Long createPoint(PointCoordinatesRequestDTO pointCoordinatesRequestDTO) {
 
         // Check if point already exists
-        if (pointCoordinatesRepository.existsPointCoordinatesByName(pointCoordinatesRequestDTO.pointName())) {
+        if (pointCoordinatesRepository.existsPointCoordinatesByName(pointCoordinatesRequestDTO.pointCoordinates().pointName())) {
             throw new DuplicatePointException("Point already exists with same name");
         }
 

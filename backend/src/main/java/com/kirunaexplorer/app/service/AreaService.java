@@ -39,7 +39,7 @@ public class AreaService {
      */
     public Long createArea(AreaRequestDTO areaRequest) {
         // Check if area already exists
-        if (areaRepository.existsAreaByName(areaRequest.areaName())) {
+        if (areaRepository.existsAreaByName(areaRequest.area().areaName())) {
             throw new DuplicateAreaException("Area already exists with same name");
         }
 
