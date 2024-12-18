@@ -229,7 +229,7 @@ public class DocumentService {
     }
 
     public List<DocumentBriefResponseDTO> getDocumentsForMap(String filter) {
-        FilterOptionForMap filterEnum = FilterOptionForMap.valueOf(filter.toUpperCase());
+        FilterOptionForMap filterEnum = FilterOptionForMap.valueOf(filter.replace("-", "_").toUpperCase());
 
         List<Document> documents = switch (filterEnum) {
             case AREA_ONLY -> documentRepository.findByGeoReferenceAreaIsNotNull();
