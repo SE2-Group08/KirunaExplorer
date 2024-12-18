@@ -16,8 +16,8 @@ public record GeometryDTO(
     String type,
 
     @NotNull(groups = {PostArea.class})
-    @Valid
-    List<CoordinatesDTO> coordinates
+    //@Valid
+    List<Object> coordinates
 ) {
 
     /**
@@ -27,8 +27,6 @@ public record GeometryDTO(
      */
     public Geometry toGeometry() {
         GeometryType geometryType = GeometryType.valueOf(type.toUpperCase());
-        List<Coordinates> coords = coordinates.stream().map(CoordinatesDTO::toCoordinates).toList();
-
-        return new Geometry(geometryType, coords);
+        return new Geometry(geometryType, coordinates);
     }
 }
