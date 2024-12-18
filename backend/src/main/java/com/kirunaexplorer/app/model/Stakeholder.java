@@ -2,7 +2,10 @@ package com.kirunaexplorer.app.model;
 
 import com.kirunaexplorer.app.dto.response.StakeholderResponseDTO;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -20,6 +23,13 @@ public class Stakeholder {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    @ManyToMany(mappedBy = "stakeholders")
+    private List<Document> documents;
+
+    public Stakeholder(@Size(min = 2, max = 64) @Size(min = 2, max = 64) String name) {
+        this.name = name;
+    }
 
 
     public StakeholderResponseDTO toResponseDTO() {
