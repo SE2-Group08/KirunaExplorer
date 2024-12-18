@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kirunaexplorer.app.constants.GeometryType;
 import com.kirunaexplorer.app.dto.inout.GeometryDTO;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Lob;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +23,7 @@ public class Geometry {
     private GeometryType type;
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private String coordinates;
 
     /**

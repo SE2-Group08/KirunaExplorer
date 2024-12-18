@@ -67,6 +67,7 @@ public class DocumentService {
      * @param pageNo Page number
      * @return List of DocumentBriefPageResponseDTO
      */
+    @Transactional
     public List<DocumentBriefPageResponseDTO> getDocumentsByPageNumber(int pageNo) {
         Page<Document> pagedResult = documentRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNo, PAGE_SIZE));
 
@@ -79,6 +80,7 @@ public class DocumentService {
      * @param id Document id
      * @return DocumentResponseDTO
      */
+    @Transactional
     public DocumentResponseDTO getDocumentById(Long id) {
 
         return documentRepository.findById(id)

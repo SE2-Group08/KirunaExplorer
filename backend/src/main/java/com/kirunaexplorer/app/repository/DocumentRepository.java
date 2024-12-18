@@ -19,6 +19,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
      * @param pageable Pageable
      * @return Page of Document
      */
+    @Query("SELECT d FROM Document d LEFT JOIN FETCH d.geoReference gr LEFT JOIN FETCH gr.area a LEFT JOIN FETCH gr.pointCoordinates pc")
     Page<Document> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     @Query("SELECT d FROM Document d WHERE (:keyword IS NULL OR :keyword = '' " +
