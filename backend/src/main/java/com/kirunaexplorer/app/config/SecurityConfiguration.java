@@ -73,6 +73,7 @@ public class SecurityConfiguration {
                         // Geolocation
                         .requestMatchers(GET, "/api/v1/areas/{id}").permitAll()
                         .requestMatchers(GET, "/api/v1/areas").permitAll()
+                        .requestMatchers(GET, "/api/v1/points").permitAll()
 
                         // Protected endpoints (URBAN_PLANNER)
                         .requestMatchers(POST, "/api/v1/documents/{id}/links").hasAuthority(Role.URBAN_PLANNER.name())
@@ -84,7 +85,6 @@ public class SecurityConfiguration {
                         .requestMatchers(POST, "/api/v1/scales").hasAuthority(Role.URBAN_PLANNER.name())
                         .requestMatchers(POST, "/api/v1/areas").hasAuthority(Role.URBAN_PLANNER.name())
                         .requestMatchers(POST, "/api/v1/points").hasAuthority(Role.URBAN_PLANNER.name())
-                        .requestMatchers(GET, "/api/v1/points").hasAuthority(Role.URBAN_PLANNER.name())
 
                         .anyRequest().authenticated()
                 )

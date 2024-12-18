@@ -251,24 +251,41 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
     };
   }
 
-  async function createArea(name, area) {
-    const formattedCoordinates = area.geometry.coordinates[0].map(([lng, lat]) => ({
-      latitude: lat,
-      longitude: lng,
-    }));
-
-    const centroid = calculateCentroid(
-        formattedCoordinates.map(({ latitude, longitude }) => [latitude, longitude])
+  function formatMultiPolygonCoordinates(multiPolygon) {
+    return multiPolygon.map(polygon =>
+        polygon[0].map(([lat, lng]) => ({
+          latitude: lat,
+          longitude: lng,
+        }))
     );
+  }
+
+  async function createArea(name, area) {
+    let formattedCoordinates = [];
+    let centroid = {};
+    if(locationMode === "entire_municipality"){
+      formattedCoordinates = formatMultiPolygonCoordinates(area.geometry.coordinates);
+
+    } else {
+      formattedCoordinates = area.geometry.coordinates[0].map(([lng, lat]) => ({
+        latitude: lat,
+        longitude: lng,
+      }));
+
+      centroid = calculateCentroid(
+          formattedCoordinates.map(({ latitude, longitude }) => [latitude, longitude])
+      );
+    }
+
 
     const newArea = {
       area: {
         areaId: null,
         areaName: name,
-        areaCentroid: centroid,
+        areaCentroid: area.areaCentroid ? area.areaCentroid : centroid ,
       },
       geometry: {
-        type: "Polygon",
+        type: area.geometry.type ? area.geometry.type :"Polygon",
         coordinates: formattedCoordinates,
       },
     };
@@ -314,14 +331,14 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
     }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
-    if (locationMode === "area" && !formDocument.geolocation.area?.areaName) {
+    if (locationMode === "area" && !selectedAreaId) {
       setErrors({ areaName: "Please provide a name for the area." });
       return;
     }
 
 
     let updatedGeolocation = { ...formDocument.geolocation };
-
+    console.log(formDocument.geolocation)
     try {
       if (locationMode === "area") {
         if (selectedAreaId) {
@@ -364,11 +381,28 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
             area: null,
           };
         }
+      } else if(locationMode==="entire_municipality"){
+        if (selectedAreaId) {
+          updatedGeolocation = {
+            area: {
+              areaId: selectedAreaId
+            },
+            pointCoordinates: null,
+          };
+        } else {
+          const newAreaId = await createArea(formDocument.geolocation.area.areaName, formDocument.geolocation.area)
+          updatedGeolocation = {
+            pointCoordinates: null,
+            area: {
+              areaId: newAreaId
+            }
+          };
+        }
       }
 
       // Prepara la geolocation finale
       const sanitizedGeolocation = {
-        area: locationMode === "area" ? updatedGeolocation.area : null,
+        area: (locationMode === "area" || locationMode === "entire_municipality" ) ? updatedGeolocation.area : null,
         pointCoordinates:
             locationMode === "point" ? updatedGeolocation.pointCoordinates : null,
       };
@@ -379,6 +413,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
           kirunaBorderCoordinates
       );
       setErrors(validationErrors);
+
       if (Object.keys(validationErrors).length > 0) {
         handleValidationErrors(validationErrors);
         return;
@@ -502,10 +537,10 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
                 setAreaModified(false);
                 if (val === "entire_municipality") {
                   handleChange("geolocation", {
-                    latitude: null,
-                    longitude: null,
-                    area: null,
-                    municipality: "Entire municipality"
+                    pointCoordinates: null,
+                    area: {
+                      areaName: "Entire municipality"
+                    },
                   });
                 } else {
                   handleChange("geolocation", {
@@ -788,7 +823,7 @@ function DocumentFormFields({
       area: {
         areaId: null,
         areaName: "", // L'utente la definirà
-        areaCentroid: centroid,
+        areaCentroid: centroid ,
         geometry: {
           type: "Polygon",
           coordinates: [coordinates], // Mantieni il formato GeoJSON
@@ -798,7 +833,6 @@ function DocumentFormFields({
     };
 
     handleChange("geolocation", newArea);
-
     setDocument((prev) => ({
       ...prev,
       geolocation: newArea,
@@ -855,7 +889,6 @@ function DocumentFormFields({
     });
     return null;
   }
-
 
   const handleLatitudeChange = (e) => {
     const latitude = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -982,8 +1015,6 @@ function DocumentFormFields({
     zoomOnPoint(point);
   };
 
-
-
   const mapRef = useRef(null);
 
   const zoomOnArea = (area) => {
@@ -1036,8 +1067,6 @@ function DocumentFormFields({
       }
     }
   };
-
-
 
   const zoomOnMunicipality = () => {
     if (mapRef.current && kirunaBorderCoordinates?.length) {
@@ -1494,8 +1523,26 @@ function DocumentFormFields({
                 value={locationMode}
                 onChange={(e) => {
                   setLocationMode(e.target.value)
-                  if(e.target.value === "entire_municipality")
+                  if(e.target.value === "entire_municipality") {
+                    console.log(defaultPosition)
+                    handleChange("geolocation", {
+                      ...document.geolocation,
+                      area: {
+                        areaId: null,
+                        areaName: "Entire Municipality",
+                        areaCentroid: {
+                          latitude: defaultPosition[0],
+                          longitude: defaultPosition[1],
+                        },
+                        geometry: {
+                          type: "MultiPolygon",
+                          coordinates: kirunaBorderCoordinates,
+                        },
+                      },
+                      pointCoordinates: null, // Clear point selection
+                    });
                     zoomOnMunicipality();
+                  }
                 }}
                 style={{flex: 1}}
               >
@@ -1572,66 +1619,66 @@ function DocumentFormFields({
         {locationMode === "point" && (
           <>
             <Col md={3}>
-        <Form.Group className="mb-3">
-            <Form.Label>Latitude</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              type="number"
-              min={67.3564329180828}
-              max={69.05958911620179}
-              step={0.00001}
-              value={document.geolocation?.pointCoordinates?.coordinates?.latitude || ""}
-              onChange={handleLatitudeChange}
-              id="formDocumentGeolocationLatitude"
-              isInvalid={!!errors.latitude}
-                  ref={refs.latitudeRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.latitude}
-            </Form.Control.Feedback>
-            <Form.Range
-              min={67.3564329180828}
-              max={69.05958911620179}
-              step={0.00001}
-              value={document.geolocation?.pointCoordinates?.coordinates?.latitude}
-              onChange={handleLatitudeChange}
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-            />
-          </Form.Group>
-          </Col>
-          <Col md={3}>
-            <Form.Group className="mb-3">
-            <Form.Label>Longitude</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              type="number"
-              value={document.geolocation?.pointCoordinates?.coordinates?.longitude || ""}
-              min={17.89900836116174}
-              max={23.28669305841499}
-              step={0.00001}
-              isInvalid={!!errors.longitude}
-              onChange={handleLongitudeChange}
-              id="formDocumentGeolocationLongitude"
-              ref={refs.longitudeRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.longitude}
-            </Form.Control.Feedback>
-            <Form.Range
-              min={17.89900836116174}
-              max={23.28669305841499}
-              step={0.00001}
-              value={document.geolocation?.pointCoordinates?.coordinates?.longitude }
-              onChange={handleLongitudeChange}
-            />
-            </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Latitude</Form.Label>
+                <div className="divider"/>
+                <Form.Control
+                    type="number"
+                    min={67.3564329180828}
+                    max={69.05958911620179}
+                    step={0.00001}
+                    value={document.geolocation?.pointCoordinates?.coordinates?.latitude || ""}
+                    onChange={handleLatitudeChange}
+                    id="formDocumentGeolocationLatitude"
+                    isInvalid={!!errors.latitude}
+                    ref={refs.latitudeRef}
+                />
+                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
+                  {errors.latitude}
+                </div>
+                <Form.Range
+                    min={67.3564329180828}
+                    max={69.05958911620179}
+                    step={0.00001}
+                    value={document.geolocation?.pointCoordinates?.coordinates?.latitude}
+                    onChange={handleLatitudeChange}
+                    disabled={
+                        document.geolocation.municipality === "Entire municipality"
+                    }
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Longitude</Form.Label>
+                <div className="divider"/>
+                <Form.Control
+                    type="number"
+                    value={document.geolocation?.pointCoordinates?.coordinates?.longitude || ""}
+                    min={17.89900836116174}
+                    max={23.28669305841499}
+                    step={0.00001}
+                    isInvalid={!!errors.longitude}
+                    onChange={handleLongitudeChange}
+                    id="formDocumentGeolocationLongitude"
+                    ref={refs.longitudeRef}
+                />
+                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
+                  {errors.longitude}
+                </div>
+                <Form.Range
+                    min={17.89900836116174}
+                    max={23.28669305841499}
+                    step={0.00001}
+                    value={document.geolocation?.pointCoordinates?.coordinates?.longitude}
+                    onChange={handleLongitudeChange}
+                />
+              </Form.Group>
             </Col>
           </>
         )}
 
-        </Row>
+      </Row>
 
 
       {locationMode === "area" && areaModified && (
@@ -1783,7 +1830,7 @@ DocumentFormFields.propTypes = {
   refs: PropTypes.object.isRequired,
   locationMode: PropTypes.string.isRequired,
   setLocationMode: PropTypes.func.isRequired,
-  selectedAreaId: PropTypes.string.isRequired,
+  selectedAreaId: PropTypes.any.isRequired,
   setSelectedAreaId: PropTypes.func.isRequired,
   selectedPointId: PropTypes.string.isRequired,
   setSelectedPointId: PropTypes.func.isRequired,
