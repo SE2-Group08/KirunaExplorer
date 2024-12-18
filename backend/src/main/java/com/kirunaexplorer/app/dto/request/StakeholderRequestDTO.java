@@ -20,9 +20,8 @@ public record StakeholderRequestDTO(
      */
     public Stakeholder toStakeholder() {
         return new Stakeholder(
-                id,
-                name,
-                null
+            id,
+            name
         );
     }
 }

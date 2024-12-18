@@ -90,12 +90,8 @@ public class DocumentController {
     }
 
     @GetMapping("/search")
-    public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam(required = false) String keyword,
-                                                          @RequestParam(required = false) String type,
-                                                          @RequestParam(required = false) List<String> stakeholderNames,
-                                                          @RequestParam(required = false) String scale,
-                                                          @RequestParam(value = "pageNo", required = false, defaultValue = "0") @Min(0) int pageNo) {
-        return documentService.searchDocuments(keyword, type, stakeholderNames, scale, pageNo);
+    public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam(required = false) String keyword, @RequestParam(required = false) String type) {
+        return documentService.searchDocuments(keyword, type);
     }
 
     @GetMapping("/area/{areaName}")
