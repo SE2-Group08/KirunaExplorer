@@ -40,7 +40,13 @@ public class Document {
 
     @Column(length = 1000)
     private String description;
-    private String stakeholders;
+    @ManyToMany
+    @JoinTable(
+            name = "document_stakeholders",
+            joinColumns = @JoinColumn(name = "document_id"),
+            inverseJoinColumns = @JoinColumn(name = "stakeholder_id")
+    )
+    private List<Stakeholder> stakeholders;
     private String type;
     private String scale;
     private LocalDate issuanceDate;
@@ -70,7 +76,7 @@ public class Document {
         return new DocumentResponseDTO(
             this.id.intValue(),
             this.title,
-            List.of(this.stakeholders.split("/")),
+            this.stakeholders.stream().map(Stakeholder::getName).toList(),
             this.scale,
             parseDate(this.issuanceDate, this.datePrecision),
             this.type,
@@ -91,7 +97,7 @@ public class Document {
         return new DocumentBriefResponseDTO(
             this.id,
             this.title,
-            List.of(this.stakeholders.split("/")),
+            this.stakeholders.stream().map(Stakeholder::getName).toList(),
             this.scale,
             parseDate(this.issuanceDate, this.datePrecision),
             this.type,
@@ -120,7 +126,7 @@ public class Document {
         return new DocumentDiagramResponseDTO(
             this.id,
             this.title,
-            List.of(this.stakeholders.split("/")),
+            this.stakeholders.stream().map(Stakeholder::getName).toList(),
             this.scale,
             parseDate(this.issuanceDate, this.datePrecision),
             this.type,
@@ -172,7 +178,7 @@ public class Document {
     public void updateFromDocumentRequestDTO(DocumentRequestDTO dto) {
         this.title = dto.title();
         this.description = dto.description();
-        this.stakeholders = String.join("/", dto.stakeholders());
+        this.stakeholders = dto.stakeholders().stream().map(this::convertToStakeholder).toList();
         this.type = dto.type();
         this.scale = dto.scale();
         this.issuanceDate = dto.parseIssuanceDate(dto.issuanceDate());
@@ -180,6 +186,10 @@ public class Document {
         this.language = dto.language();
         this.pages = dto.nrPages();
         this.updatedAt = LocalDateTime.now();
+    }
+
+    private Stakeholder convertToStakeholder(String name) {
+        return new Stakeholder(name);
     }
 
     public void addFile(DocumentFile file) {
