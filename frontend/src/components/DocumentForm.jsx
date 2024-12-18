@@ -110,10 +110,13 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         },
         description: document.description || "",
       });
-      if(document.geolocation?.area){
-        if(document.geolocation.area.areaName === "Entire municipality")
-          setLocationMode("entire_municipality")
-        setLocationMode("area")
+      if (document.geolocation?.area) {
+        console.log(document.geolocation)
+        if (document.geolocation.area.areaName === "Entire Municipality") {
+          setLocationMode("entire_municipality");
+        } else {
+          setLocationMode("area");
+        }
       } else {
         setLocationMode("point")
       }
@@ -338,7 +341,6 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
 
 
     let updatedGeolocation = { ...formDocument.geolocation };
-    console.log(formDocument.geolocation)
     try {
       if (locationMode === "area") {
         if (selectedAreaId) {
@@ -865,7 +867,6 @@ function DocumentFormFields({
 
     handleChange("geolocation", { ...document.geolocation, area: remainingArea });*/
       handleChange("area", null); // Rimuovi il poligono dall'area
-
   };
 
   function MapClickHandlerForNewPoint() {
@@ -1522,9 +1523,17 @@ function DocumentFormFields({
                 as="select"
                 value={locationMode}
                 onChange={(e) => {
-                  setLocationMode(e.target.value)
-                  if(e.target.value === "entire_municipality") {
-                    console.log(defaultPosition)
+                  setLocationMode(e.target.value);
+                  if (e.target.value === "entire_municipality") {
+                    console.log(defaultPosition);
+                    const municipality = allKnownAreas.find(
+                        (p) => p.name === "Entire Municipality"
+                    );
+
+                    if (municipality) {
+                      setSelectedAreaId(municipality.id.toString());
+                    }
+
                     handleChange("geolocation", {
                       ...document.geolocation,
                       area: {
@@ -1544,15 +1553,15 @@ function DocumentFormFields({
                     zoomOnMunicipality();
                   }
                 }}
-                style={{flex: 1}}
-              >
-                <option value=""> -- select --</option>
-                <option value="entire_municipality">Entire municipality</option>
-                <option value="area">Area</option>
-                <option value="point">Coordinates</option>
-              </Form.Control>
-            </Form.Group>
-          </Row>
+                style={{ flex: 1 }}
+            >
+              <option value=""> -- select --</option>
+              <option value="entire_municipality">Entire municipality</option>
+              <option value="area">Area</option>
+              <option value="point">Coordinates</option>
+            </Form.Control>
+          </Form.Group>
+        </Row>
           {locationMode === "point" && newPoint && !selectedPointId &&(
               <Row className="mb-2 mt-3">
                 <Col md={24}>
@@ -1735,9 +1744,9 @@ function DocumentFormFields({
                 {locationMode === "point" && markerPosition && (
                     <Marker position={markerPosition} />
                 )}
-                {locationMode === "entire_municipality" && (
+                {locationMode === "entire_municipality" ? (
                   <Polygon positions={kirunaBorderCoordinates} />
-                )}
+                ) : null}
 
                 <Polygon
                     positions={kirunaBorderCoordinates}
@@ -1766,21 +1775,35 @@ function DocumentFormFields({
                 )}
                 {
                     document.geolocation.area?.geometry && (() => {
-                      console.log("Geometry:", document.geolocation.area.geometry);
                       const { type, coordinates } = document.geolocation.area.geometry;
 
                       if (type === "POLYGON" || type === "Polygon") {
-                        // Mappatura corretta [lng, lat] → [lat, lng] per Leaflet
                         const polygonCoords = coordinates.map(([lng, lat]) => [lat, lng]);
-                        return <Polygon positions={polygonCoords} color="purple" />;
+                        return <Polygon positions={polygonCoords} color="green" />;
                       } else if (type === "MULTIPOLYGON" || type === "MultiPolygon") {
-                        // Gestione MultiPolygon
-                        const multiPolygonCoords = coordinates.map((polygon) =>
-                            polygon.map(([lng, lat]) => [lat, lng])
-                        );
-                        return multiPolygonCoords.map((coords, idx) => (
-                            <Polygon key={idx} positions={coords} color="purple" />
-                        ));
+
+                        const coordinates = kirunaBorderCoordinates;
+                        // Validate coordinates
+                        if (!Array.isArray(coordinates)) {
+                          console.error("Invalid coordinates format:", coordinates);
+                          return null; // Or provide a fallback UI
+                        }
+
+                        try {
+                          // Transform MultiPolygon coordinates
+                          const multiPolygonCoords = coordinates.map((polygon) =>
+                              polygon.map((ring) =>
+                                  ring.map(([lng, lat]) => [lat, lng])
+                              )
+                          );
+
+                          return multiPolygonCoords.map((coords, idx) => (
+                              <Polygon key={idx} positions={coords} color="blue" />
+                          ));
+                        } catch (error) {
+                          console.error("Error processing MultiPolygon coordinates:", error);
+                          return null; // Gracefully handle errors
+                        }
                       }
 
                       console.warn(`Unsupported geometry type: ${type}`);
