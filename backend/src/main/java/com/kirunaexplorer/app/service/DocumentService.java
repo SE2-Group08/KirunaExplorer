@@ -215,6 +215,8 @@ public class DocumentService {
         } else {
             geoReference.setArea(null);
         }
+    }
+
     /**
      * Get all documents formatted for diagram representation.
      *
