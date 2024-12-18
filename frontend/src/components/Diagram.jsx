@@ -214,36 +214,49 @@ const FullPageChart = () => {
 
     // Disegna le linee curve per i collegamenti tra i documenti
     const drawnLinks = new Set(); // Set per memorizzare le coppie di documenti già considerate
-    
+
+    const offset = 10; // Lunghezza da accorciare all'inizio e alla fine della linea
+
     documentsToShow.forEach((document) => {
       document.links.forEach((link, index) => {
         const targetDocument = documentsToShow.find((d) => d.id === link.documentId);
         if (targetDocument) {
           const linkType = link.linkType;
-    
-          // Genera un identificativo unico per la coppia di documenti e il tipo di link (es: "1-2-linkType")
+
+          // Genera un identificativo unico per la coppia di documenti e il tipo di link
           const linkId = [document.id, targetDocument.id].sort().join("-") + `-${linkType}`;
-          
+
           // Disegna la linea solo se questa coppia di documenti con questo tipo non è già stata processata
           if (!drawnLinks.has(linkId)) {
             drawnLinks.add(linkId); // Segna questa coppia e tipo come processati
-    
+
             const startX = documentPositions[document.id].x + 15; // Aggiungi un offset per centrarsi sull'icona
             const startY = documentPositions[document.id].y + 15;
             const endX = documentPositions[targetDocument.id].x + 15;
             const endY = documentPositions[targetDocument.id].y + 15;
-    
+
+            // Calcola la distanza tra i due punti
+            const deltaX = endX - startX;
+            const deltaY = endY - startY;
+            const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+
+            // Calcola i nuovi punti accorciati
+            const newStartX = startX + (offset * deltaX) / distance;
+            const newStartY = startY + (offset * deltaY) / distance;
+            const newEndX = endX - (offset * deltaX) / distance;
+            const newEndY = endY - (offset * deltaY) / distance;
+
             // Calcola la curvatura in base all'indice del link
-            const curveOffset = 40 * (index - Math.floor(document.links.length / 1.3)); // Valore di curvatura
-            const controlPointX = (startX + endX) / 2 + curveOffset;
-            const controlPointY = (startY + endY) / 2 - Math.abs(curveOffset) / 2; // Controlla la posizione dell'arco
-    
+            const curveOffset = 20 * (index - Math.floor(document.links.length / 1.2)); // Valore di curvatura
+            const controlPointX = (newStartX + newEndX) / 2 + curveOffset;
+            const controlPointY = (newStartY + newEndY) / 2 - Math.abs(curveOffset) / 2;
+
             // Crea una curva con il path, applicando il tipo di linea
             mainGroup
               .append("path")
               .attr(
                 "d",
-                `M ${startX},${startY} Q ${controlPointX},${controlPointY} ${endX},${endY}`
+                `M ${newStartX},${newStartY} Q ${controlPointX},${controlPointY} ${newEndX},${newEndY}`
               )
               .attr("fill", "none")
               .attr("stroke", getLinkColor(linkType))
@@ -253,6 +266,7 @@ const FullPageChart = () => {
         }
       });
     });
+
 
     // Alza le icone dei documenti sopra le linee
     mainGroup.selectAll(".document-icon").raise();
