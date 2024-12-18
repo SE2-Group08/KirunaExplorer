@@ -411,7 +411,6 @@ const getAllAreasSnippets = async (token) => {
     if (!Array.isArray(data)) {
       throw new Error("Response data is not an array");
     }
-    console.log("API areas", data);
 
     // Map the data to the required format
     return data.map((item) => ({
@@ -448,7 +447,6 @@ const addGeolocatedArea = async (area, token) => {
         return null;
       }
       const areaId = location.split("/").pop();
-      console.log(areaId)
       return areaId;
     } else {
       console.error(

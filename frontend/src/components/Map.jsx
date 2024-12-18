@@ -47,6 +47,7 @@ const MapKiruna = () => {
   const [tileLayer, setTileLayer] = useState("satellite");
   const { setFeedbackFromError, shouldRefresh } = useContext(FeedbackContext);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const kirunaBorderCoordinates = getKirunaArea();
 
   // Reference for dynamic Polygon
   const kirunaPolygonRef = useRef(null);
@@ -66,26 +67,58 @@ const MapKiruna = () => {
       .catch((error) => setFeedbackFromError(error));
   }, [setFeedbackFromError, shouldRefresh]);
 
-  const handleDocumentClick = async (document) => {
-    await API.getDocumentById(document.id)
-      .then((response) => {
-        setSelectedDocument(response);
-        setShow(true);
-        setShowDocumentSidePanel(true);
-      })
-      .then(
-        setSelectedPosition(
-          document.geolocation.pointCoordinates?.coordinates ||
-            document.geolocation.area.areaCentroid
-        )
-      )
-      .catch((error) => setFeedbackFromError(error));
+  const highlightArea = (area, map) => {
+    if (area.geometry) {
+      if (kirunaPolygonRef.current) {
+        map.removeLayer(kirunaPolygonRef.current);
+        kirunaPolygonRef.current = null;
+      }
+      if (map) {
+        const polygon = L.polygon(
+          area.geometry.coordinates.map((coord) => [coord[1], coord[0]]),
+          {
+            color: "blue",
+            weight: 3,
+            fillOpacity: 0.1,
+          }
+        ).addTo(map);
+        kirunaPolygonRef.current = polygon;
+      }
+    }
   };
 
-  const handleAreaClick = async (area) => {
+  const handleDocumentClick = async (document, map) => {
+    if (kirunaPolygonRef.current) {
+      map.removeLayer(kirunaPolygonRef.current);
+      kirunaPolygonRef.current = null;
+    }
+    try {
+      const response = await API.getDocumentById(document.id);
+      setSelectedDocument(response);
+      setShow(true);
+      setShowDocumentSidePanel(true);
+
+      const position =
+        document.geolocation.pointCoordinates?.coordinates ||
+        document.geolocation.area.areaCentroid;
+      setSelectedPosition(position);
+
+      if (document.geolocation.area) {
+        const areaResponse = await API.getAreaById(
+          document.geolocation.area.areaId
+        );
+        highlightArea(areaResponse, map);
+      }
+    } catch (error) {
+      setFeedbackFromError(error);
+    }
+  };
+
+  const handleAreaClick = async (area, map) => {
     await API.getAreaById(area.id)
       .then((response) => {
         setSelectedArea(response);
+        highlightArea(response, map);
       })
       .then(setSelectedPosition(area.centroid))
       .catch((error) => setFeedbackFromError(error));
@@ -96,8 +129,6 @@ const MapKiruna = () => {
     setShowDocumentSidePanel(false);
     selectedDocument ? setSelectedDocument(null) : setSelectedArea(null);
   };
-
-  const kirunaBorderCoordinates = getKirunaArea();
 
   const handleSearch = async ({
     keyword = "",
@@ -270,29 +301,7 @@ const DocumentMarkers = ({
           direction: "top",
         })
         .openTooltip();
-
-      if (doc.geolocation.area?.name === "Entire municipality") {
-        const map = marker._map;
-        if (!kirunaPolygonRef.current) {
-          kirunaPolygonRef.current = L.polygon(kirunaBorderCoordinates, {
-            color: "purple",
-            weight: 3,
-            fillOpacity: 0.1,
-          }).addTo(map);
-        }
-      }
     };
-
-    // const handleMouseOut = (e) => {
-    //   const marker = e.target;
-    //   marker.closeTooltip();
-
-    //   if (kirunaPolygonRef.current) {
-    //     const map = marker._map;
-    //     map.removeLayer(kirunaPolygonRef.current);
-    //     kirunaPolygonRef.current = null;
-    //   }
-    // };
 
     return (
       <Marker
@@ -300,7 +309,7 @@ const DocumentMarkers = ({
         position={position}
         icon={getIconForDocument(doc.type, doc.stakeholders)}
         eventHandlers={{
-          click: () => handleDocumentClick(doc),
+          click: (e) => handleDocumentClick(doc, e.target._map),
           mouseover: handleMouseOver,
           //   mouseout: handleMouseOut,
         }}
@@ -333,7 +342,7 @@ const AreaMarkers = ({ areas, handleAreaClick }) => {
         key={index}
         position={[area.centroid.latitude, area.centroid.longitude]}
         eventHandlers={{
-          click: () => handleAreaClick(area),
+          click: (e) => handleAreaClick(area, e.target._map),
           mouseover: handleMouseHover,
         }}
       />
