@@ -114,6 +114,7 @@ const downloadFile = async (fileId, fileName, fileExtension) => {
     window.URL.revokeObjectURL(url);
   } catch (error) {
     handleInvalidResponse(error);
+    throw error;
   }
 };
 
@@ -344,7 +345,6 @@ const getAllGeolocatedPoints = async (token) => {
     if (!Array.isArray(data)) {
       throw new Error("Response data is not an array");
     }
-    console.log("Api points", data);
 
     // Map the data to the required format
     return data.map((item) => ({
@@ -378,12 +378,12 @@ const addGeolocatedPoint = async (point, token) => {
         response.status,
         response.statusText
       );
-      return null;
+      throw new Error("Failed to add the point.");
     }
     const location = response.headers.get("location");
     if (!location) {
       console.error("Location header not found in response.");
-      return null;
+      throw new Error("Location header not found in response.");
     }
 
     const pointId = location.split("/").pop(); // Estrarre l'ID dal percorso
@@ -392,7 +392,7 @@ const addGeolocatedPoint = async (point, token) => {
     return pointId;
   } catch (error) {
     console.error("Error while adding point:", error);
-    return null;
+   throw new Error("Error while adding point:", error);
   }
 };
 
@@ -430,13 +430,14 @@ const getAllAreasSnippets = async (token) => {
     }));
   } catch (error) {
     console.error("Error fetching areas:", error.message);
-    throw error; // Re-throw the error so the caller can handle it
+    throw new Error("Error fetching areas"); // Re-throw the error so the caller can handle it
   }
 };
 
 // Create a new area
 const addGeolocatedArea = async (area, token) => {
   try {
+    console.log(area);
     const response = await fetch(`${SERVER_URL}/areas`, {
       method: "POST",
       headers: {
@@ -450,7 +451,7 @@ const addGeolocatedArea = async (area, token) => {
       const location = response.headers.get("location");
       if (!location) {
         console.error("Location header not found in response.");
-        return null;
+        throw new Error("Location header not found in response.");
       }
       const areaId = location.split("/").pop();
       return areaId;
@@ -460,11 +461,11 @@ const addGeolocatedArea = async (area, token) => {
         response.status,
         response.statusText
       );
-      return null;
+      throw new Error("Failed to add the point.");
     }
   } catch (error) {
     console.error("Error while adding point:", error);
-    return null;
+    throw new Error("Error while adding area", error);
   }
 };
 
@@ -486,6 +487,7 @@ const getAreaById = async (id, authToken) => {
     // Parse the JSON data
     const data = await response.json();
 
+    console.log(data);
     // Map the response to the required format
     return {
       id: data.id, // Unique area identifier
@@ -504,7 +506,7 @@ const getAreaById = async (id, authToken) => {
     };
   } catch (error) {
     console.error("Error fetching area by ID:", error.message);
-    throw error; // Re-throw the error so the caller can handle it
+    throw new Error("Error fetching area by ID"); // Re-throw the error so the caller can handle it
   }
 };
 

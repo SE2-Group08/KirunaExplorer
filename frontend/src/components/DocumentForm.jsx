@@ -268,9 +268,8 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
     let centroid = {};
     if(locationMode === "entire_municipality"){
       formattedCoordinates = formatMultiPolygonCoordinates(area.geometry.coordinates);
-
     } else {
-      formattedCoordinates = area.geometry.coordinates[0].map(([lng, lat]) => ({
+      formattedCoordinates = area.geometry.coordinates[0].map(([lat, lng]) => ({
         latitude: lat,
         longitude: lng,
       }));
@@ -633,7 +632,7 @@ function DocumentFormFields({
     if (locationMode === "area") {
       const areaCentroid = document?.geolocation?.area?.areaCentroid;
 
-      if (areaCentroid && areaCentroid.latitude && areaCentroid.longitude) {
+      if (areaCentroid?.latitude && areaCentroid?.longitude) {
         setMarkerPosition([areaCentroid.latitude, areaCentroid.longitude]);
       } else {
         console.warn("Area centroid is missing or invalid. Resetting marker position.");
@@ -818,7 +817,7 @@ function DocumentFormFields({
 
     // Calcola il centroide
     const coordinates = area.geometry.coordinates[0];
-    const centroid = calculateCentroid(coordinates.map(([lng, lat]) => [lat, lng]));
+    const centroid = calculateCentroid(coordinates.map(([lat, lng]) => [lng, lat]));
 
     // Salva l'area creata temporaneamente
     const newArea = {
@@ -1033,10 +1032,10 @@ function DocumentFormFields({
     } else if (type === "MultiPolygon") {
       // Gestisce MultiPolygon se presente
       const latlngs = coordinates.flatMap((polygon) =>
-          polygon.map(([lng, lat]) => [lat, lng])
-      );
+        polygon.map(([lng, lat]) => [lat, lng])
+    );
 
-      const bounds = L.latLngBounds(latlngs);
+    const bounds = L.latLngBounds(latlngs);
       mapRef.current.fitBounds(bounds, { padding: [20, 20] });
 
     } else {
@@ -1792,12 +1791,12 @@ function DocumentFormFields({
                         try {
                           // Transform MultiPolygon coordinates
                           const multiPolygonCoords = coordinates.map((polygon) =>
-                              polygon.map((ring) =>
-                                  ring.map(([lng, lat]) => [lat, lng])
-                              )
-                          );
+                            polygon.map((ring) =>
+                                ring.map(([lng, lat]) => [lat, lng])
+                            )
+                        );
 
-                          return multiPolygonCoords.map((coords, idx) => (
+                        return multiPolygonCoords.map((coords, idx) => (
                               <Polygon key={idx} positions={coords} color="blue" />
                           ));
                         } catch (error) {
