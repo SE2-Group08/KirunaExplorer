@@ -1,5 +1,6 @@
 package com.kirunaexplorer.app.dto.inout;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.kirunaexplorer.app.constants.GeometryType;
 import com.kirunaexplorer.app.model.Coordinates;
 import com.kirunaexplorer.app.model.Geometry;
@@ -17,7 +18,7 @@ public record GeometryDTO(
 
     @NotNull(groups = {PostArea.class})
     //@Valid
-    List<CoordinatesDTO> coordinates
+    JsonNode coordinates
 ) {
 
     /**
@@ -27,7 +28,9 @@ public record GeometryDTO(
      */
     public Geometry toGeometry() {
         GeometryType geometryType = GeometryType.valueOf(type.toUpperCase());
-        List<Coordinates> coords = coordinates.stream().map(CoordinatesDTO::toCoordinates).toList();
-        return new Geometry(geometryType, coords);
+        Geometry geometry = new Geometry();
+        geometry.setType(geometryType);
+        geometry.setCoordinates(coordinates);
+        return geometry;
     }
 }

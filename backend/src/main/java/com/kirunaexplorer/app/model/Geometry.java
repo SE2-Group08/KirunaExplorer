@@ -1,9 +1,13 @@
 package com.kirunaexplorer.app.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kirunaexplorer.app.constants.GeometryType;
 import com.kirunaexplorer.app.dto.inout.GeometryDTO;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Lob;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,8 +24,8 @@ public class Geometry {
 
     private GeometryType type;
 
-    @ElementCollection
-    private List<Coordinates> coordinates;
+    @Lob
+    private String coordinates;
 
     /**
      * Convert to GeometryDTO.
@@ -29,6 +33,28 @@ public class Geometry {
      * @return GeometryDTO
      */
     public GeometryDTO toGeometryDTO() {
-        return new GeometryDTO(type.name(), coordinates.stream().map(Coordinates::toCoordinatesDTO).toList());
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode coordinatesNode;
+        try {
+            coordinatesNode = mapper.readTree(coordinates);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse coordinates JSON", e);
+        }
+        return new GeometryDTO(type.name(), coordinatesNode);
+    }
+
+
+    /**
+     * Set coordinates from JsonNode.
+     *
+     * @param coordinatesNode JsonNode
+     */
+    public void setCoordinates(JsonNode coordinatesNode) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            this.coordinates = mapper.writeValueAsString(coordinatesNode);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to convert coordinates to JSON", e);
+        }
     }
 }
