@@ -1,49 +1,30 @@
 import PropTypes from "prop-types";
-import {
-  Button,
-  Col,
-  Row,
-  ListGroup,
-  OverlayTrigger,
-  Tooltip,
-} from "react-bootstrap";
-import {
-  FaFilePdf,
-  FaFileWord,
-  FaFileExcel,
-  FaFileImage,
-  FaFileAlt,
-} from "react-icons/fa";
+import { Button, Col, Row, ListGroup, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
 import { AiOutlineDownload, AiOutlineDelete } from "react-icons/ai";
 import "./DocumentResourcesGrid.css";
 import "./DocumentResourcesList.css";
 
-const DocumentResources = ({
-  resources,
-  onDelete,
-  onDownload,
-  viewMode,
-  isEditable,
-}) => {
-  const getFileIcon = (extension) => {
-    switch (extension.toLowerCase()) {
-      case "pdf":
-        return <FaFilePdf size={50} />;
-      case "doc":
-      case "docx":
-        return <FaFileWord size={50} />;
-      case "xls":
-      case "xlsx":
-        return <FaFileExcel size={50} />;
-      case "png":
-      case "jpg":
-      case "jpeg":
-      case "gif":
-        return <FaFileImage size={50} />;
-      default:
-        return <FaFileAlt size={50} />;
-    }
-  };
+const DocumentResources = ({ resources, onDelete, onDownload, viewMode, isEditable}) => {
+    const getFileIcon = (extension) => {
+        switch (extension.toLowerCase()) {
+            case "pdf":
+                return <FaFilePdf size={50} />;
+            case "doc":
+            case "docx":
+                return <FaFileWord size={50} />;
+            case "xls":
+            case "xlsx":
+                return <FaFileExcel size={50} />;
+            case "png":
+            case "jpg":
+            case "jpeg":
+            case "gif":
+                return <FaFileImage size={50} />;
+            default:
+                return <FaFileAlt size={50} />;
+        }
+    };
 
   return viewMode === "grid" ? (
     <Row className="gy-4">
@@ -132,11 +113,15 @@ const DocumentResources = ({
 };
 
 DocumentResources.propTypes = {
-  resources: PropTypes.array.isRequired,
-  onDelete: PropTypes.func,
-  onDownload: PropTypes.func,
-  viewMode: PropTypes.oneOf(["grid", "list"]).isRequired,
-  isEditable: PropTypes.bool.isRequired,
+    resources: PropTypes.arrayOf(
+        PropTypes.shape({
+            name: PropTypes.string.isRequired,
+        })
+    ),
+    onDelete: PropTypes.func,
+    onDownload: PropTypes.func,
+    viewMode: PropTypes.oneOf(["grid", "list"]).isRequired,
+    isEditable: PropTypes.bool.isRequired,
 };
 
 export default DocumentResources;

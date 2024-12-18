@@ -50,6 +50,7 @@ export const validateForm = (
     document.geolocation,
     kirunaBorderCoordinates
   );
+  console.log(geolocationErrors)
   if (Object.keys(geolocationErrors).length > 0) {
     newErrors.geolocation = geolocationErrors;
   }
@@ -165,39 +166,62 @@ const validateNrPages = (nrPages) => {
 
 const validateGeolocation = (geolocation, kirunaBorderCoordinates) => {
   const newErrors = {};
-  if (geolocation.latitude && geolocation.longitude) {
-    const point = { lat: geolocation.latitude, lng: geolocation.longitude };
-    const kirunaBorderCoordinatesLngLat = kirunaBorderCoordinates.map(
-      ([lat, lng]) => [lng, lat]
-    );
-    const polygon = [
-      ...kirunaBorderCoordinatesLngLat,
-      kirunaBorderCoordinatesLngLat[0],
-    ]; // Close the loop
+  if (geolocation.pointCoordinates) {
+    const point = {
+      lat: geolocation.pointCoordinates.coordinates.latitude,
+      lng: geolocation.pointCoordinates.coordinates.longitude
+    };
+
     const [x, y] = [point.lng, point.lat]; // Ensure [lng, lat]
-    let inside = false;
 
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const [xi, yi] = polygon[i];
-      const [xj, yj] = polygon[j];
+    const switchCoordinates = (polygon) => {
+      return polygon.map(ring => ring.map(([lat, lng]) => [lng, lat]));
+    };
 
-      const intersect =
-        yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-      if (intersect) inside = !inside;
+    const isPointInRing = (point, ring) => {
+      let inside = false;
+
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i];
+        const [xj, yj] = ring[j];
+
+        const intersect =
+            yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+        if (intersect) inside = !inside;
+      }
+
+      return inside;
+    };
+
+    const isPointInPolygon = (point, polygon) => {
+      const [outerRing, ...holes] = polygon;
+
+      if (!isPointInRing(point, outerRing)) return false;
+
+      for (const hole of holes) {
+        if (isPointInRing(point, hole)) return false;
+      }
+
+      return true;
+    };
+
+    let insideAnyPolygon = false;
+
+    for (const polygon of kirunaBorderCoordinates) {
+      const switchedPolygon = switchCoordinates(polygon);
+      if (isPointInPolygon([x, y], switchedPolygon)) {
+        insideAnyPolygon = true;
+        break;
+      }
     }
 
-    if (!inside) {
+    console.log(insideAnyPolygon);
+    if (!insideAnyPolygon) {
       newErrors.latitude = "Geolocation must be within the Kiruna boundary.";
       newErrors.longitude = "Geolocation must be within the Kiruna boundary.";
     }
   }
-  if (
-    (geolocation.latitude || geolocation.longitude) &&
-    geolocation.municipality === "Entire municipality"
-  ) {
-    newErrors.municipality =
-      "Geolocation must be 'Entire municipality' or a valid coordinate.";
-  }
+
   return newErrors;
 };
 

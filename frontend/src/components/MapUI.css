@@ -53,3 +53,24 @@
     background: #f0f0f0;
     color: #000;
 }
+
+.legend-button {
+    position: absolute;
+    top: calc(10px + 90px + 50px); /* Adjust based on the height of the map style toggle */
+    left: 10px;
+    z-index: 1000;
+  }
+  
+  .center-map-button {
+    position: absolute;
+    top: calc(10px + 90px + 100px); /* Adjust based on the height of the map style toggle and the legend button */
+    left: 10px;
+    z-index: 1000;
+  }
+
+  .entire-municipality-button {
+    position: absolute;
+    top: calc(10px + 90px + 100px); /* Adjust based on the height of the map style toggle and the legend button */
+    left: 10px;
+    z-index: 1000;
+  }

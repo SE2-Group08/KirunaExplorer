@@ -13,12 +13,15 @@ import {
 import {
   MapContainer,
   TileLayer,
-  Marker,
   Polygon,
+  FeatureGroup,
+  Marker,
   useMapEvents,
 } from "react-leaflet";
+import { EditControl } from "react-leaflet-draw";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-draw/dist/leaflet.draw.css";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
@@ -29,14 +32,18 @@ import "../App.scss";
 import getKirunaArea from "./KirunaArea.jsx";
 import { Document } from "../model/Document.mjs";
 import { validateForm } from "../utils/formValidation.js";
-import { allowedLanguages } from "../utils/allowedLanguages.js";
 
-export default function DocumentFormComponent({ document, show, onHide }) {
+export default function DocumentFormComponent({ document, show, onHide, authToken }) {
   const kirunaBorderCoordinates = getKirunaArea();
   const [existingFiles, setExistingFiles] = useState([]);
   const [deletedExistingFiles, setDeletedExistingFiles] = useState([]);
   const [filesToUpload, setFilesToUpload] = useState([]);
   const [errors, setErrors] = useState({});
+  const [locationMode, setLocationMode] = useState("");
+  const [selectedAreaId, setSelectedAreaId] = useState("");
+  const [selectedPointId, setSelectedPointId] = useState("");
+  const [areaModified, setAreaModified] = useState(false);
+
   const [formDocument, setFormDocument] = useState(
     document || {
       title: "",
@@ -52,9 +59,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       language: "",
       nrPages: 0,
       geolocation: {
-        latitude: "",
-        longitude: "",
-        municipality: "Entire municipality",
+        area: null,
+        pointCoordinates: null,
       },
       description: "",
     }
@@ -75,6 +81,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const longitudeRef = useRef(null);
   const municipalityRef = useRef(null);
   const descriptionRef = useRef(null);
+  const areaNameRef = useRef(null);
 
   useEffect(() => {
     if (document?.id) {
@@ -98,14 +105,18 @@ export default function DocumentFormComponent({ document, show, onHide }) {
         language: document.language || "",
         nrPages: document.nrPages || 0,
         geolocation: {
-          latitude: document.geolocation ? document.geolocation.latitude : "",
-          longitude: document.geolocation ? document.geolocation.longitude : "",
-          municipality: document.geolocation
-            ? document.geolocation.municipality
-            : "Entire municipality",
+          area: document.geolocation?.area || null,
+          pointCoordinates: document.geolocation?.pointCoordinates || null,
         },
         description: document.description || "",
       });
+      if(document.geolocation?.area){
+        if(document.geolocation.area.areaName === "Entire municipality")
+          setLocationMode("entire_municipality")
+        setLocationMode("area")
+      } else {
+        setLocationMode("point")
+      }
 
       API.getDocumentFiles(document.id)
         .then((files) => {
@@ -114,7 +125,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
         })
         .catch((error) => setFeedbackFromError(error));
     }
-  }, [document, setFeedbackFromError]);
+
+  }, [authToken,document, setFeedbackFromError]);
 
   // Initialize Leaflet marker icon defaults
   delete L.Icon.Default.prototype._getIconUrl;
@@ -152,6 +164,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       municipalityRef.current.focus();
     } else if (validationErrors.description) {
       descriptionRef.current.focus();
+    } else if (validationErrors.areaName) {
+      areaNameRef.current.focus();
     }
   };
 
@@ -204,7 +218,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const uploadFiles = async (docId, filesToUpload) => {
     if (filesToUpload.length > 0) {
       try {
-        await API.uploadFiles(docId, filesToUpload);
+        await API.uploadFiles(docId, filesToUpload, authToken);
       } catch (error) {
         setFeedbackFromError(error);
       }
@@ -215,7 +229,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     if (deletedExistingFiles.length > 0) {
       try {
         await Promise.all(
-          deletedExistingFiles.map((fileId) => API.deleteFile(fileId))
+          deletedExistingFiles.map((fileId) => API.deleteFile(fileId, authToken))
         );
       } catch (error) {
         setFeedbackFromError(error);
@@ -223,44 +237,201 @@ export default function DocumentFormComponent({ document, show, onHide }) {
     }
   };
 
+  function calculateCentroid(coordinates) {
+    let latSum = 0, lngSum = 0, numPoints = coordinates.length;
+
+    coordinates.forEach(([lat, lng]) => {
+      latSum += lat;
+      lngSum += lng;
+    });
+
+    return {
+      latitude: latSum / numPoints,
+      longitude: lngSum / numPoints,
+    };
+  }
+
+  function formatMultiPolygonCoordinates(multiPolygon) {
+    return multiPolygon.map(polygon =>
+        polygon[0].map(([lat, lng]) => ({
+          latitude: lat,
+          longitude: lng,
+        }))
+    );
+  }
+
+  async function createArea(name, area) {
+    let formattedCoordinates = [];
+    let centroid = {};
+    if(locationMode === "entire_municipality"){
+      formattedCoordinates = formatMultiPolygonCoordinates(area.geometry.coordinates);
+
+    } else {
+      formattedCoordinates = area.geometry.coordinates[0].map(([lng, lat]) => ({
+        latitude: lat,
+        longitude: lng,
+      }));
+
+      centroid = calculateCentroid(
+          formattedCoordinates.map(({ latitude, longitude }) => [latitude, longitude])
+      );
+    }
+
+
+    const newArea = {
+      area: {
+        areaId: null,
+        areaName: name,
+        areaCentroid: area.areaCentroid ? area.areaCentroid : centroid ,
+      },
+      geometry: {
+        type: area.geometry.type ? area.geometry.type :"Polygon",
+        coordinates: formattedCoordinates,
+      },
+    };
+
+    try {
+      const areaId = await API.addGeolocatedArea(newArea, authToken);
+      setFeedback({ type: "success", message: "Area created successfully" });
+      return areaId;
+    } catch (error) {
+      setFeedbackFromError(error);
+      throw error;
+    }
+  }
+
+
+  async function createPoint(pointName, coordinates) {
+    const newPoint = {
+     pointCoordinates: {
+       pointId: null,
+       pointName: pointName,
+       coordinates: {
+         latitude: coordinates.latitude,
+         longitude: coordinates.longitude,
+       },
+     }
+    };
+
+    try {
+      const pointId = await API.addGeolocatedPoint(newPoint, authToken);
+      setShouldRefresh(true);
+      setFeedback({ type: "success", message: "Point added successfully" });
+      return pointId;
+    } catch (error) {
+      setFeedbackFromError(error);
+      throw error;
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const combinedIssuanceDate = `${formDocument.year}${
-      formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
+        formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
     }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
-    const sanitizedGeolocation = {
-      latitude: formDocument.geolocation.latitude || null,
-      longitude: formDocument.geolocation.longitude || null,
-      municipality: formDocument.geolocation.municipality || null,
-    };
-
-    const validationErrors = validateForm(
-      formDocument,
-      combinedIssuanceDate,
-      kirunaBorderCoordinates
-    );
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      handleValidationErrors(validationErrors);
+    if (locationMode === "area" && !selectedAreaId && formDocument.geolocation.area.areaName.trim()==="") {
+      setErrors({ areaName: "Please provide a name for the area." });
       return;
     }
 
+
+    let updatedGeolocation = { ...formDocument.geolocation };
+    console.log(formDocument.geolocation)
     try {
-      if (!document) {
-        const newDocId = await createDocument(
+      if (locationMode === "area") {
+        if (selectedAreaId) {
+          updatedGeolocation = {
+            area: { areaId: selectedAreaId },
+            pointCoordinates: null,
+          };
+        } else if (formDocument.geolocation.area?.areaName) {
+          const newAreaId = await createArea(formDocument.geolocation.area.areaName, formDocument.geolocation.area)
+          updatedGeolocation = {
+            pointCoordinates: null,
+            area: {
+              areaId: newAreaId
+            }
+          };
+        }
+      } else if (locationMode === "point") {
+        if (formDocument.geolocation.pointCoordinates?.pointId) {
+          updatedGeolocation = {
+            pointCoordinates: {
+              pointId: formDocument.geolocation.pointCoordinates.pointId,
+            },
+            area: null,
+          };
+        } else {
+          const sanitizedPointName =
+              formDocument.geolocation.pointCoordinates.pointName?.trim() === ""
+                  ? null
+                  : formDocument.geolocation.pointCoordinates.pointName;
+
+          const newPointId = await createPoint(
+              sanitizedPointName,
+              formDocument.geolocation.pointCoordinates.coordinates
+          );
+
+          updatedGeolocation = {
+            pointCoordinates: {
+              pointId: newPointId,
+            },
+            area: null,
+          };
+        }
+      } else if(locationMode==="entire_municipality"){
+        if (selectedAreaId) {
+          updatedGeolocation = {
+            area: {
+              areaId: selectedAreaId
+            },
+            pointCoordinates: null,
+          };
+        } else {
+          const newAreaId = await createArea(formDocument.geolocation.area.areaName, formDocument.geolocation.area)
+          updatedGeolocation = {
+            pointCoordinates: null,
+            area: {
+              areaId: newAreaId
+            }
+          };
+        }
+      }
+
+      // Prepara la geolocation finale
+      const sanitizedGeolocation = {
+        area: (locationMode === "area" || locationMode === "entire_municipality" ) ? updatedGeolocation.area : null,
+        pointCoordinates:
+            locationMode === "point" ? updatedGeolocation.pointCoordinates : null,
+      };
+
+      const validationErrors = validateForm(
           formDocument,
           combinedIssuanceDate,
-          sanitizedGeolocation
+          kirunaBorderCoordinates
+      );
+      setErrors(validationErrors);
+
+      if (Object.keys(validationErrors).length > 0) {
+        handleValidationErrors(validationErrors);
+        return;
+      }
+
+      if (!document) {
+        const newDocId = await createDocument(
+            formDocument,
+            combinedIssuanceDate,
+            sanitizedGeolocation
         );
         await uploadFiles(newDocId, filesToUpload);
       } else {
         await updateDocument(
-          document,
-          formDocument,
-          combinedIssuanceDate,
-          sanitizedGeolocation
+            document,
+            formDocument,
+            combinedIssuanceDate,
+            sanitizedGeolocation
         );
         await uploadFiles(document.id, filesToUpload);
         await deleteFiles(deletedExistingFiles);
@@ -295,7 +466,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   };
 
   const handleSave = async (d) => {
-    API.updateDocument(d.id, d)
+    API.updateDocument(d.id, d, authToken)
       .then(() => setShouldRefresh(true))
       .then(() =>
         setFeedback({
@@ -310,7 +481,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const handleAdd = async (d) => {
     try {
       // Aggiungi il documento e ottieni la risposta
-      const newDocResponse = await API.addDocument(d);
+      const newDocResponse = await API.addDocument(d, authToken);
 
       // Aggiorna lo stato e fornisci feedback
       setShouldRefresh(true);
@@ -322,6 +493,27 @@ export default function DocumentFormComponent({ document, show, onHide }) {
       // Gestione errori
       setFeedbackFromError(error);
       throw error; // Propaga l'errore se necessario
+    }
+  };
+
+  const handleSearch = async ({
+    keyword = "",
+    documentTypes = [],
+    stakeholders = [],
+    scales = [],
+  }) => {
+    try {
+      const params = new URLSearchParams();
+      if (keyword) params.append("keyword", keyword);
+      if (documentTypes.length > 0) params.append("type", documentTypes.join(","));
+      if (stakeholders.length > 0) params.append("stakeholderNames", stakeholders.join(","));
+      if (scales.length > 0) params.append("scale", scales.join(","));
+
+      const response = await API.searchDocuments(params.toString());
+      setAllDocuments(response); // Update the master list with backend results
+      setFilteredDocuments(response); // Update the filtered list
+    } catch (error) {
+      setFeedbackFromError(error);
     }
   };
 
@@ -340,6 +532,7 @@ export default function DocumentFormComponent({ document, show, onHide }) {
         <Form style={{ width: "100%" }} className="mx-auto">
           <DocumentFormFields
             document={formDocument}
+            setDocument={setFormDocument}
             errors={errors}
             handleChange={handleChange}
             kirunaBorderCoordinates={kirunaBorderCoordinates}
@@ -357,6 +550,33 @@ export default function DocumentFormComponent({ document, show, onHide }) {
               municipalityRef,
               descriptionRef,
             }}
+              locationMode={locationMode}
+              setLocationMode={(val) => {
+                setLocationMode(val);
+                setSelectedAreaId("");
+                setSelectedPointId("");
+                setAreaModified(false);
+                if (val === "entire_municipality") {
+                  handleChange("geolocation", {
+                    pointCoordinates: null,
+                    area: {
+                      areaName: "Entire municipality"
+                    },
+                  });
+                } else {
+                  handleChange("geolocation", {
+                    municipality: "",
+                    // Clear coords/area if needed
+                  });
+                }
+              }}
+              selectedAreaId={selectedAreaId}
+              setSelectedAreaId={setSelectedAreaId}
+              selectedPointId={selectedPointId}
+              setSelectedPointId={setSelectedPointId}
+              areaModified={areaModified}
+              setAreaModified={setAreaModified}
+              authToken={authToken}
           />
           <UploadFilesComponent
             updateFilesToUpload={updateFilesToUpload}
@@ -383,14 +603,25 @@ DocumentFormComponent.propTypes = {
   document: PropTypes.object,
   onHide: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
+  authToken: PropTypes.string.isRequired
 };
 
 function DocumentFormFields({
   document,
+  setDocument,
   errors,
   handleChange,
   kirunaBorderCoordinates,
   refs,
+  locationMode,
+  setLocationMode,
+  selectedAreaId,
+  setSelectedAreaId,
+  selectedPointId,
+  setSelectedPointId,
+  areaModified,
+  setAreaModified,
+  authToken
 }) {
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
@@ -400,23 +631,87 @@ function DocumentFormFields({
     "English",
   ]);
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
-  const [markerPosition, setMarkerPosition] = useState([
-    document.geolocation.latitude
-      ? document.geolocation.latitude
-      : defaultPosition[0],
-    document.geolocation.longitude
-      ? document.geolocation.longitude
-      : defaultPosition[1],
-  ]);
+  const safeLatitude = document?.geolocation?.pointCoordinates?.coordinates?.latitude === "" || document?.geolocation?.pointCoordinates?.coordinates?.latitude == null
+      ? null
+      : parseFloat(document.geolocation.pointCoordinates.coordinates.latitude);
+  const safeLongitude = document?.geolocation?.pointCoordinates?.coordinates?.longitude === "" || document?.geolocation?.pointCoordinates?.coordinates?.longitude == null
+      ? null
+      : parseFloat(document.geolocation.pointCoordinates.coordinates.longitude);
+
+  const finalPosition = (Number.isFinite(safeLatitude) && Number.isFinite(safeLongitude))
+      ? [safeLatitude, safeLongitude]
+      : defaultPosition;
+
+  const [markerPosition, setMarkerPosition] = useState(finalPosition);
+  const [pointName, setPointName] = useState("");
+  const [newPoint, setNewPoint] = useState(false)
   const [filteredLanguages, setFilteredLanguages] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
-  const languageRefs = useRef([]);
-  const dropdownRef = useRef(null);
+  useEffect(() => {
+    if (locationMode === "area") {
+      const areaCentroid = document?.geolocation?.area?.areaCentroid;
 
+      if (areaCentroid && areaCentroid.latitude && areaCentroid.longitude) {
+        setMarkerPosition([areaCentroid.latitude, areaCentroid.longitude]);
+      } else {
+        console.warn("Area centroid is missing or invalid. Resetting marker position.");
+        setMarkerPosition(defaultPosition); // Fallback to default position if centroid is invalid
+      }
+
+      // Clear pointCoordinates and geolocation latitude/longitude
+      handleChange("geolocation", {
+        area: document.geolocation.area, // Retains the selected area
+        pointCoordinates: null,         // Clears point selection
+      });
+
+      setPointName(""); // Reset the point name input
+    } else if (locationMode === "point" && document.geolocation.pointCoordinates) {
+      // If in point mode, set the marker position to pointCoordinates
+      const { latitude, longitude } = document.geolocation.pointCoordinates.coordinates || {};
+      if (latitude && longitude) {
+        setMarkerPosition([latitude, longitude]);
+      }
+    }
+  }, [locationMode]);
+
+  useEffect(() => {
+    if (mapRef.current && document.geolocation.area?.geometry) {
+      const { coordinates } = document.geolocation.area.geometry;
+      const polygonCoords = coordinates[0].map(([lng, lat]) => [lat, lng]);
+      const bounds = L.latLngBounds(polygonCoords);
+      mapRef.current.fitBounds(bounds);
+    }
+  }, [document.area]);
+
+  const [allKnownAreas, setAllKnownAreas] = useState([]);
+  const [allKnownPoints, setAllKnownPoints] = useState([]);
   const { setFeedbackFromError } = useContext(FeedbackContext);
 
   useEffect(() => {
+    API.getAllAreasSnippets(authToken)
+        .then(setAllKnownAreas)
+        .catch(setFeedbackFromError);
+
+    API.getAllGeolocatedPoints(authToken)
+        .then((points) => {
+          setAllKnownPoints(points);
+
+          // Se il documento ha un punto esistente, imposta il selectedPointId
+          if (document.geolocation?.pointCoordinates?.pointId) {
+            const existingPoint = points.find(
+                (p) => p.id === document.geolocation.pointCoordinates.pointId
+            );
+
+            if (existingPoint) {
+              setSelectedPointId(existingPoint.id.toString());
+
+              // Imposta la posizione del marcatore sulla mappa
+              setMarkerPosition([existingPoint.latitude, existingPoint.longitude]);
+            }
+          }
+        })
+        .catch(setFeedbackFromError);
     // Fetch all stakeholders
     API.getAllStakeholders()
       .then((stakeholders) => {
@@ -448,10 +743,10 @@ function DocumentFormFields({
 
   useEffect(() => {
     // Set marker position if geolocation is available
-    if (document.geolocation.latitude && document.geolocation.longitude) {
+    if (document.geolocation.pointCoordinates) {
       setMarkerPosition([
-        document.geolocation.latitude,
-        document.geolocation.longitude,
+        document.geolocation.pointCoordinates.coordinates.latitude,
+        document.geolocation.pointCoordinates.coordinates.longitude,
       ]);
     }
 
@@ -468,11 +763,32 @@ function DocumentFormFields({
       });
     }
   }, [
-    document.geolocation.latitude,
-    document.geolocation.longitude,
-    document.language,
-    languageOptions,
+    document?.geolocation?.pointCoordinates?.coordinates,
+      document.language,
+      languageOptions,
   ]);
+  useEffect(() => {
+    const loadAreaGeometry = async () => {
+      if (document.geolocation?.area?.areaId) {
+        try {
+          const areaDetails = await API.getAreaById(document.geolocation.area.areaId, authToken);
+
+          handleChange("geolocation", {
+            area: areaDetails,
+            pointCoordinates: null,
+          });
+          setSelectedAreaId(areaDetails.id);
+          zoomOnArea(areaDetails);
+        } catch (error) {
+          console.error("Failed to load area geometry:", error);
+        }
+      }
+    };
+
+    loadAreaGeometry();
+  }, [document, authToken]);
+
+
 
   const handleDayChange = (e) => {
     const value = e.target.value;
@@ -500,69 +816,251 @@ function DocumentFormFields({
       handleChange("year", value);
     }
   };
+  function calculateCentroid(coordinates) {
+    let latSum = 0, lngSum = 0, numPoints = coordinates.length;
 
-  const handleMapClick = (e) => {
-    const { lat, lng } = e.latlng;
-    setMarkerPosition([lat, lng]);
-    handleChange("geolocation", {
-      latitude: lat,
-      longitude: lng,
-      municipality: "",
+    coordinates.forEach(([lat, lng]) => {
+      latSum += lat;
+      lngSum += lng;
     });
+
+    return {
+      latitude: latSum / numPoints,
+      longitude: lngSum / numPoints,
+    };
+  }
+  const onCreated = (e) => {
+    setAreaModified(true);
+
+    const layer = e.layer;
+    const area = layer.toGeoJSON();
+
+    // Calcola il centroide
+    const coordinates = area.geometry.coordinates[0];
+    const centroid = calculateCentroid(coordinates.map(([lng, lat]) => [lat, lng]));
+
+    // Salva l'area creata temporaneamente
+    const newArea = {
+      area: {
+        areaId: null,
+        areaName: "", // L'utente la definirà
+        areaCentroid: centroid ,
+        geometry: {
+          type: "Polygon",
+          coordinates: [coordinates], // Mantieni il formato GeoJSON
+        },
+      },
+      pointCoordinates: null,
+    };
+
+    handleChange("geolocation", newArea);
+    setDocument((prev) => ({
+      ...prev,
+      geolocation: newArea,
+    }));
+
+    setSelectedAreaId(""); // Resetta l'area selezionata
   };
 
-  const MapClickHandler = () => {
+
+
+  const onEdited = (e) => {
+    const updatedAreas = [];
+    e.layers.eachLayer((layer) => {
+      const updatedArea = layer.toGeoJSON();
+      updatedAreas.push(updatedArea);
+    });
+
+    handleChange("area", updatedAreas[0]); // Salva il primo poligono come area principale
+  };
+
+
+  const onDeleted = () => {
+   /* setAreaModified(true);
+    const remainingArea = document.geolocation.area.filter((area) => {
+      return !e.layers.getLayers().some((layer) => {
+        const layerArea = layer.toGeoJSON();
+        return JSON.stringify(layerArea) === JSON.stringify(area);
+      });
+    });
+
+    handleChange("geolocation", { ...document.geolocation, area: remainingArea });*/
+      handleChange("area", null); // Rimuovi il poligono dall'area
+
+  };
+
+  function MapClickHandlerForNewPoint() {
     useMapEvents({
-      click: handleMapClick,
+      click: (e) => {
+        const { lat, lng } = e.latlng;
+
+        handleChange("geolocation", {
+          pointCoordinates: {
+            coordinates: { latitude: lat, longitude: lng },
+            pointId: null,
+            pointName: pointName || "",
+          },
+        });
+
+        setMarkerPosition([lat, lng]);
+        setPointName("");
+        setNewPoint(true);
+        setSelectedPointId("");
+      },
     });
     return null;
-  };
+  }
 
   const handleLatitudeChange = (e) => {
-    const value = e.target.value;
-    const lat = value === "" ? "" : parseFloat(value);
+    const latitude = e.target.value === "" ? null : parseFloat(e.target.value);
+
     handleChange("geolocation", {
       ...document.geolocation,
-      latitude: lat,
-      municipality: "",
+      pointCoordinates: {
+        ...document.geolocation.pointCoordinates,
+        coordinates: {
+          ...document.geolocation.pointCoordinates.coordinates,
+          latitude,
+        },
+      },
     });
-    if (lat != "" && document.geolocation.longitude != "") {
-      setMarkerPosition([lat, document.geolocation.longitude]);
-    }
+
+    // Sync the marker position
+    setMarkerPosition([
+      latitude,
+      document.geolocation.pointCoordinates?.coordinates?.longitude || defaultPosition[1],
+    ]);
   };
 
   const handleLongitudeChange = (e) => {
-    const value = e.target.value;
-    const lng = value === "" ? "" : parseFloat(value);
+    const longitude = e.target.value === "" ? null : parseFloat(e.target.value);
+
     handleChange("geolocation", {
       ...document.geolocation,
-      longitude: lng,
-      municipality: "",
+      pointCoordinates: {
+        ...document.geolocation.pointCoordinates,
+        coordinates: {
+          ...document.geolocation.pointCoordinates.coordinates,
+          longitude,
+        },
+      },
     });
-    if (document.geolocation.latitude != "" && lng != "") {
-      setMarkerPosition([document.geolocation.latitude, lng]);
+
+    // Sync the marker position
+    setMarkerPosition([
+      document.geolocation.pointCoordinates?.coordinates?.latitude || defaultPosition[0],
+      longitude,
+    ]);
+  };
+
+
+  const handleSelectExistingArea = async (e) => {
+    const areaId = e.target.value;
+
+    try {
+      // Fetch the selected area details
+      const area = await API.getAreaById(areaId, authToken);
+
+      if (!area) {
+        throw new Error("Area data is missing or invalid");
+      }
+
+      console.log("Fetched Area:", area);
+
+      // Update the selected area ID state
+      setSelectedAreaId(areaId);
+
+      // Safely extract centroid coordinates
+      const { latitude, longitude } = area?.centroid || { latitude: null, longitude: null };
+
+      // Update the geolocation field with correct structure
+      handleChange("geolocation", {
+        area: {
+          areaId: area.id,
+          areaName: area.name,
+          areaCentroid: { latitude, longitude },
+          geometry: area.geometry,
+        },
+        pointCoordinates: null, // Clear point selection
+      });
+
+      // Zoom the map to the area geometry
+      if (area.geometry) {
+        zoomOnArea(area);
+      } else if (latitude && longitude) {
+        // Fallback to centroid if geometry is unavailable
+        mapRef.current.flyTo([latitude, longitude], 12);
+      }
+    } catch (error) {
+      console.error("Error selecting area:", error.message || error);
     }
   };
 
-  const handleLanguageChange = (e) => {
-    const value = e.target.value;
-    handleChange("customLanguage", value);
+  const handleSelectExistingPoint = (e) => {
+    const pointId = e.target.value; // Get selected pointId from the dropdown
+    console.log("Selected point ID:", pointId);
 
-    if (value) {
-      const filtered = Array.from(allowedLanguages)
-        .filter((language) =>
-          language.toLowerCase().includes(value.toLowerCase())
-        )
-        .sort((a, b) => {
-          const aStartsWith = a.toLowerCase().startsWith(value.toLowerCase());
-          const bStartsWith = b.toLowerCase().startsWith(value.toLowerCase());
-          if (aStartsWith && !bStartsWith) return -1;
-          if (!aStartsWith && bStartsWith) return 1;
-          return a.localeCompare(b);
-        });
-      setFilteredLanguages(filtered);
+    // Safely find the point using a stricter condition
+    const point = allKnownPoints?.find((p) => {
+      console.log("Checking point:", p.id, "against", pointId);
+      return p.id.toString() === pointId.toString();
+    });
+
+    if (!point) {
+      console.error("Point not found with ID:", pointId);
+      return;
+    }
+
+    console.log("Existing point found:", point);
+
+    setSelectedPointId(pointId);
+
+    // Update geolocation state with the found point
+    handleChange("geolocation", {
+      ...document.geolocation,
+      pointCoordinates: {
+        pointId: point.id,
+        pointName: point.name,
+        coordinates: {
+          latitude: point.latitude,
+          longitude: point.longitude,
+        },
+      },
+      area: null, // Clear any area selection
+    });
+
+    // Update the marker position on the map
+    setMarkerPosition([point.latitude, point.longitude]);
+
+    // Zoom to the selected point on the map
+    zoomOnPoint(point);
+  };
+
+  const mapRef = useRef(null);
+
+  const zoomOnArea = (area) => {
+    if (!mapRef.current || !area?.geometry?.type) return;
+
+    const { type, coordinates } = area.geometry;
+
+    if (type === "POLYGON") {
+      // Mappa le coordinate in [lat, lng] per Leaflet
+      const latlngs = coordinates.map(([lng, lat]) => [lat, lng]);
+
+      const bounds = L.latLngBounds(latlngs);
+      mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+
+    } else if (type === "MultiPolygon") {
+      // Gestisce MultiPolygon se presente
+      const latlngs = coordinates.flatMap((polygon) =>
+          polygon.map(([lng, lat]) => [lat, lng])
+      );
+
+      const bounds = L.latLngBounds(latlngs);
+      mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+
     } else {
-      setFilteredLanguages([]);
+      console.warn("Unsupported geometry type:", type);
     }
   };
 
@@ -576,18 +1074,14 @@ function DocumentFormFields({
     if (filteredLanguages.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setHighlightedIndex((prevIndex) => {
-          const newIndex = prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0;
-          languageRefs.current[newIndex]?.scrollIntoView({ block: "nearest" });
-          return newIndex;
-        });
+        setHighlightedIndex((prevIndex) =>
+          prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0
+        );
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setHighlightedIndex((prevIndex) => {
-          const newIndex = prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1;
-          languageRefs.current[newIndex]?.scrollIntoView({ block: "nearest" });
-          return newIndex;
-        });
+        setHighlightedIndex((prevIndex) =>
+          prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1
+        );
       } else if (e.key === "Enter" && highlightedIndex >= 0) {
         e.preventDefault();
         handleLanguageSelect(filteredLanguages[highlightedIndex]);
@@ -595,36 +1089,18 @@ function DocumentFormFields({
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        !refs.languageRef.current.contains(event.target)
-      ) {
-        setFilteredLanguages([]);
-      }
-    };
-
-    const handleLanguageInputClick = () => {
-      setFilteredLanguages([]);
-    };
-
-    const handleClickOutsideEvent = (event) => handleClickOutside(event);
-    window.addEventListener("mousedown", handleClickOutsideEvent);
-
-    const languageInput = refs.languageRef.current;
-    if (languageInput) {
-      languageInput.addEventListener("click", handleLanguageInputClick);
+  const zoomOnMunicipality = () => {
+    if (mapRef.current && kirunaBorderCoordinates?.length) {
+      const bounds = L.latLngBounds(kirunaBorderCoordinates);
+      mapRef.current.flyToBounds(bounds, { padding: [50, 50], maxZoom: 10 });
     }
+  };
 
-    return () => {
-      window.removeEventListener("mousedown", handleClickOutsideEvent);
-      if (languageInput) {
-        languageInput.removeEventListener("click", handleLanguageInputClick);
-      }
-    };
-  }, [refs.languageRef]);
+  const zoomOnPoint = (point) => {
+    if (mapRef.current && point.latitude && point.longitude) {
+      mapRef.current.flyTo([point.latitude, point.longitude], 10);
+    }
+  };
 
   return (
     <>
@@ -967,10 +1443,7 @@ function DocumentFormFields({
             <Form.Control
               as="select"
               value={document.language}
-              onChange={(e) => {
-                handleChange("language", e.target.value);
-                handleLanguageInputClick();
-              }}
+              onChange={(e) => handleChange("language", e.target.value)}
               isInvalid={!!errors.language}
               ref={refs.languageRef}
             >
@@ -989,10 +1462,9 @@ function DocumentFormFields({
                   type="text"
                   placeholder="Enter custom language"
                   value={document.customLanguage || ""}
-                  onChange={(e) => {
-                    handleChange("customLanguage", e.target.value);
-                    handleLanguageChange(e);
-                  }}
+                  onChange={(e) =>
+                    handleChange("customLanguage", e.target.value)
+                  }
                   isInvalid={!!errors.language}
                   className="me-2"
                   onKeyDown={handleKeyDown}
@@ -1018,15 +1490,11 @@ function DocumentFormFields({
               </div>
             )}
             {filteredLanguages.length > 0 && (
-              <div className="mt-2 position-relative" ref={dropdownRef}>
-                <div
-                  className="dropdown-menu show custom-scroll"
-                  style={{ maxHeight: "200px", overflowY: "auto" }}
-                >
+              <div className="mt-2 position-relative">
+                <div className="dropdown-menu show">
                   {filteredLanguages.map((language, index) => (
                     <button
                       key={language}
-                      ref={(el) => (languageRefs.current[index] = el)}
                       className={`dropdown-item ${
                         index === highlightedIndex ? "active" : ""
                       }`}
@@ -1063,111 +1531,294 @@ function DocumentFormFields({
         </Col>
       </Row>
 
-      <Row className={"mb-4"}>
-        <Form.Group className="mb-3">
-          <Col md={12}>
-            <Form.Label>Latitude</Form.Label>
-            <div className="divider" />
+      {/* Dropdown for location mode */}
+      <Row className="mb-4">
+        <Col md={3}>
+        <Row>
+          <Form.Group style={{display: "flex", alignItems: "center"}}>
+            <Form.Label style={{marginRight: "10px"}}>Geolocation</Form.Label>
+            <div className="divider"
+                 style={{width: "1px", height: "20px", backgroundColor: "#ccc", margin: "0 10px"}}/>
             <Form.Control
-              type="number"
-              min={67.3564329180828}
-              max={69.05958911620179}
-              step={0.00001}
-              value={document.geolocation.latitude || ""}
-              onChange={handleLatitudeChange}
-              id="formDocumentGeolocationLatitude"
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-              isInvalid={!!errors.latitude}
-              refs={refs.latitudeRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.latitude}
-            </Form.Control.Feedback>
-            <Form.Range
-              min={67.3564329180828}
-              max={69.05958911620179}
-              step={0.00001}
-              value={document.geolocation.latitude || ""}
-              onChange={handleLatitudeChange}
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-            />
-          </Col>
-          <Col md={12}>
-            <Form.Label>Longitude</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              type="number"
-              value={document.geolocation.longitude || ""}
-              min={17.89900836116174}
-              max={23.28669305841499}
-              step={0.00001}
-              isInvalid={!!errors.longitude}
-              onChange={handleLongitudeChange}
-              id="formDocumentGeolocationLongitude"
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-              refs={refs.longitudeRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.longitude}
-            </Form.Control.Feedback>
-            <Form.Range
-              min={17.89900836116174}
-              max={23.28669305841499}
-              step={0.00001}
-              value={document.geolocation.longitude || ""}
-              onChange={handleLongitudeChange}
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-            />
-          </Col>
-          <Col md={12}>
-            <div style={{ height: "300px", marginBottom: "15px" }}>
+                as="select"
+                value={locationMode}
+                onChange={(e) => {
+                  setLocationMode(e.target.value)
+                  if(e.target.value === "entire_municipality") {
+                    console.log(defaultPosition)
+                    handleChange("geolocation", {
+                      ...document.geolocation,
+                      area: {
+                        areaId: null,
+                        areaName: "Entire Municipality",
+                        areaCentroid: {
+                          latitude: defaultPosition[0],
+                          longitude: defaultPosition[1],
+                        },
+                        geometry: {
+                          type: "MultiPolygon",
+                          coordinates: kirunaBorderCoordinates,
+                        },
+                      },
+                      pointCoordinates: null, // Clear point selection
+                    });
+                    zoomOnMunicipality();
+                  }
+                }}
+                style={{flex: 1}}
+              >
+                <option value=""> -- select --</option>
+                <option value="entire_municipality">Entire municipality</option>
+                <option value="area">Area</option>
+                <option value="point">Coordinates</option>
+              </Form.Control>
+            </Form.Group>
+          </Row>
+          {locationMode === "point" && newPoint && !selectedPointId &&(
+              <Row className="mb-2 mt-3">
+                <Col md={24}>
+                  <Form.Group controlId="formDocumentPointName">
+                    <Form.Control
+                        type="text"
+                        value={pointName || document.geolocation?.pointCoordinates?.pointName || ""}
+                        onChange={(e) => {
+                          const updatedPointName = e.target.value;
+                          setPointName(updatedPointName); // Update local state
+
+                          console.log(updatedPointName)
+                          // Synchronize with geolocation
+                          handleChange("geolocation", {
+                            ...document.geolocation,
+                            pointCoordinates: {
+                              ...document.geolocation.pointCoordinates,
+                              pointName: updatedPointName,
+                            },
+                          });
+                        }}
+                        placeholder="Enter the point name"
+                    />
+
+                    <Form.Text className="text-muted">
+                      This name will help identify the point.
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+              </Row>
+          )}
+        </Col>
+      {locationMode === "area" && (
+        <Col md={3}>
+          <Form.Group>
+            <Form.Control as="select" value={selectedAreaId} onChange={handleSelectExistingArea}>
+            <option value="">-- Select an existing area --</option>
+                {allKnownAreas
+                    ?.filter((area) => area.name !== "Entire Municipality") // Exclude "Entire Municipality"
+                    .map((area) => (
+                        <option key={area.id} value={area.id}>
+                          {area.name}
+                        </option>
+                    ))}
+          </Form.Control>
+        </Form.Group>
+        </Col>
+        )}
+
+        {locationMode === "point" && (
+            <>
+        <Col md={3}>
+          <Form.Group>
+            <Form.Control as="select" value={selectedPointId} onChange={handleSelectExistingPoint}>
+              <option value="">-- Select an existing point --</option>
+              {allKnownPoints.map((point) => (
+                  <option key={point.id} value={point.id}>
+                    {point.name || `Point ${point.id}`}
+                  </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+      </>
+
+          )}
+
+        {locationMode === "point" && (
+          <>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Latitude</Form.Label>
+                <div className="divider"/>
+                <Form.Control
+                    type="number"
+                    min={67.3564329180828}
+                    max={69.05958911620179}
+                    step={0.00001}
+                    value={document.geolocation?.pointCoordinates?.coordinates?.latitude || ""}
+                    onChange={handleLatitudeChange}
+                    id="formDocumentGeolocationLatitude"
+                    isInvalid={!!errors.latitude}
+                    ref={refs.latitudeRef}
+                />
+                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
+                  {errors.latitude}
+                </div>
+                <Form.Range
+                    min={67.3564329180828}
+                    max={69.05958911620179}
+                    step={0.00001}
+                    value={document.geolocation?.pointCoordinates?.coordinates?.latitude}
+                    onChange={handleLatitudeChange}
+                    disabled={
+                        document.geolocation.municipality === "Entire municipality"
+                    }
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Longitude</Form.Label>
+                <div className="divider"/>
+                <Form.Control
+                    type="number"
+                    value={document.geolocation?.pointCoordinates?.coordinates?.longitude || ""}
+                    min={17.89900836116174}
+                    max={23.28669305841499}
+                    step={0.00001}
+                    isInvalid={!!errors.longitude}
+                    onChange={handleLongitudeChange}
+                    id="formDocumentGeolocationLongitude"
+                    ref={refs.longitudeRef}
+                />
+                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
+                  {errors.longitude}
+                </div>
+                <Form.Range
+                    min={17.89900836116174}
+                    max={23.28669305841499}
+                    step={0.00001}
+                    value={document.geolocation?.pointCoordinates?.coordinates?.longitude}
+                    onChange={handleLongitudeChange}
+                />
+              </Form.Group>
+            </Col>
+          </>
+        )}
+
+      </Row>
+
+
+      {locationMode === "area" && areaModified && (
+          <Row className="mb-4">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Area name</Form.Label>
+                <div className="divider" />
+                <Form.Control
+                    type="text"
+                    value={document.geolocation.area?.areaName || ""}
+                    onChange={(e) => {
+                      const updatedAreaName = e.target.value;
+
+                      handleChange("geolocation", {
+                        ...document.geolocation,
+                        area: {
+                          ...document.geolocation.area,
+                          areaName: updatedAreaName, // Aggiorna solo il nome dell'area
+                        },
+                      });
+                    }}
+                    isInvalid={!!errors.areaName}
+                />
+                <Form.Control.Feedback type="invalid">{errors.areaName}</Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
+
+      )}
+
+      {/* MAP */}
+      <Row className="mb-4">
+        <Col md={12}>
+          <Form.Group>
+            <div style={{ height: "400px", marginBottom: "15px" }}>
+              {locationMode === "point" && (
+                  <Form.Text className="text-muted">
+                    Click on the map to set the location. Latitude and Longitude fields will update automatically.
+                  </Form.Text>
+              )}
               <MapContainer
-                center={markerPosition}
-                zoom={13}
-                style={{ height: "100%", width: "100%" }}
+                  ref={mapRef}
+                  center={markerPosition}
+                  zoom={10}
+                  style={{ height: "100%", width: "100%" }}
+                  key={JSON.stringify(document.area)}
               >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <Marker position={markerPosition} />
-                {document.geolocation.municipality === "Entire municipality" ? (
+                {locationMode === "point" && markerPosition && (
+                    <Marker position={markerPosition} />
+                )}
+                {locationMode === "entire_municipality" && (
                   <Polygon positions={kirunaBorderCoordinates} />
-                ) : undefined}
-                <MapClickHandler />
+                )}
+
+                <Polygon
+                    positions={kirunaBorderCoordinates}
+                    color="purple"
+                    weight={3}
+                    fillOpacity={0}
+                />
+                {locationMode === "point" && <MapClickHandlerForNewPoint />}
+                {locationMode === "area" && (
+                    <FeatureGroup>
+                      <EditControl
+                          position="topright"
+                          onCreated={onCreated}
+                          onDeleted={onDeleted}
+                          draw={{
+                            rectangle: false,
+                            polygon: true,
+                            polyline: false,
+                            circle: false,
+                            circlemarker: false,
+                            marker: false,
+                          }}
+                          edit={{ remove: true }}
+                        />
+                    </FeatureGroup>
+                )}
+                {
+                    document.geolocation.area?.geometry && (() => {
+                      console.log("Geometry:", document.geolocation.area.geometry);
+                      const { type, coordinates } = document.geolocation.area.geometry;
+
+                      if (type === "POLYGON" || type === "Polygon") {
+                        // Mappatura corretta [lng, lat] → [lat, lng] per Leaflet
+                        const polygonCoords = coordinates.map(([lng, lat]) => [lat, lng]);
+                        return <Polygon positions={polygonCoords} color="purple" />;
+                      } else if (type === "MULTIPOLYGON" || type === "MultiPolygon") {
+                        // Gestione MultiPolygon
+                        const multiPolygonCoords = coordinates.map((polygon) =>
+                            polygon.map(([lng, lat]) => [lat, lng])
+                        );
+                        return multiPolygonCoords.map((coords, idx) => (
+                            <Polygon key={idx} positions={coords} color="purple" />
+                        ));
+                      }
+
+                      console.warn(`Unsupported geometry type: ${type}`);
+                      return null;
+                    })()}
+
+
+
+                {locationMode === "point" &&
+                    Number.isFinite(safeLatitude) &&
+                    Number.isFinite(safeLongitude) && (
+                        <Marker position={[safeLatitude, safeLongitude]} />
+                    )}
               </MapContainer>
             </div>
-            <Form.Text className="text-muted">
-              Click on the map to set the location. Latitude and Longitude
-              fields will update automatically.
-            </Form.Text>
-            <Form.Check
-              type="checkbox"
-              label="Entire municipality"
-              checked={
-                document.geolocation.municipality === "Entire municipality"
-              }
-              onChange={(e) => {
-                const isChecked = e.target.checked;
-                setMarkerPosition(defaultPosition);
-                handleChange("geolocation", {
-                  latitude: isChecked ? "" : document.geolocation.latitude,
-                  longitude: isChecked ? "" : document.geolocation.longitude,
-                  municipality: isChecked ? "Entire municipality" : "",
-                });
-              }}
-              className="mt-2"
-              feedback={errors.municipality}
-              feedbackType="invalid"
-              ref={refs.municipalityRef}
-            />
-          </Col>
-        </Form.Group>
+          </Form.Group>
+        </Col>
       </Row>
 
       {/* DESCRIPTION */}
@@ -1175,7 +1826,7 @@ function DocumentFormFields({
         <Col md={12}>
           <Form.Group className="mb-3" controlId="formDocumentDescription">
             <Form.Label>Description</Form.Label>
-            <div className="form-divider" />
+            <div className="divider" />
             <Form.Control
               as="textarea"
               rows={3}
@@ -1197,10 +1848,20 @@ function DocumentFormFields({
 
 DocumentFormFields.propTypes = {
   document: PropTypes.object.isRequired,
+  setDocument: PropTypes.func.isRequired,
   errors: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   kirunaBorderCoordinates: PropTypes.array.isRequired,
   refs: PropTypes.object.isRequired,
+  locationMode: PropTypes.string.isRequired,
+  setLocationMode: PropTypes.func.isRequired,
+  selectedAreaId: PropTypes.any.isRequired,
+  setSelectedAreaId: PropTypes.func.isRequired,
+  selectedPointId: PropTypes.string.isRequired,
+  setSelectedPointId: PropTypes.func.isRequired,
+  areaModified: PropTypes.bool.isRequired,
+  setAreaModified: PropTypes.func.isRequired,
+  authToken: PropTypes.string.isRequired
 };
 
 function UploadFilesComponent({
@@ -1281,8 +1942,8 @@ function UploadFilesComponent({
       <Row className="mb-4">
         <Col md={12}>
           <Form.Group controlId="formDocumentFiles">
-            <Form.Label>Upload files</Form.Label>
-            <div className="form-divider" />
+            <Form.Label>Upload resources</Form.Label>
+            <div className="divider" />
             <div className="d-flex align-items-center">
               <Form.Control
                 type="file"

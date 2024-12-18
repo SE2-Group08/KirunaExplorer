@@ -1,11 +1,6 @@
 import { useEffect, useState, useRef, useContext } from "react";
 import { Button } from "react-bootstrap";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMap
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import "leaflet/dist/leaflet.css";
 import "react-leaflet-markercluster/dist/styles.min.css";
@@ -13,13 +8,14 @@ import L from "leaflet";
 import "leaflet-editable";
 import API from "../API";
 import PropTypes from "prop-types";
-import DocumentSidePanel from "./DocumentSidePanel";
 import getKirunaArea from "./KirunaArea";
 import MapStyleToggle from "./MapStyleToggle";
 import FeedbackContext from "../contexts/FeedbackContext";
 import { getIconForDocument } from "../utils/iconMapping";
 import LegendModal from "./Legend";
-import SearchBar from './SearchBar.jsx';
+import SearchBar from "./SearchBar.jsx";
+import DocumentOffcanvas from "./SidePanel";
+import "./MapUI.css";
 
 const ZoomToMarker = ({ position, zoomLevel }) => {
   const map = useMap();
@@ -40,201 +36,334 @@ ZoomToMarker.propTypes = {
 
 const MapKiruna = () => {
   const [documents, setDocuments] = useState([]);
+  const [areas, setAreas] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
-  const [showDocumentSidePanel, setShowDocumentSidePanel] = useState(true);
-    const [show, setShow] = useState(true);
+  const [selectedArea, setSelectedArea] = useState(null);
+  const [showSidePanel, setShowSidePanel] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+  const [tileLayer, setTileLayer] = useState("satellite");
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [mapRef, setMapRef] = useState(null);
   const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
-  const [tileLayer, setTileLayer] = useState("satellite");
-  const {setFeedbackFromError} = useContext(FeedbackContext);
-  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const kirunaBorderCoordinates = getKirunaArea();
+  const { setFeedbackFromError, shouldRefresh } = useContext(FeedbackContext);
 
   // Reference for dynamic Polygon
   const kirunaPolygonRef = useRef(null);
 
-
-    useEffect(() => {
-        API.getAllDocumentSnippets()
-            .then((docs) => {
-                setDocuments(docs);
-                setFilteredDocuments(docs);
-            })
-            .catch((error) => setFeedbackFromError(error));
-    }, [setFeedbackFromError]);
-
-
-  const handleDocumentClick = (document) => {
-    API.getDocumentById(document.id)
-      .then((response) => {
-        setSelectedDocument(response);
-          setShow(true);
-          setShowDocumentSidePanel(true);
+  useEffect(() => {
+    API.getAllDocumentSnippets("point-only")
+      .then((docs) => {
+        setDocuments(docs);
+        setFilteredDocuments(docs);
       })
       .catch((error) => setFeedbackFromError(error));
+
+    API.getAllAreasSnippets()
+      .then((areas) => {
+        setAreas(areas);
+      })
+      .catch((error) => setFeedbackFromError(error));
+  }, [setFeedbackFromError, shouldRefresh]);
+
+  const clearHighlightedArea = () => {
+    if (mapRef && kirunaPolygonRef.current) {
+      mapRef.removeLayer(kirunaPolygonRef.current);
+      kirunaPolygonRef.current = null;
+    }
+  };
+
+  const highlightArea = (area) => {
+    console.log(area)
+    if (area.geometry) {
+      clearHighlightedArea(mapRef);
+      if (mapRef) {
+        const polygon = L.polygon(
+          area.geometry.coordinates,
+          {
+            color: "blue",
+            weight: 3,
+            fillOpacity: 0.1,
+          }
+        ).addTo(mapRef);
+        kirunaPolygonRef.current = polygon;
+
+        // Calculate the bounds of the polygon
+        const bounds = polygon.getBounds();
+        // Adjust the map view to fit the bounds of the polygon
+        mapRef.flyToBounds(bounds, { duration: 1.5 });
+      }
+    }
+  };
+
+  const handleDocumentClick = async (document) => {
+    clearHighlightedArea(mapRef);
+    setShowSidePanel(false);
+    setSelectedArea(null);
+    try {
+      const response = await API.getDocumentById(document.id);
+      setSelectedDocument(response);
+      setShowSidePanel(true);
+
+      const position =
+        document.geolocation.pointCoordinates?.coordinates ||
+        document.geolocation.area.areaCentroid;
+
+      if (document.geolocation.area) {
+        const areaResponse = await API.getAreaById(
+          document.geolocation.area.areaId
+        );
+        highlightArea(areaResponse);
+      } else {
+        mapRef.flyTo([position.latitude, position.longitude], 11, {
+          duration: 1.5,
+        });
+      }
+    } catch (error) {
+      setFeedbackFromError(error);
+    }
+  };
+
+  const handleAreaClick = async (area) => {
+    setShowSidePanel(false);
+    setSelectedDocument(null);
+    await API.getAreaById(area.id)
+      .then((response) => {
+        setSelectedArea(response);
+        highlightArea(response, mapRef);
+      })
+      .catch((error) => setFeedbackFromError(error));
+
+    setShowSidePanel(true);
   };
 
   const closeSidePanel = () => {
-      setShow(false);
-    setShowDocumentSidePanel(false);
+    clearHighlightedArea(mapRef);
+    setShowSidePanel(false);
     setSelectedDocument(null);
+    setSelectedArea(null);
   };
 
-  const kirunaBorderCoordinates = getKirunaArea();
-
-  const handleSearch = (keyword) => {
+  const handleSearch = async ({
+    keyword = "",
+    // documentTypes = [],
+    // stakeholders = [],
+    // scales = [],
+  }) => {
     if (!keyword) {
       setFilteredDocuments(documents);
       return;
     }
 
     API.searchDocuments(keyword)
-        .then((data) => {
-          setFilteredDocuments(data);
-        })
-        .catch((error) => {
-          setFeedbackFromError(error);
-        });
+      .then((data) => {
+        setFilteredDocuments(data);
+      })
+      .catch((error) => {
+        setFeedbackFromError(error);
+      });
   };
 
+  const handleEntireMunicipalityClick = async () => {
+    setShowSidePanel(false);
+    setSelectedDocument(null);
+    highlightArea({areaName: "Entire municipality", geometry: { coordinates: kirunaBorderCoordinates } });
+    setShowSidePanel(true);
+  };
+
+  const onRealTimeSearch = async ({
+    keyword = "",
+    documentTypes = [],
+    stakeholders = [],
+    scales = [],
+  }) => {
+    const lowerCaseKeyword = keyword.toLowerCase();
+
+    const filtered = documents.filter((doc) => {
+      const matchesKeyword =
+        !keyword || doc.title.toLowerCase().includes(lowerCaseKeyword);
+      const matchesDocumentTypes =
+        documentTypes.length === 0 || documentTypes.includes(doc.type);
+      const matchesStakeholders =
+        stakeholders.length === 0 ||
+        stakeholders.some((id) => doc.stakeholders.includes(id));
+      const matchesScales = scales.length === 0 || scales.includes(doc.scale);
+
+      return (
+        matchesKeyword &&
+        matchesDocumentTypes &&
+        matchesStakeholders &&
+        matchesScales
+      );
+    });
+
+    setFilteredDocuments(filtered);
+  };
   return (
-      <div style={{display: "flex", height: "90vh", position: "relative"}}>
-          <div style={{position: 'absolute', top: '10px', left: '30px', zIndex: 1000, marginBottom: "5rem",
-              marginLeft: '5rem'
-
-          }}>
-              <SearchBar
-                  onSearch={handleSearch}
-              />
-          </div>
-          <MapStyleToggle setTileLayer={setTileLayer}/>
-          <Button
-              title={"legend"}
-              variant="white"
-              onClick={() => {
-                  setShowLegend(!showLegend);
-              }}
-              style={{
-                  position: "absolute",
-                  top: "10px",
-                  right: "10px",
-                  zIndex: 1000,
-              }}
-          >
-              <i className="bi bi-question-circle"></i>
-          </Button>
-          <Button
-              title={"center-map"}
-              variant="white"
-              onClick={() => setShowDocumentSidePanel(!showDocumentSidePanel)}
-              style={{
-                  position: "absolute",
-                  top: "50px",
-                  right: "10px",
-                  zIndex: 1000,
-              }}
-          >
-              <i className="bi bi-geo-alt"></i>
-          </Button>
-          <div style={{flex: 2, position: "relative"}}>
-              <MapContainer
-                  center={kirunaPosition}
-                  zoom={zoomLevel}
-                  style={{height: "100%", width: "100%"}}
-              >
-                  <TileLayer
-                      url={
-                          tileLayer === "paper"
-                              ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                              : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                      }
-                      attribution={
-                          tileLayer === "paper"
-                              ? "&copy; OpenStreetMap contributors"
-                              : "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
-                      }
-                  />
-                  <MarkerClusterGroup>
-                      {filteredDocuments.map((doc, index) => {
-                          const position = doc.geolocation?.latitude
-                              ? [doc.geolocation.latitude, doc.geolocation.longitude]
-                              : kirunaPosition;
-
-                          return (
-                              <Marker
-                                  key={index}
-                                  position={position}
-                                  icon={getIconForDocument(doc.type, doc.stakeholders)}
-                                  eventHandlers={{
-                                      click: () => handleDocumentClick(doc),
-                                      mouseover: (e) => {
-                                          const marker = e.target;
-                                          // Showing the title of the document as a tooltip
-                                          marker
-                                              .bindTooltip(doc.title, {
-                                                  permanent: false,
-                                                  offset: [2, -33],
-                                                  direction: "top",
-                                              })
-                                              .openTooltip();
-                                          // Showing the polygon when mouseover on the document
-                                          if (
-                                              doc.geolocation?.municipality === "Entire municipality"
-                                          ) {
-                                              const map = marker._map;
-                                              if (!kirunaPolygonRef.current) {
-                                                  kirunaPolygonRef.current = L.polygon(
-                                                      kirunaBorderCoordinates,
-                                                      {
-                                                          color: "purple",
-                                                          weight: 3,
-                                                          fillOpacity: 0.1,
-                                                      }
-                                                  ).addTo(map);
-                                              }
-                                          }
-                                      },
-                                      mouseout: (e) => {
-                                          const marker = e.target;
-                                          marker.closeTooltip();
-
-                                          // Removing the polygon when mouseout
-                                          if (kirunaPolygonRef.current) {
-                                              const map = marker._map;
-                                              map.removeLayer(kirunaPolygonRef.current);
-                                              kirunaPolygonRef.current = null;
-                                          }
-                                      },
-                                  }}
-                              />
-                          );
-                      })}
-                  </MarkerClusterGroup>
-                  {selectedDocument && selectedDocument.geolocation.latitude ? (
-                      <ZoomToMarker
-                          position={[
-                              selectedDocument.geolocation.latitude,
-                              selectedDocument.geolocation.longitude,
-                          ]}
-                          zoomLevel={15}
-                      />
-                  ) : (
-                      <ZoomToMarker position={kirunaPosition} zoomLevel={12}/>
-                  )}
-              </MapContainer>
-          </div>
-
-          {selectedDocument && showDocumentSidePanel && (
-              <DocumentSidePanel
-                  document={selectedDocument}
-                  onClose={closeSidePanel}
-              />
-          )}
-          {showLegend && (
-              <LegendModal show={showLegend} onHide={() => setShowLegend(false)}/>
-          )}
+    <div style={{ display: "flex", height: "91vh", position: "relative" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: "12px",
+          left: "30px",
+          zIndex: 1000,
+          marginBottom: "5rem",
+          marginLeft: "5rem",
+        }}
+      >
+        <SearchBar
+          onSearch={handleSearch}
+          onRealTimeSearch={onRealTimeSearch}
+        />
       </div>
+      <MapStyleToggle setTileLayer={setTileLayer} />
+      <Button
+        title={"legend"}
+        variant="white"
+        onClick={() => {
+          setShowLegend(!showLegend);
+        }}
+        className="legend-button"
+      >
+        <i className="bi bi-question-circle"></i>
+      </Button>
+      {/* <Button
+        title={"center-map"}
+        variant="white"
+        onClick={() => setShowSidePanel(!showSidePanel)}
+        className="center-map-button"
+      >
+        <i className="bi bi-geo-alt"></i>
+      </Button> */}
+      <Button
+        title={"Documents of Entire Municipality"}
+        variant="white"
+        onClick={() => {
+          handleEntireMunicipalityClick();
+        }}
+        className="entire-municipality-button"
+      >
+        <i className="bi bi-map"></i>
+      </Button>
+      <div style={{ flex: 2, position: "relative" }}>
+        <MapContainer
+          center={kirunaPosition}
+          zoom={zoomLevel}
+          style={{ height: "100%", width: "100%" }}
+          ref={setMapRef}
+        >
+          <TileLayer
+            url={
+              tileLayer === "paper"
+                ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            }
+            attribution={
+              tileLayer === "paper"
+                ? "&copy; OpenStreetMap contributors"
+                : "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+            }
+          />
+          <MarkerClusterGroup>
+            <DocumentMarkers
+              filteredDocuments={filteredDocuments}
+              handleDocumentClick={handleDocumentClick}
+              kirunaPolygonRef={kirunaPolygonRef}
+              kirunaBorderCoordinates={kirunaBorderCoordinates}
+            />
+            <AreaMarkers areas={areas} handleAreaClick={handleAreaClick} />
+          </MarkerClusterGroup>
+        </MapContainer>
+      </div>
+      {showSidePanel && (
+        <DocumentOffcanvas
+          document={selectedDocument}
+          area={selectedArea}
+          onClose={() => {
+            closeSidePanel();
+          }}
+        />
+      )}
+      {showLegend && (
+        <LegendModal show={showLegend} onHide={() => setShowLegend(false)} />
+      )}
+    </div>
   );
+};
+
+const DocumentMarkers = ({ filteredDocuments, handleDocumentClick }) => {
+  return filteredDocuments.map((doc, index) => {
+    const position = doc.geolocation.pointCoordinates
+      ? [
+          doc.geolocation.pointCoordinates.coordinates.latitude,
+          doc.geolocation.pointCoordinates.coordinates.longitude,
+        ]
+      : [
+          doc.geolocation.area.areaCentroid.latitude,
+          doc.geolocation.area.areaCentroid.longitude,
+        ];
+
+    const handleMouseOver = (e) => {
+      const marker = e.target;
+      marker
+        .bindTooltip(doc.title, {
+          permanent: false,
+          offset: [2, -33],
+          direction: "top",
+        })
+        .openTooltip();
+    };
+
+    return (
+      <Marker
+        key={index}
+        position={position}
+        icon={getIconForDocument(doc.type, doc.stakeholders)}
+        eventHandlers={{
+          click: () => handleDocumentClick(doc),
+          mouseover: handleMouseOver,
+        }}
+      />
+    );
+  });
+};
+
+DocumentMarkers.propTypes = {
+  filteredDocuments: PropTypes.array.isRequired,
+  handleDocumentClick: PropTypes.func.isRequired,
+  kirunaPolygonRef: PropTypes.object.isRequired,
+  kirunaBorderCoordinates: PropTypes.array.isRequired,
+};
+
+const AreaMarkers = ({ areas, handleAreaClick }) => {
+  return areas.map((area, index) => {
+    const handleMouseHover = (e) => {
+      const marker = e.target;
+      marker
+        .bindTooltip(area.name, {
+          permanent: false,
+          offset: [-15, -15],
+          direction: "top",
+        })
+        .openTooltip();
+    };
+    return (
+      <Marker
+        key={index}
+        position={[area.centroid.latitude, area.centroid.longitude]}
+        eventHandlers={{
+          click: () => handleAreaClick(area),
+          mouseover: handleMouseHover,
+        }}
+      />
+    );
+  });
+};
+
+AreaMarkers.propTypes = {
+  areas: PropTypes.array.isRequired,
+  handleAreaClick: PropTypes.func.isRequired,
 };
 
 export default MapKiruna;
