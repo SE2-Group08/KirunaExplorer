@@ -331,7 +331,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
     }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
-    if (locationMode === "area" && !selectedAreaId) {
+    if (locationMode === "area" && !selectedAreaId && formDocument.geolocation.area.areaName.trim()==="") {
       setErrors({ areaName: "Please provide a name for the area." });
       return;
     }
@@ -1589,12 +1589,16 @@ function DocumentFormFields({
         <Col md={3}>
           <Form.Group>
             <Form.Control as="select" value={selectedAreaId} onChange={handleSelectExistingArea}>
-                    <option value="">-- Select an existing area --</option>
-                    {allKnownAreas?.map((area) => (
-                  <option key={area.id} value={area.id}>{area.properties?.name || `${area.name}`}</option>
+            <option value="">-- Select an existing area --</option>
+                {allKnownAreas
+                    ?.filter((area) => area.name !== "Entire Municipality") // Exclude "Entire Municipality"
+                    .map((area) => (
+                        <option key={area.id} value={area.id}>
+                          {area.name}
+                        </option>
                     ))}
-            </Form.Control>
-          </Form.Group>
+          </Form.Control>
+        </Form.Group>
         </Col>
         )}
 
