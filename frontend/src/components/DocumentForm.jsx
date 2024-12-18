@@ -1024,9 +1024,9 @@ function DocumentFormFields({
 
     if (type === "POLYGON") {
       // Mappa le coordinate in [lat, lng] per Leaflet
-      const latlngs = coordinates.map(([lng, lat]) => [lat, lng]);
+      //const latlngs = coordinates.map(([lng, lat]) => [lat, lng]);
 
-      const bounds = L.latLngBounds(latlngs);
+      const bounds = L.latLngBounds(coordinates);
       mapRef.current.fitBounds(bounds, { padding: [20, 20] });
 
     } else if (type === "MultiPolygon") {
@@ -1777,8 +1777,8 @@ function DocumentFormFields({
                       const { type, coordinates } = document.geolocation.area.geometry;
 
                       if (type === "POLYGON" || type === "Polygon") {
-                        const polygonCoords = coordinates.map(([lng, lat]) => [lat, lng]);
-                        return <Polygon positions={polygonCoords} color="green" />;
+                        //const polygonCoords = coordinates.map(([lng, lat]) => [lat, lng]);
+                        return <Polygon positions={coordinates} color="green" />;
                       } else if (type === "MULTIPOLYGON" || type === "MultiPolygon") {
 
                         const coordinates = kirunaBorderCoordinates;
