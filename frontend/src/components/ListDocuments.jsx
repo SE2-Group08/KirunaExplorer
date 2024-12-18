@@ -172,12 +172,18 @@ export default function ListDocuments({
 
   const handleSearch = async ({
     keyword = "",
-    // documentTypes = [],
-    // stakeholders = [],
-    // scales = [],
+    documentTypes = [],
+    stakeholders = [],
+    scales = [],
   }) => {
     try {
-      const response = await API.searchDocuments(keyword);
+      const params = new URLSearchParams();
+      if (keyword) params.append("keyword", keyword);
+      if (documentTypes.length > 0) params.append("type", documentTypes.join(","));
+      if (stakeholders.length > 0) params.append("stakeholderNames", stakeholders.join(","));
+      if (scales.length > 0) params.append("scale", scales.join(","));
+
+      const response = await API.searchDocuments(params.toString());
       setAllDocuments(response); // Update the master list with backend results
       setFilteredDocuments(response); // Update the filtered list
     } catch (error) {

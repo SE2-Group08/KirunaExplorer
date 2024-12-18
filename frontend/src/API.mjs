@@ -307,6 +307,9 @@ const searchDocuments = async (keyword) => {
     {
       method: "GET",
       // Removed 'Content-Type' header as it's not needed for GET requests
+      headers: {
+        "Content-Type": "application/json",
+      },
     }
   )
     .then(handleInvalidResponse)
@@ -315,6 +318,7 @@ const searchDocuments = async (keyword) => {
 
   return response;
 };
+
 /* ************************** *
  *   Geolocation APIs   *
  * ************************** */
