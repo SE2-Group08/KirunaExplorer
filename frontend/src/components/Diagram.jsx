@@ -68,7 +68,7 @@ const FullPageChart = () => {
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     // Creazione degli scale
-    const xScale = d3.scaleLinear().domain([2004, 2024]).range([0, width]);
+    const xScale = d3.scaleLinear().domain([2004, 2025]).range([0, width]);
     const yScale = d3
       .scalePoint()
       .domain([" ", "Text", "Concept", "1:100000", "1:10000", "1:5000", "1:1000", "Blueprints/effects", ""])
