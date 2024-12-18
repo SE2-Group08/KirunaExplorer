@@ -23,11 +23,11 @@ import DocumentDescriptionComponent from "./DocumentDescription";
 import SearchBar from "./SearchBar"; // Import the updated SearchBar component
 
 export default function ListDocuments({
-                                        shouldRefresh,
-                                        loggedIn,
-                                        isUrbanPlanner,
-                                        authToken,
-                                      }) {
+  shouldRefresh,
+  loggedIn,
+  isUrbanPlanner,
+  authToken,
+}) {
   const [allDocuments, setAllDocuments] = useState([]);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -45,15 +45,15 @@ export default function ListDocuments({
   const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
     []
   );
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const { setFeedbackFromError, setShouldRefresh } =
     useContext(FeedbackContext);
 
-    useEffect(() => {
-        if (!loggedIn || !isUrbanPlanner) {
-            navigate("/login");
-        }
-    }, [loggedIn, isUrbanPlanner, navigate]);
+  useEffect(() => {
+    if (!loggedIn || !isUrbanPlanner) {
+      navigate("/login");
+    }
+  }, [loggedIn, isUrbanPlanner, navigate]);
 
   useEffect(() => {
     // Scroll to top of the page
@@ -98,13 +98,14 @@ export default function ListDocuments({
       setSelectedDocument(newDoc);
 
       if (linking) {
-        const dLinks = await API.getAllLinksOfDocument(newDoc.id, authToken).catch(
-            (error) => setFeedbackFromError(error)
-        );
+        const dLinks = await API.getAllLinksOfDocument(
+          newDoc.id,
+          authToken
+        ).catch((error) => setFeedbackFromError(error));
         setLinks(dLinks);
         if (
-            selectedDocumentToLink &&
-            document.id === selectedDocumentToLink.id
+          selectedDocumentToLink &&
+          document.id === selectedDocumentToLink.id
         ) {
           return;
         }
@@ -140,26 +141,41 @@ export default function ListDocuments({
     );
   };
 
-  const handleSearchInput = ({ keyword = "", documentTypes = [], stakeholders = [], scales = [] }) => {
+  const handleSearchInput = ({
+    keyword = "",
+    documentTypes = [],
+    stakeholders = [],
+    scales = [],
+  }) => {
     const lowerCaseKeyword = keyword.toLowerCase();
 
     const filtered = allDocuments.filter((doc) => {
       const matchesKeyword =
-          !keyword || doc.title.toLowerCase().includes(lowerCaseKeyword);
+        !keyword || doc.title.toLowerCase().includes(lowerCaseKeyword);
       const matchesDocumentTypes =
-          documentTypes.length === 0 || documentTypes.includes(doc.type);
+        documentTypes.length === 0 || documentTypes.includes(doc.type);
       const matchesStakeholders =
-          stakeholders.length === 0 || stakeholders.some((id) => doc.stakeholders.includes(id));
-      const matchesScales =
-          scales.length === 0 || scales.includes(doc.scale);
+        stakeholders.length === 0 ||
+        stakeholders.some((id) => doc.stakeholders.includes(id));
+      const matchesScales = scales.length === 0 || scales.includes(doc.scale);
 
-      return matchesKeyword && matchesDocumentTypes && matchesStakeholders && matchesScales;
+      return (
+        matchesKeyword &&
+        matchesDocumentTypes &&
+        matchesStakeholders &&
+        matchesScales
+      );
     });
 
     setFilteredDocuments(filtered);
   };
 
-  const handleSearch = async ({ keyword = "", documentTypes = [], stakeholders = [], scales = [] }) => {
+  const handleSearch = async ({
+    keyword = "",
+    documentTypes = [],
+    stakeholders = [],
+    scales = [],
+  }) => {
     try {
       const response = await API.searchDocuments(keyword);
       setAllDocuments(response); // Update the master list with backend results
@@ -225,15 +241,15 @@ export default function ListDocuments({
         </Col>
       </Row>
 
-        {/* SearchBar Component */}
-        <Row className="my-4">
-          <Col>
-            <SearchBar
-                onSearch={handleSearch}
-                onRealTimeSearch={handleSearchInput}
-            />
-          </Col>
-        </Row>
+      {/* SearchBar Component */}
+      <Row className="my-4">
+        <Col>
+          <SearchBar
+            onSearch={handleSearch}
+            onRealTimeSearch={handleSearchInput}
+          />
+        </Col>
+      </Row>
 
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
         {allDocuments.length === 0 ? (
@@ -264,13 +280,15 @@ export default function ListDocuments({
             ))}
           </Row>
         )}
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
-
+        {totalPages > 1 && (
+          <div style={{ position: "fixed", bottom: 100, width: "100%" }}>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
         {/* Modal for viewing a document's description */}
         {selectedDocument && (
           <DocumentDescriptionComponent
