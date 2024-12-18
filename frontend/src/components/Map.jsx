@@ -43,6 +43,7 @@ const MapKiruna = () => {
   const [showLegend, setShowLegend] = useState(false);
   const [tileLayer, setTileLayer] = useState("satellite");
   const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [mapRef, setMapRef] = useState(null);
   const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
   const kirunaBorderCoordinates = getKirunaArea();
@@ -66,37 +67,38 @@ const MapKiruna = () => {
       .catch((error) => setFeedbackFromError(error));
   }, [setFeedbackFromError, shouldRefresh]);
 
-  const clearHighlightedArea = (map) => {
-    if (map && kirunaPolygonRef.current) {
-      map.removeLayer(kirunaPolygonRef.current);
+  const clearHighlightedArea = () => {
+    if (mapRef && kirunaPolygonRef.current) {
+      mapRef.removeLayer(kirunaPolygonRef.current);
       kirunaPolygonRef.current = null;
     }
   };
 
-  const highlightArea = (area, map) => {
+  const highlightArea = (area) => {
+    console.log(area)
     if (area.geometry) {
-      clearHighlightedArea(map);
-      if (map) {
+      clearHighlightedArea(mapRef);
+      if (mapRef) {
         const polygon = L.polygon(
-          area.geometry.coordinates.map((coord) => [coord[1], coord[0]]),
+          area.geometry.coordinates,
           {
             color: "blue",
             weight: 3,
             fillOpacity: 0.1,
           }
-        ).addTo(map);
+        ).addTo(mapRef);
         kirunaPolygonRef.current = polygon;
 
         // Calculate the bounds of the polygon
         const bounds = polygon.getBounds();
         // Adjust the map view to fit the bounds of the polygon
-        map.flyToBounds(bounds, { duration: 1.5 });
+        mapRef.flyToBounds(bounds, { duration: 1.5 });
       }
     }
   };
 
-  const handleDocumentClick = async (document, map) => {
-    clearHighlightedArea(map);
+  const handleDocumentClick = async (document) => {
+    clearHighlightedArea(mapRef);
     setShowSidePanel(false);
     setSelectedArea(null);
     try {
@@ -112,9 +114,9 @@ const MapKiruna = () => {
         const areaResponse = await API.getAreaById(
           document.geolocation.area.areaId
         );
-        highlightArea(areaResponse, map);
+        highlightArea(areaResponse);
       } else {
-        map.flyTo([position.latitude, position.longitude], 11, {
+        mapRef.flyTo([position.latitude, position.longitude], 11, {
           duration: 1.5,
         });
       }
@@ -123,21 +125,21 @@ const MapKiruna = () => {
     }
   };
 
-  const handleAreaClick = async (area, map) => {
+  const handleAreaClick = async (area) => {
     setShowSidePanel(false);
     setSelectedDocument(null);
     await API.getAreaById(area.id)
       .then((response) => {
         setSelectedArea(response);
-        highlightArea(response, map);
+        highlightArea(response, mapRef);
       })
       .catch((error) => setFeedbackFromError(error));
 
     setShowSidePanel(true);
   };
 
-  const closeSidePanel = (map) => {
-    clearHighlightedArea(map);
+  const closeSidePanel = () => {
+    clearHighlightedArea(mapRef);
     setShowSidePanel(false);
     setSelectedDocument(null);
     setSelectedArea(null);
@@ -163,13 +165,11 @@ const MapKiruna = () => {
       });
   };
 
-  const handleEntireMunicipalityClick = async (map) => {
-    return await API.getAllAreasSnippets()
-      .then((areas) =>
-        areas.filter((area) => area.name === "Entire Municipality")
-      )
-      .then((area) => handleAreaClick(area, map))
-      .catch((error) => setFeedbackFromError(error));
+  const handleEntireMunicipalityClick = async () => {
+    setShowSidePanel(false);
+    setSelectedDocument(null);
+    highlightArea({areaName: "Entire municipality", geometry: { coordinates: kirunaBorderCoordinates } });
+    setShowSidePanel(true);
   };
 
   const onRealTimeSearch = async ({
@@ -240,7 +240,7 @@ const MapKiruna = () => {
         title={"Documents of Entire Municipality"}
         variant="white"
         onClick={() => {
-          handleEntireMunicipalityClick(L.map);
+          handleEntireMunicipalityClick();
         }}
         className="entire-municipality-button"
       >
@@ -251,6 +251,7 @@ const MapKiruna = () => {
           center={kirunaPosition}
           zoom={zoomLevel}
           style={{ height: "100%", width: "100%" }}
+          ref={setMapRef}
         >
           <TileLayer
             url={
@@ -279,7 +280,9 @@ const MapKiruna = () => {
         <DocumentOffcanvas
           document={selectedDocument}
           area={selectedArea}
-          onClose={() => closeSidePanel()}
+          onClose={() => {
+            closeSidePanel();
+          }}
         />
       )}
       {showLegend && (
@@ -318,7 +321,7 @@ const DocumentMarkers = ({ filteredDocuments, handleDocumentClick }) => {
         position={position}
         icon={getIconForDocument(doc.type, doc.stakeholders)}
         eventHandlers={{
-          click: (e) => handleDocumentClick(doc, e.target._map),
+          click: () => handleDocumentClick(doc),
           mouseover: handleMouseOver,
         }}
       />
@@ -350,7 +353,7 @@ const AreaMarkers = ({ areas, handleAreaClick }) => {
         key={index}
         position={[area.centroid.latitude, area.centroid.longitude]}
         eventHandlers={{
-          click: (e) => handleAreaClick(area, e.target._map),
+          click: () => handleAreaClick(area),
           mouseover: handleMouseHover,
         }}
       />

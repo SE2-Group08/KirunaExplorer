@@ -493,8 +493,8 @@ const getAreaById = async (id, authToken) => {
       geometry: {
         type: data.geometry.type,
         coordinates: data.geometry.coordinates.map((coord) => [
-          coord.longitude,
           coord.latitude,
+          coord.longitude,
         ]), // Convert {latitude, longitude} to [lng, lat]
       },
     };
