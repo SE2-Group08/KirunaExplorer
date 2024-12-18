@@ -21,7 +21,7 @@ public class Geometry {
     private GeometryType type;
 
     @ElementCollection
-    private List<Object> coordinates;
+    private List<Coordinates> coordinates;
 
     /**
      * Convert to GeometryDTO.
@@ -29,6 +29,6 @@ public class Geometry {
      * @return GeometryDTO
      */
     public GeometryDTO toGeometryDTO() {
-        return new GeometryDTO(type.name(), coordinates);
+        return new GeometryDTO(type.name(), coordinates.stream().map(Coordinates::toCoordinatesDTO).toList());
     }
 }
