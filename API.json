@@ -86,11 +86,15 @@
             "minimum": 0
           },
           "geolocation": {
-            "oneOf":[
-             { "$ref": "#/components/schemas/AreaSnippet" },
-             { "$ref": "#/components/schemas/PointCoordinates" }
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AreaSnippet"
+              },
+              {
+                "$ref": "#/components/schemas/PointCoordinates"
+              }
             ]
-           },
+          },
           "description": {
             "type": "string",
             "description": "The description of the document",
@@ -167,10 +171,14 @@
             "maxLength": 64
           },
           "geolocation": {
-           "oneOf":[
-            { "$ref": "#/components/schemas/AreaSnippet" },
-            { "$ref": "#/components/schemas/PointCoordinates" }
-           ]
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AreaSnippet"
+              },
+              {
+                "$ref": "#/components/schemas/PointCoordinates"
+              }
+            ]
           }
         },
         "required": [
@@ -640,6 +648,45 @@
         "responses": {
           "204": {
             "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/area/{areaName}": {
+      "get": {
+        "summary": "Get all documents in a specific area",
+        "tags": [
+          "document"
+        ],
+        "parameters": [
+          {
+            "name": "areaName",
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/documentSnippet"
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
