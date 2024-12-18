@@ -66,7 +66,7 @@ public class Document {
      *
      * @return DocumentResponseDTO object
      */
-    public DocumentResponseDTO toResponseDTO(Integer nrConnections) {
+    public DocumentResponseDTO toDocumentResponseDTO(Integer nrConnections) {
         return new DocumentResponseDTO(
             this.id.intValue(),
             this.title,

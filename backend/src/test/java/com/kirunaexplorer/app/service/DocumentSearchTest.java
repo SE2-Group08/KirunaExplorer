@@ -39,7 +39,7 @@ class DocumentSearchTest {
         String type = "pdf";
         Document document = new Document(1L, "example1", "description", "stakeholder1", type, "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        document.setGeoReference(new GeoReference(document, null, null));
 
         List<Document> documents = Arrays.asList(document);
         when(documentRepository.searchDocuments(keyword, type)).thenReturn(documents);
@@ -60,7 +60,7 @@ class DocumentSearchTest {
         // Setup
         Document document = new Document(1L, "doc1", "description", "stakeholder1", "pdf", "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        document.setGeoReference(new GeoReference(document, null, null));
 
         List<Document> documents = Arrays.asList(document);
         when(documentRepository.searchDocuments(null, null)).thenReturn(documents);
@@ -82,7 +82,7 @@ class DocumentSearchTest {
         String keyword = "example";
         Document document = new Document(1L, "example1", "description", "stakeholder1", "pdf", "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        document.setGeoReference(new GeoReference(document, null, null));
 
         List<Document> documents = Arrays.asList(document);
         when(documentRepository.searchDocuments(keyword, null)).thenReturn(documents);
@@ -104,7 +104,7 @@ class DocumentSearchTest {
         String type = "pdf";
         Document document = new Document(1L, "example1", "description", "stakeholder1", type, "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        document.setGeoReference(new GeoReference(document, null, null));
 
         List<Document> documents = Arrays.asList(document);
         when(documentRepository.searchDocuments(null, type)).thenReturn(documents);
@@ -155,7 +155,7 @@ class DocumentSearchTest {
         // Setup
         Document document = new Document(1L, "doc1", "description", "stakeholder1", "pdf", "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        document.setGeoReference(new GeoReference(document, null, null));
 
         List<Document> documents = Collections.singletonList(document);
         when(documentRepository.searchDocuments("doc1", "pdf")).thenReturn(documents);
@@ -176,7 +176,7 @@ class DocumentSearchTest {
         // Setup
         Document document = new Document(1L, "doc1", "description", "stakeholder1", "pdf", "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        document.setGeoReference(new GeoReference(document, null, null));
 
         List<Document> documents = Arrays.asList(document);
         when(documentRepository.searchDocuments("", "")).thenReturn(documents);
@@ -198,7 +198,7 @@ class DocumentSearchTest {
         String type = "pdf";
         Document document = new Document(1L, longKeyword, "description", "stakeholder1", type, "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        document.setGeoReference(new GeoReference(document, null, null));
 
         List<Document> documents = Arrays.asList(document);
         when(documentRepository.searchDocuments(longKeyword, type)).thenReturn(documents);

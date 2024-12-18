@@ -226,9 +226,8 @@ export default function DocumentFormComponent({ document, show, onHide }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const combinedIssuanceDate = `${formDocument.year}${
-      formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
-    }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
+    const combinedIssuanceDate = `${formDocument.year}${formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
+      }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
     const sanitizedGeolocation = {
       latitude: formDocument.geolocation.latitude || null,
@@ -410,7 +409,6 @@ function DocumentFormFields({
   ]);
   const [filteredLanguages, setFilteredLanguages] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-
   const languageRefs = useRef([]);
   const dropdownRef = useRef(null);
 
@@ -544,6 +542,7 @@ function DocumentFormFields({
     }
   };
 
+
   const handleLanguageChange = (e) => {
     const value = e.target.value;
     handleChange("customLanguage", value);
@@ -669,8 +668,8 @@ function DocumentFormFields({
                     const newStakeholders = e.target.checked
                       ? [...document.stakeholders, stakeholderOption.name]
                       : document.stakeholders.filter(
-                          (s) => s !== stakeholderOption.name
-                        );
+                        (s) => s !== stakeholderOption.name
+                      );
                     handleChange("stakeholders", newStakeholders);
                   }}
                   isInvalid={!!errors.stakeholders}
@@ -1027,9 +1026,8 @@ function DocumentFormFields({
                     <button
                       key={language}
                       ref={(el) => (languageRefs.current[index] = el)}
-                      className={`dropdown-item ${
-                        index === highlightedIndex ? "active" : ""
-                      }`}
+                      className={`dropdown-item ${index === highlightedIndex ? "active" : ""
+                        }`}
                       onClick={() => handleLanguageSelect(language)}
                     >
                       {language}

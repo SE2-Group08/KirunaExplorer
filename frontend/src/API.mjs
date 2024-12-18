@@ -3,6 +3,11 @@ import Stakeholder from "./model/Stakeholder.mjs";
 import Link from "./model/Link.mjs";
 import { DocumentType } from "./model/DocumentType.mjs";
 import { Scale } from "./model/Scale.mjs";
+import {
+  GeolocatedPoint,
+  GeolocatedAreaSnippet,
+  GeolocatedAreaGeometry,
+} from "./model/Geolocation.mjs";
 
 const SERVER_URL = "http://localhost:8080/api/v1";
 
@@ -231,11 +236,11 @@ const searchDocuments = async (keyword) => {
   return response;
 };
 
-// /* ************************** *
-//  *      Stakeholders APIs     *
-//  * ************************** */
+/* ************************** *
+ *      Stakeholders APIs     *
+ * ************************** */
 
-// // Retrieve all stakeholders
+// Retrieve all stakeholders
 const getAllStakeholders = async () => {
   const stakeholders = await fetch(`${SERVER_URL}/stakeholders`)
     .then(handleInvalidResponse)
@@ -321,6 +326,63 @@ const addScale = async (scale) => {
 };
 
 /* ************************** *
+ *   Geolocation APIs   *
+ * ************************** */
+// Retrieve all point coordinates
+const getAllGeolocatedPoints = async () => {
+  const geolocatedPoints = await fetch(`${SERVER_URL}/points`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((geolocatedPoints) =>
+      geolocatedPoints.map((point) => GeolocatedPoint.fromJSON(point))
+    );
+
+  return geolocatedPoints;
+};
+
+// Create a new point coordinate
+const addGeolocatedPoint = async (point) => {
+  return await fetch(`${SERVER_URL}/points`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(point),
+  }).then(handleInvalidResponse);
+};
+
+// Retrieve all areas snippets
+const getAllAreasSnippets = async () => {
+  const areas = await fetch(`${SERVER_URL}/areas`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((areas) => areas.map((area) => GeolocatedAreaSnippet.fromJSON(area)));
+
+  return areas;
+};
+
+// Create a new area
+const addGeolocatedArea = async (area) => {
+  return await fetch(`${SERVER_URL}/areas`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(area),
+  }).then(handleInvalidResponse);
+};
+
+// Retrieve the geometry of a specific area
+const getAreaById = async (areaId) => {
+  const area = await fetch(`${SERVER_URL}/areas/${areaId}`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then((area) => GeolocatedAreaGeometry.fromJSON(area));
+
+  return area;
+};
+
+/* ************************** *
  *       Helper functions      *
  * ************************** */
 
@@ -383,6 +445,7 @@ async function mapAPISnippetsToSnippet(apiSnippets) {
 const API = {
   /* Document */
   getAllDocumentSnippets,
+  getDocumentsByPageNumber,
   addDocument,
   getDocumentById,
   updateDocument,
@@ -404,11 +467,16 @@ const API = {
   searchDocuments,
   getAllScales,
   addScale,
-  getDocumentsByPageNumber,
+  /* File */
   uploadFiles,
   deleteFile,
   getDocumentFiles,
   downloadFile,
-
+  /* Geolocation */
+  getAllGeolocatedPoints,
+  addGeolocatedPoint,
+  getAllAreasSnippets,
+  addGeolocatedArea,
+  getAreaById,
 };
 export default API;
