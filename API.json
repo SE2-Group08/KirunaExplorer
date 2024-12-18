@@ -697,6 +697,43 @@
         }
       }
     },
+    "/api/v1/documents/map": {
+      "get": {
+        "summary": "Gett all documents for the map",
+        "tags": [
+          "document"
+        ],
+        "parameters": [
+          {
+            "name": "filter",
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|area-only|point-only|no-geolocation)$"
+            },
+            "in": "query",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/documentSnippet"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/links": {
       "put": {
         "summary": "Update a link",
