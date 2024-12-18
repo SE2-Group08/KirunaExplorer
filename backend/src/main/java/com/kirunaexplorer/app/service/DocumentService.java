@@ -2,13 +2,17 @@ package com.kirunaexplorer.app.service;
 
 import com.kirunaexplorer.app.dto.inout.LinksDocumentDTO;
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
-import com.kirunaexplorer.app.dto.response.*;
+import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentDiagramResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.repository.*;
 import com.kirunaexplorer.app.util.DocumentFieldsChecker;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -126,16 +130,11 @@ public class DocumentService {
         geoReferenceRepository.save(geoReference);
     }
 
-    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
-        List<Document> documents = documentRepository.searchDocuments(keyword, type);
-        if (documents == null) {
-            return List.of();
-        }
-        return documents.stream()
-            .map(Document::toDocumentBriefResponseDTO)
-            .toList();
+    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type, List<String> stakeholderNames, String scale, int pageNo) {
+        Pageable pageable = PageRequest.of(pageNo, PAGE_SIZE);
+        Page<Document> documents = documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable);
+        return documents.stream().map(Document::toDocumentBriefResponseDTO).toList();
     }
-
     /**
      * Store new stakeholders, type and scale
      *
