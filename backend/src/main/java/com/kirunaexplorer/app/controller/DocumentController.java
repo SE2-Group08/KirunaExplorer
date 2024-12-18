@@ -90,6 +90,11 @@ public class DocumentController {
     public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam(required = false) String keyword, @RequestParam(required = false) String type) {
         return documentService.searchDocuments(keyword, type);
     }
+
+    @GetMapping("/area/{areaName}")
+    public ResponseEntity<List<DocumentBriefResponseDTO>> getDocumentsByArea(@PathVariable String areaName) {
+        return ResponseEntity.ok(documentService.getDocumentsByAreaName(areaName));
+    }
 }
 
 

@@ -1,5 +1,6 @@
 package com.kirunaexplorer.app.repository;
 
+import com.kirunaexplorer.app.model.Area;
 import com.kirunaexplorer.app.model.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +22,10 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     Page<Document> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     @Query("SELECT d FROM Document d WHERE (:keyword IS NULL OR :keyword = '' " +
-            "OR LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR LOWER(d.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND (:type IS NULL OR d.type = :type)")
+        "OR LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+        "OR LOWER(d.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND (:type IS NULL OR d.type = :type)")
     List<Document> searchDocuments(@Param("keyword") String keyword, @Param("type") String type);
 
+    @Query("SELECT d FROM Document d WHERE d.geoReference.area = :area")
+    List<Document> findByGeoReferenceArea(@Param("area") Area area);
 }

@@ -13,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.sound.midi.SysexMessage;
 import java.util.List;
 
 @Service
@@ -216,5 +215,14 @@ public class DocumentService {
         } else {
             geoReference.setArea(null);
         }
+    }
+
+    public List<DocumentBriefResponseDTO> getDocumentsByAreaName(String areaName) {
+        Area area = areaRepository.findAreaByName(areaName)
+            .orElseThrow(() -> new ResourceNotFoundException("Area not found with name " + areaName));
+
+        return documentRepository.findByGeoReferenceArea(area).stream()
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
     }
 }
