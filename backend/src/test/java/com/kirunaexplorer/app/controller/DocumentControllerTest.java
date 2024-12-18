@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 import java.util.Objects;
@@ -158,7 +159,7 @@ class DocumentControllerTest {
         private final DocumentResponseDTO document = new DocumentResponseDTO(
             id.intValue(),
             "title",
-            List.of("stakeholder"),
+            List.of("stakeholder 1", "stakeholder 2"),
             "scale",
             "2023-01-01",
             "type",
@@ -169,30 +170,83 @@ class DocumentControllerTest {
             "description"
         );
 
+        /**
+         * Test for successfully retrieving a document by its ID.
+         * This test verifies that when a valid document ID is provided,
+         * the response status is `200 OK` and the response body contains
+         * the expected document details.
+         *
+         * @throws Exception if an error occurs during the request
+         */
         @Test
-        void testGetDocumentById_successful() {
+        void testGetDocumentById_successful() throws Exception {
+
             when(documentService.getDocumentById(id)).thenReturn(document);
-
-            ResponseEntity<DocumentResponseDTO> response = documentController.getDocumentById(id);
-
-            assertNotNull(response, "The response should not be null");
-            assertEquals(HttpStatus.OK, response.getStatusCode(), "The status code should be OK - 200");
-            assertEquals(document, response.getBody(), "The response body should match the document");
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/documents/{id}", id))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(document.id()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(document.title()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.stakeholders[0]").value(document.stakeholders().get(0)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.stakeholders[1]").value(document.stakeholders().get(1)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.scale").value(document.scale()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.issuanceDate").value(document.issuanceDate()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.type").value(document.type()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.language").value(document.language()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.nrPages").value(document.nrPages()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.description").value(document.description()));
         }
 
+        /**
+         * Test for handling the case when a document is not found by its ID.
+         * This test verifies that when a non-existent document ID is provided,
+         * the response status is `404 Not Found` and the error message matches
+         * the one defined in the `messages.properties` file.
+         *
+         * @throws Exception if an error occurs during the request
+         */
         @Test
-        void testGetDocumentById_notFound() {
-            when(documentService.getDocumentById(id)).thenThrow(new ResourceNotFoundException("Document not found with ID " + id));
+        void testGetDocumentById_notFound() throws Exception {
+            Long nonExistentId = 999999L;
+            String errorMessage = messageSource.getMessage("error.document.notFound", new Object[]{String.valueOf(nonExistentId)}, LocaleContextHolder.getLocale());
 
-            ResponseEntity<DocumentResponseDTO> response;
-            try {
-                response = documentController.getDocumentById(id);
-            } catch (ResourceNotFoundException e) {
-                response = ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
+            when(documentService.getDocumentById(nonExistentId)).thenThrow(new ResourceNotFoundException(errorMessage));
 
-            assertNotNull(response, "The response should not be null");
-            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), "The status code should be NOT_FOUND - 404");
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/documents/{id}", nonExistentId))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
+        }
+
+        /**
+         * Test for handling the case when a null ID is provided in the `getDocumentById` method.
+         * This test verifies that when a null ID is provided, the response status is `404 Not Found`
+         * and the error message matches the expected message.
+         *
+         * @throws Exception if an error occurs during the request
+         */
+        @Test
+        void testGetDocumentById_nullId() throws Exception {
+            String errorMessage = "No static resource " + "api/v1/documents.";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/documents/{id}", (Object) null))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
+        }
+
+        /**
+         * Test for handling the case when a non-integer ID is provided in the `getDocumentById` method.
+         * This test verifies that when a non-integer ID is provided, the response status is `400 Bad Request`
+         * and the error message matches the one defined in the `messages.properties` file.
+         *
+         * @throws Exception if an error occurs during the request
+         */
+        @Test
+        void testGetDocumentById_nonIntegerAsId() throws Exception {
+            String nonIntegerId = "abc";
+            String errorMessage = messageSource.getMessage("error.id.invalid", new Object[]{nonIntegerId}, LocaleContextHolder.getLocale());
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/documents/{id}", nonIntegerId))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
         }
     }
 

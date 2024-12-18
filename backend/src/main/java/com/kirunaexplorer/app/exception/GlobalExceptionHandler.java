@@ -13,6 +13,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -28,9 +29,20 @@ public class GlobalExceptionHandler {
         this.messageSource = messageSource;
     }
 
-    // Handle Resource Not Found (404)
+    // Handle Resource Not Found (404) - custom exception
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            ex.getMessage(),
+            request.getDescription(false),
+            LocalDateTime.now());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    // Handle No Resource Found (404)
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.NOT_FOUND.value(),
             ex.getMessage(),
@@ -62,7 +74,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    // Handle Duplicate Document Type (400)
+    // Handle Duplicate Document Type (400) - custom exception
     @ExceptionHandler(DuplicateDocumentTypeException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateDocumentTypeException(DuplicateDocumentTypeException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -73,7 +85,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    // Handle Duplicate Stakeholder Exception (400)
+    // Handle Duplicate Stakeholder Exception (400) - custom exception
     @ExceptionHandler(DuplicateStakeholderException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateStakeholderException(DuplicateStakeholderException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -111,15 +123,13 @@ public class GlobalExceptionHandler {
     // Handle Method Argument Type Mismatch Exception (400)
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
-        String errorMessage;
-        switch (ex.getName()) {
-            case "pageNo":
-                errorMessage = messageSource.getMessage("error.pageNo.invalid", new Object[]{ex.getValue()}, LocaleContextHolder.getLocale());
-                break;
-            default:
-                errorMessage = ex.getMessage();
-                break;
-        }
+        String errorMessage = switch (ex.getName()) {
+            case "pageNo" ->
+                messageSource.getMessage("error.pageNo.invalid", new Object[]{ex.getValue()}, LocaleContextHolder.getLocale());
+            case "id" ->
+                messageSource.getMessage("error.id.invalid", new Object[]{ex.getValue()}, LocaleContextHolder.getLocale());
+            default -> ex.getMessage();
+        };
 
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.BAD_REQUEST.value(),

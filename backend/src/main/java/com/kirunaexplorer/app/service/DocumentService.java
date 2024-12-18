@@ -8,6 +8,8 @@ import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.repository.*;
 import com.kirunaexplorer.app.util.DocumentFieldsChecker;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class DocumentService {
     private final DocumentScaleRepository documentScaleRepository;
     private final StakeholderRepository stakeholderRepository;
     private final DocumentTypeRepository documentTypeRepository;
+    private final MessageSource messageSource;
 
     private static final int PAGE_SIZE = 16;
 
@@ -32,7 +35,8 @@ public class DocumentService {
         DocumentLinkRepository documentLinkRepository,
         StakeholderRepository stakeholderRepository,
         DocumentTypeRepository documentTypeRepository,
-        DocumentScaleRepository documentScaleRepository
+        DocumentScaleRepository documentScaleRepository,
+        MessageSource messageSource
     ) {
         this.geoReferenceRepository = geoReferenceRepository;
         this.documentRepository = documentRepository;
@@ -40,6 +44,7 @@ public class DocumentService {
         this.stakeholderRepository = stakeholderRepository;
         this.documentTypeRepository = documentTypeRepository;
         this.documentScaleRepository = documentScaleRepository;
+        this.messageSource = messageSource;
     }
 
     /**
@@ -61,7 +66,6 @@ public class DocumentService {
      */
     public List<DocumentBriefPageResponseDTO> getDocumentsByPageNumber(int pageNo) {
         Page<Document> pagedResult = documentRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNo, PAGE_SIZE));
-        System.out.println("ARRIVATO QUI");
         return List.of(DocumentBriefPageResponseDTO.from(pagedResult));
     }
 
@@ -72,9 +76,10 @@ public class DocumentService {
      * @return DocumentResponseDTO
      */
     public DocumentResponseDTO getDocumentById(Long id) {
-
         return documentRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + id))
+            .orElseThrow(() -> new ResourceNotFoundException(
+                messageSource.getMessage("error.document.notFound", new Object[]{String.valueOf(id)}, LocaleContextHolder.getLocale())
+            ))
             .toResponseDTO(documentLinkRepository.countByDocumentId(id));
     }
 

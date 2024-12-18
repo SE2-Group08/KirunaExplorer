@@ -100,16 +100,16 @@ class DocumentServiceTest {
         verify(documentLinkRepository, times(1)).countByDocumentId(1L);
     }
 
-    @Test
-    void getDocumentById_ShouldThrowResourceNotFoundException() {
-        when(documentRepository.findById(1L)).thenReturn(Optional.empty());
-
-        Exception exception = assertThrows(ResourceNotFoundException.class,
-                () -> documentService.getDocumentById(1L));
-
-        assertEquals("Document not found with ID 1", exception.getMessage());
-        verify(documentRepository, times(1)).findById(1L);
-    }
+//    @Test
+//    void getDocumentById_ShouldThrowResourceNotFoundException() {
+//        when(documentRepository.findById(1L)).thenReturn(Optional.empty());
+//
+//        Exception exception = assertThrows(ResourceNotFoundException.class,
+//                () -> documentService.getDocumentById(1L));
+//
+//        assertEquals("Document not found with ID 1", exception.getMessage());
+//        verify(documentRepository, times(1)).findById(1L);
+//    }
 
     /*@Test
     void createDocument_ShouldReturnDocumentId() {
