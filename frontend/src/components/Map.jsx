@@ -174,7 +174,6 @@ const MapKiruna = () => {
   const handleEntireMunicipalityClick = async () => {
     setShowSidePanel(false);
     setSelectedDocument(null);
-    console.log(municipalityArea);
     setSelectedArea(municipalityArea);
     setShowSidePanel(true);
   };
