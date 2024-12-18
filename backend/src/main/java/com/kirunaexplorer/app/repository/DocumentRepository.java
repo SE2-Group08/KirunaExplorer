@@ -28,4 +28,13 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     @Query("SELECT d FROM Document d WHERE d.geoReference.area = :area")
     List<Document> findByGeoReferenceArea(@Param("area") Area area);
+
+    @Query("SELECT d FROM Document d WHERE d.geoReference.area IS NOT NULL")
+    List<Document> findByGeoReferenceAreaIsNotNull();
+
+    @Query("SELECT d FROM Document d WHERE d.geoReference.pointCoordinates IS NOT NULL")
+    List<Document> findByGeoReferencePointCoordinatesIsNotNull();
+
+    @Query("SELECT d FROM Document d WHERE d.geoReference.area IS NULL AND d.geoReference.pointCoordinates IS NULL")
+    List<Document> findByGeoReferenceIsNull();
 }

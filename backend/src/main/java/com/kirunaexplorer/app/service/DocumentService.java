@@ -1,5 +1,6 @@
 package com.kirunaexplorer.app.service;
 
+import com.kirunaexplorer.app.constants.FilterOptionForMap;
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
@@ -8,6 +9,7 @@ import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.repository.*;
 import com.kirunaexplorer.app.util.DocumentFieldsChecker;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -222,6 +224,20 @@ public class DocumentService {
             .orElseThrow(() -> new ResourceNotFoundException("Area not found with name " + areaName));
 
         return documentRepository.findByGeoReferenceArea(area).stream()
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
+    }
+
+    public List<DocumentBriefResponseDTO> getDocumentsForMap(String filter) {
+        FilterOptionForMap filterEnum = FilterOptionForMap.valueOf(filter.toUpperCase());
+
+        List<Document> documents = switch (filterEnum) {
+            case AREA_ONLY -> documentRepository.findByGeoReferenceAreaIsNotNull();
+            case POINT_ONLY -> documentRepository.findByGeoReferencePointCoordinatesIsNotNull();
+            case NO_GEOLOCATION -> documentRepository.findByGeoReferenceIsNull();
+            default -> documentRepository.findAll();
+        };
+        return documents.stream()
             .map(Document::toDocumentBriefResponseDTO)
             .toList();
     }
