@@ -39,10 +39,6 @@ const logOut = async (token) => {
   console.log("User successfully logged out.");
 };
 
-
-
-
-
 /* ********************* *
  *       User APIs       *
  * ********************* */
@@ -66,21 +62,20 @@ const getUserById = async (userId) => {
  * ************************** */
 
 const uploadFiles = async (id, files, token) => {
-
   const formData = new FormData();
   files.forEach((file) => {
     formData.append("files", file);
   });
 
   const url = `${SERVER_URL}/documents/${id}/files`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-      body: formData,
-    })
-  .then(handleInvalidResponse)
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  })
+    .then(handleInvalidResponse)
     .then((response) => response);
 };
 
@@ -89,7 +84,7 @@ const deleteFile = async (fileId, token) => {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   }).then(handleInvalidResponse);
 };
@@ -144,7 +139,7 @@ const createLink = async (documentId, link, token) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     credentials: "include",
     body: JSON.stringify(requestBody),
@@ -157,11 +152,11 @@ const getAllLinksOfDocument = async (documentId, token) => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   })
-      .then(handleInvalidResponse)
-      .then((response) => response.json());
+    .then(handleInvalidResponse)
+    .then((response) => response.json());
   return links;
 };
 
@@ -181,9 +176,9 @@ const deleteLink = async (linkId, token) => {
   return await fetch(`${SERVER_URL}/links/${linkId}`, {
     method: "DELETE",
     headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-    }
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
   }).then(handleInvalidResponse);
 };
 
@@ -204,11 +199,11 @@ const getAllDocumentSnippets = async () => {
 const getDocumentsByPageNumber = async (pageNo = 0, token) => {
   try {
     const response = await fetch(`${SERVER_URL}/documents?pageNo=${pageNo}`, {
-        method: "GET",
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
     if (!response.ok) {
       console.error(response);
@@ -221,13 +216,21 @@ const getDocumentsByPageNumber = async (pageNo = 0, token) => {
   }
 };
 
+const getDocumentsByAreaName = async (areaName) => {
+  const documents = await fetch(`${SERVER_URL}/documents/area/${areaName}`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    .then(mapAPISnippetsToSnippet);
+  return documents;
+};
+
 const addDocument = async (document, token) => {
   try {
     const response = await fetch(`${SERVER_URL}/documents`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(document),
     });
@@ -266,23 +269,22 @@ const getDocumentById = async (documentId) => {
 };
 
 const updateDocument = async (documentId, nextDocument, token) => {
-
-    try {
+  try {
     const response = await fetch(`${SERVER_URL}/documents`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-    credentials: "include",
-    body: JSON.stringify(nextDocument),
-  }).then(handleInvalidResponse);
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "include",
+      body: JSON.stringify(nextDocument),
+    }).then(handleInvalidResponse);
 
-  return await response;
-    } catch (error) {
-        console.error("Error updating document:", error.message);
-        throw error; // Propagate the error to be handled by the caller
-    }
+    return await response;
+  } catch (error) {
+    console.error("Error updating document:", error.message);
+    throw error; // Propagate the error to be handled by the caller
+  }
 };
 
 // Delete a document given its id
@@ -323,7 +325,7 @@ const getAllGeolocatedPoints = async (token) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -344,7 +346,9 @@ const getAllGeolocatedPoints = async (token) => {
     // Map the data to the required format
     return data.map((item) => ({
       id: item.pointCoordinates.pointId,
-      name: item.pointCoordinates.pointName || `Point ${item.pointCoordinates.pointId}`,
+      name:
+        item.pointCoordinates.pointName ||
+        `Point ${item.pointCoordinates.pointId}`,
       latitude: item.pointCoordinates.coordinates.latitude,
       longitude: item.pointCoordinates.coordinates.longitude,
     }));
@@ -356,20 +360,20 @@ const getAllGeolocatedPoints = async (token) => {
 
 // Create a new point coordinate
 const addGeolocatedPoint = async (point, token) => {
-  try{
+  try {
     const response = await fetch(`${SERVER_URL}/points`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(point),
-    })
+    });
     if (!response.ok) {
       console.error(
-          "Failed to add the point:",
-          response.status,
-          response.statusText
+        "Failed to add the point:",
+        response.status,
+        response.statusText
       );
       return null;
     }
@@ -381,7 +385,7 @@ const addGeolocatedPoint = async (point, token) => {
 
     const pointId = location.split("/").pop(); // Estrarre l'ID dal percorso
 
-    console.log(pointId)
+    console.log(pointId);
     return pointId;
   } catch (error) {
     console.error("Error while adding point:", error);
@@ -427,7 +431,6 @@ const getAllAreasSnippets = async (token) => {
   }
 };
 
-
 // Create a new area
 const addGeolocatedArea = async (area, token) => {
   try {
@@ -435,10 +438,10 @@ const addGeolocatedArea = async (area, token) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(area),
-    })
+    });
 
     if (response.ok) {
       const location = response.headers.get("location");
@@ -450,9 +453,9 @@ const addGeolocatedArea = async (area, token) => {
       return areaId;
     } else {
       console.error(
-          "Failed to add the point:",
-          response.status,
-          response.statusText
+        "Failed to add the point:",
+        response.status,
+        response.statusText
       );
       return null;
     }
@@ -460,7 +463,6 @@ const addGeolocatedArea = async (area, token) => {
     console.error("Error while adding point:", error);
     return null;
   }
-
 };
 
 // Retrieve the geometry of a specific area
@@ -491,7 +493,10 @@ const getAreaById = async (id, authToken) => {
       },
       geometry: {
         type: data.geometry.type,
-        coordinates: data.geometry.coordinates.map(coord => [coord.longitude, coord.latitude]), // Convert {latitude, longitude} to [lng, lat]
+        coordinates: data.geometry.coordinates.map((coord) => [
+          coord.longitude,
+          coord.latitude,
+        ]), // Convert {latitude, longitude} to [lng, lat]
       },
     };
   } catch (error) {
@@ -499,7 +504,6 @@ const getAreaById = async (id, authToken) => {
     throw error; // Re-throw the error so the caller can handle it
   }
 };
-
 
 /* ************************** *
  *      Stakeholders APIs     *
@@ -654,6 +658,7 @@ const API = {
   /* Document */
   getAllDocumentSnippets,
   getDocumentsByPageNumber,
+  getDocumentsByAreaName,
   addDocument,
   getDocumentById,
   updateDocument,

@@ -15,6 +15,7 @@ import FeedbackContext from "../contexts/FeedbackContext";
 import { getIconForDocument } from "../utils/iconMapping";
 import LegendModal from "./Legend";
 import SearchBar from "./SearchBar.jsx";
+import DocumentsSideList from "./DocumentsSideList.jsx";
 
 const ZoomToMarker = ({ position, zoomLevel }) => {
   const map = useMap();
@@ -39,7 +40,7 @@ const MapKiruna = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [selectedArea, setSelectedArea] = useState(null);
   const [showDocumentSidePanel, setShowDocumentSidePanel] = useState(true);
-  const [show, setShow] = useState(true);
+  const [showDocumentSideList, setShowDocumentSideList] = useState(true);
   const [showLegend, setShowLegend] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const kirunaPosition = [67.84, 20.2253];
@@ -92,10 +93,10 @@ const MapKiruna = () => {
       map.removeLayer(kirunaPolygonRef.current);
       kirunaPolygonRef.current = null;
     }
+    setShowDocumentSideList(false);
     try {
       const response = await API.getDocumentById(document.id);
       setSelectedDocument(response);
-      setShow(true);
       setShowDocumentSidePanel(true);
 
       const position =
@@ -115,6 +116,7 @@ const MapKiruna = () => {
   };
 
   const handleAreaClick = async (area, map) => {
+    setShowDocumentSidePanel(false);
     await API.getAreaById(area.id)
       .then((response) => {
         setSelectedArea(response);
@@ -122,10 +124,11 @@ const MapKiruna = () => {
       })
       .then(setSelectedPosition(area.centroid))
       .catch((error) => setFeedbackFromError(error));
+
+    setShowDocumentSideList(true);
   };
 
   const closeSidePanel = () => {
-    setShow(false);
     setShowDocumentSidePanel(false);
     selectedDocument ? setSelectedDocument(null) : setSelectedArea(null);
   };
@@ -266,6 +269,12 @@ const MapKiruna = () => {
         <DocumentSidePanel
           document={selectedDocument}
           onClose={closeSidePanel}
+        />
+      )}
+      {selectedArea && showDocumentSideList && (
+        <DocumentsSideList
+          area={selectedArea}
+          onClose={() => setShowDocumentSideList(false)}
         />
       )}
       {showLegend && (
