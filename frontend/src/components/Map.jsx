@@ -37,6 +37,7 @@ ZoomToMarker.propTypes = {
 const MapKiruna = () => {
   const [documents, setDocuments] = useState([]);
   const [areas, setAreas] = useState([]);
+  const [municipalityArea, setMunicipalityArea] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [selectedArea, setSelectedArea] = useState(null);
   const [showSidePanel, setShowSidePanel] = useState(false);
@@ -62,7 +63,16 @@ const MapKiruna = () => {
 
     API.getAllAreasSnippets()
       .then((areas) => {
-        setAreas(areas);
+        const filteredAreas = areas.filter(
+          (area) => area.name !== "Entire Municipality"
+        );
+        setAreas(filteredAreas);
+        const municipality = areas.find(
+          (area) => area.name === "Entire Municipality"
+        );
+        if (municipality) {
+          setMunicipalityArea(municipality);
+        }
       })
       .catch((error) => setFeedbackFromError(error));
   }, [setFeedbackFromError, shouldRefresh]);
@@ -75,18 +85,14 @@ const MapKiruna = () => {
   };
 
   const highlightArea = (area) => {
-    console.log(area)
     if (area.geometry) {
       clearHighlightedArea(mapRef);
       if (mapRef) {
-        const polygon = L.polygon(
-          area.geometry.coordinates,
-          {
-            color: "blue",
-            weight: 3,
-            fillOpacity: 0.1,
-          }
-        ).addTo(mapRef);
+        const polygon = L.polygon(area.geometry.coordinates, {
+          color: "blue",
+          weight: 3,
+          fillOpacity: 0.1,
+        }).addTo(mapRef);
         kirunaPolygonRef.current = polygon;
 
         // Calculate the bounds of the polygon
@@ -168,7 +174,8 @@ const MapKiruna = () => {
   const handleEntireMunicipalityClick = async () => {
     setShowSidePanel(false);
     setSelectedDocument(null);
-    highlightArea({areaName: "Entire municipality", geometry: { coordinates: kirunaBorderCoordinates } });
+    console.log(municipalityArea);
+    setSelectedArea(municipalityArea);
     setShowSidePanel(true);
   };
 
@@ -217,7 +224,6 @@ const MapKiruna = () => {
           onRealTimeSearch={onRealTimeSearch}
         />
       </div>
-      <MapStyleToggle setTileLayer={setTileLayer} />
       <Button
         title={"legend"}
         variant="white"
@@ -233,9 +239,9 @@ const MapKiruna = () => {
         variant="white"
         onClick={() => setShowSidePanel(!showSidePanel)}
         className="center-map-button"
-      >
+        >
         <i className="bi bi-geo-alt"></i>
-      </Button> */}
+        </Button> */}
       <Button
         title={"Documents of Entire Municipality"}
         variant="white"
@@ -246,6 +252,7 @@ const MapKiruna = () => {
       >
         <i className="bi bi-map"></i>
       </Button>
+      <MapStyleToggle setTileLayer={setTileLayer} />
       <div style={{ flex: 2, position: "relative" }}>
         <MapContainer
           center={kirunaPosition}

@@ -57,7 +57,7 @@ const DocumentOffcanvas = ({ document, area, onClose }) => {
         <Offcanvas.Title>
           {selectedDocument
             ? selectedDocument.title
-            : `Documents in ${area?.name}`}
+            : `Documents in ${area?.name || "this area"}`}
         </Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
