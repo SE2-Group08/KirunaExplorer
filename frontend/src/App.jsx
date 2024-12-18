@@ -10,6 +10,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import Map from "./components/Map";
 import "./App.scss";
 import FeedbackContext from "./contexts/FeedbackContext";
+import Diagram from "./components/Diagram";
 
 function App() {
   const [feedback, setFeedback] = useState("");
@@ -44,6 +45,7 @@ function App() {
                 element={<ListDocuments shouldRefresh={shouldRefresh} />}
               />
               <Route path="/map" element={<Map />} />
+              <Route path="/diagram" element={<Diagram />} />
               <Route path="/" element={<SplashPage />} />
               <Route
                 path="*"

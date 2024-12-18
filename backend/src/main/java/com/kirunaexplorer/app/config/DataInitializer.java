@@ -1,5 +1,6 @@
 package com.kirunaexplorer.app.config;
 
+import com.kirunaexplorer.app.constants.DocumentLinkType;
 import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.model.Document.DatePrecision;
 import com.kirunaexplorer.app.repository.*;
@@ -20,6 +21,7 @@ public class DataInitializer implements CommandLineRunner {
     private final GeoReferenceRepository geoReferenceRepository;
     private final StakeholderRepository stakeholderRepository;
     private final DocumentTypeRepository documentTypeRepository;
+    private final DocumentLinkRepository documentLinkRepository;
     private final DocumentScaleRepository documentScaleRepository;
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
@@ -28,12 +30,14 @@ public class DataInitializer implements CommandLineRunner {
         GeoReferenceRepository geoReferenceRepository,
         StakeholderRepository stakeholderRepository,
         DocumentTypeRepository documentTypeRepository,
+        DocumentLinkRepository documentLinkRepository,
         DocumentScaleRepository documentScaleRepository
     ) {
         this.documentRepository = documentRepository;
         this.geoReferenceRepository = geoReferenceRepository;
         this.stakeholderRepository = stakeholderRepository;
         this.documentTypeRepository = documentTypeRepository;
+        this.documentLinkRepository = documentLinkRepository;
         this.documentScaleRepository = documentScaleRepository;
     }
 
@@ -229,12 +233,23 @@ public class DataInitializer implements CommandLineRunner {
         );
         geoReferenceRepository.save(geoRef7);
 
+        /*
         for (int i = 0; i < 100; i++) {
             addNewDocument(i);
         }
+        */
+        documentLinkRepository.save(new DocumentLink(null, document1, document2, DocumentLinkType.DIRECT_CONSEQUENCE, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document1, document2, DocumentLinkType.COLLATERAL_CONSEQUENCE, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document1, document2, DocumentLinkType.PREVISION, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document2, document3, DocumentLinkType.DIRECT_CONSEQUENCE, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document2, document4, DocumentLinkType.COLLATERAL_CONSEQUENCE, LocalDateTime.now()));
+        documentLinkRepository.save(new DocumentLink(null, document3, document4, DocumentLinkType.PREVISION, LocalDateTime.now()));
 
+        initializeStakeholders();
+        initializeDocumentType();
 
     }
+
 
     private void addNewDocument(int documentNumber) {
         Document document = new Document(null,

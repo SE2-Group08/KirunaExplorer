@@ -55,7 +55,7 @@ export default function HomePage() {
       {/* Sezione Card */}
       <Container className="py-4">
         <Row className="text-center d-flex justify-content-center">
-          <Col md={4}>
+          <Col md={3}>
             <Card className="h-100">
               <Card.Body>
                 <FaFileAlt size={40} className="mb-3" />
@@ -68,7 +68,7 @@ export default function HomePage() {
               <a href="/documents" className="stretched-link"></a>
             </Card>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <Card className="h-100">
               <Card.Body>
                 <FaMapMarkedAlt size={40} className="mb-3" />
@@ -81,18 +81,19 @@ export default function HomePage() {
               <a href="/map" className="stretched-link"></a>
             </Card>
           </Col>
-          {/* <Col md={4}>
+          <Col md={3}>
             <Card className="h-100">
               <Card.Body>
-                <FaUsers size={40} className="mb-3" />
-                <Card.Title>Community Insights</Card.Title>
+                <FaMapMarkedAlt size={40} className="mb-3" />
+                <Card.Title>Diagram tool</Card.Title>
                 <Card.Text>
-                  Collaborate with stakeholders and share insights to build a
-                  sustainable future for Kiruna.
+                  Generate and interact with the dynamic diagram to better
+                  understand data and processes.
                 </Card.Text>
               </Card.Body>
+              <a href="/diagram" className="stretched-link"></a>
             </Card>
-          </Col> */}
+          </Col>
         </Row>
       </Container>
     </div>
