@@ -99,9 +99,8 @@ public class Document {
         );
     }
 
-    /**
+    /***
      * Converts the Document object to a DocumentBriefLinksResponseDTO object.
-     *
      * @param linksDTOs List of LinksDTO objects
      * @return DocumentBriefLinksResponseDTO object
      */
@@ -130,25 +129,7 @@ public class Document {
     }
 
     /***
-     * Converts the Document object to a DocumentDiagramResponseDTO object.
-     * @param linksDTOs List of LinksDocumentDTO objects
-     * @return DocumentDiagramResponseDTO object
-     */
-    public DocumentDiagramResponseDTO toDocumentDiagramResponseDTO(List<LinksDocumentDTO> linksDTOs) {
-        return new DocumentDiagramResponseDTO(
-            this.id,
-            this.title,
-            List.of(this.stakeholders.split("/")),
-            this.scale,
-            parseDate(this.issuanceDate, this.datePrecision),
-            this.type,
-            linksDTOs
-        );
-    }
-
-    /**
      * Map the document links to DocumentBriefLinksResponseDTO
-     *
      * @param documentLinks List of DocumentLink objects
      * @return List<DocumentBriefLinksResponseDTO>
      */
@@ -184,25 +165,8 @@ public class Document {
             .toList();
     }
 
-    public List<DocumentDiagramResponseDTO> mapLinkedDocumentsToDocumentDiagramResponseDTO(List<DocumentLink> documentLinks) {
-        return documentLinks.stream()
-            .collect(Collectors.groupingBy(link ->
-                link.getDocument().equals(this) ? link.getLinkedDocument() : link.getDocument()))
-            .entrySet()
-            .stream()
-            .map(entry -> {
-                Document linkedDocument = entry.getKey();
-                List<LinksDocumentDTO> linksDTOs = entry.getValue().stream()
-                    .map(link -> link.toLinksDocumentDTO(this.id))
-                    .toList();
-                return linkedDocument.toDocumentDiagramResponseDTO(linksDTOs);
-            })
-            .toList();
-    }
-
     /***
      * Update the document from a DocumentRequestDTO
-     *
      * @param dto DocumentRequestDTO
      */
     public void updateFromDocumentRequestDTO(DocumentRequestDTO dto) {
