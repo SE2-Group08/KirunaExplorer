@@ -129,6 +129,16 @@ const getAllDocumentSnippets = async () => {
   return documents;
 };
 
+// Retrieve all documents snippets for the diagram
+const getAllDocumentSnippetsWithLinks = async () => {
+  console.log("API GET ALL DOCUMENTS WITH LINKS");
+  const documents = await fetch(`${SERVER_URL}/documents/diagram`)
+    .then(handleInvalidResponse)
+    .then((response) => response.json())
+    console.log("API DOCUMENTS: ", documents);
+  return documents;
+};
+
 // Retrieve documents by page number
 const getDocumentsByPageNumber = async (pageNo = 0) => {
   try {
@@ -440,6 +450,8 @@ const API = {
   getDocumentById,
   updateDocument,
   deleteDocument,
+  searchDocuments,
+  getAllDocumentSnippetsWithLinks,
   /* Stakeholder */
   getAllStakeholders,
   addStakeholder,

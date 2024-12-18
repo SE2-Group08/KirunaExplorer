@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -60,7 +61,7 @@ class FileServiceTests {
         when(documentRepository.findById(documentId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-            () -> fileService.storeFiles(documentId, request));
+                () -> fileService.storeFiles(documentId, request));
 
         verify(fileRepository, never()).saveAll(any());
     }
@@ -86,25 +87,26 @@ class FileServiceTests {
         when(fileRepository.findById(fileId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-            () -> fileService.getFile(fileId));
+                () -> fileService.getFile(fileId));
     }
 
-    /*@Test
+    @Test
     void shouldDeleteFileSuccessfully() {
         Long fileId = 1L;
         Document document = new Document();
         DocumentFile file = new DocumentFile(fileId, document, "file1", "txt", 1024L, new byte[]{});
-        document.setDocumentFiles(Set.of(file));
+        document.setDocumentFiles(new HashSet<>(Set.of(file)));  // Usa un HashSet per permettere la modifica
 
         when(fileRepository.findById(fileId)).thenReturn(Optional.of(file));
-        when(documentRepository.save(any())).thenReturn(document);
+        doNothing().when(fileRepository).delete(file);
+        when(documentRepository.save(any(Document.class))).thenReturn(document);
 
         fileService.deleteFile(fileId);
 
         verify(fileRepository).delete(file);
         verify(documentRepository).save(document);
         Assertions.assertTrue(document.getDocumentFiles().isEmpty());
-    }*/
+    }
 
     @Test
     void shouldThrowExceptionWhenDeletingFileNotFound() {
@@ -113,7 +115,7 @@ class FileServiceTests {
         when(fileRepository.findById(fileId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-            () -> fileService.deleteFile(fileId));
+                () -> fileService.deleteFile(fileId));
 
         verify(fileRepository, never()).delete(any());
         verify(documentRepository, never()).save(any());
@@ -132,8 +134,8 @@ class FileServiceTests {
         List<FileSnippetResponseDTO> result = fileService.getFilesSnippet(documentId);
 
         Assertions.assertEquals(2, result.size());
-        /*Assertions.assertEquals("file1", result.get(0).name());
-        Assertions.assertEquals("file2", result.get(1).name());*/
+        Assertions.assertEquals("file1", result.get(0).name());
+        Assertions.assertEquals("file2", result.get(1).name());
         verify(documentRepository).findById(documentId);
     }
 
@@ -144,7 +146,7 @@ class FileServiceTests {
         when(documentRepository.findById(documentId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-            () -> fileService.getFilesSnippet(documentId));
+                () -> fileService.getFilesSnippet(documentId));
 
         verify(documentRepository).findById(documentId);
     }

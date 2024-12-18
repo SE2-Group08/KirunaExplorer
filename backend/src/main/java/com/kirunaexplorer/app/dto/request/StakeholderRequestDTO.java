@@ -6,11 +6,11 @@ import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Size;
 
 public record StakeholderRequestDTO(
-    @Null
+    @Null (message = "id must be null")
     Long id,
 
-    @NotNull
-    @Size(min = 2, max = 64)
+    @NotNull(message = "name must be not null")
+    @Size(min = 2, max = 64, message = "size error")
     String name
 ) {
     /**
