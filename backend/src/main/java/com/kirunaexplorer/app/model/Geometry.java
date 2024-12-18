@@ -23,7 +23,7 @@ public class Geometry {
     private GeometryType type;
 
     @Lob
-    @Basic(fetch = FetchType.LAZY)
+    @Basic(fetch = FetchType.EAGER)
     private String coordinates;
 
     /**

@@ -27,6 +27,7 @@ public class Area {
     private Coordinates centroid;
 
     @Embedded
+    @Basic(fetch = FetchType.EAGER)
     private Geometry geometry;
 
 

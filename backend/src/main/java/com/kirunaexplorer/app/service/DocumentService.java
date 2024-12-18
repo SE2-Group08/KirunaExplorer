@@ -221,6 +221,7 @@ public class DocumentService {
         }
     }
 
+    @Transactional
     public List<DocumentBriefResponseDTO> getDocumentsByAreaName(String areaName) {
         Area area = areaRepository.findAreaByName(areaName)
             .orElseThrow(() -> new ResourceNotFoundException("Area not found with name " + areaName));
@@ -230,6 +231,7 @@ public class DocumentService {
             .toList();
     }
 
+    @Transactional
     public List<DocumentBriefResponseDTO> getDocumentsForMap(String filter) {
         FilterOptionForMap filterEnum = FilterOptionForMap.valueOf(filter.replace("-", "_").toUpperCase());
 
