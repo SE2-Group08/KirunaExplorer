@@ -163,6 +163,15 @@ const MapKiruna = () => {
       });
   };
 
+  const handleEntireMunicipalityClick = async (map) => {
+    return await API.getAllAreasSnippets()
+      .then((areas) =>
+        areas.filter((area) => area.name === "Entire Municipality")
+      )
+      .then((area) => handleAreaClick(area, map))
+      .catch((error) => setFeedbackFromError(error));
+  };
+
   const onRealTimeSearch = async ({
     keyword = "",
     documentTypes = [],
@@ -219,13 +228,23 @@ const MapKiruna = () => {
       >
         <i className="bi bi-question-circle"></i>
       </Button>
-      <Button
+      {/* <Button
         title={"center-map"}
         variant="white"
         onClick={() => setShowSidePanel(!showSidePanel)}
         className="center-map-button"
       >
         <i className="bi bi-geo-alt"></i>
+      </Button> */}
+      <Button
+        title={"Documents of Entire Municipality"}
+        variant="white"
+        onClick={() => {
+          handleEntireMunicipalityClick(L.map);
+        }}
+        className="entire-municipality-button"
+      >
+        <i className="bi bi-map"></i>
       </Button>
       <div style={{ flex: 2, position: "relative" }}>
         <MapContainer
