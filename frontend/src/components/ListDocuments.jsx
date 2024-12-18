@@ -444,7 +444,7 @@ DocumentSnippetTableComponent.propTypes = {
   isLinkedDocument: PropTypes.func.isRequired,
 };
 
- const DocumentSnippetCardComponent = ({
+ export const DocumentSnippetCardComponent = ({
   document,
   isLinkedDocument,
   onSelect,

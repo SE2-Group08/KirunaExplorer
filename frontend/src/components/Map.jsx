@@ -8,14 +8,14 @@ import L from "leaflet";
 import "leaflet-editable";
 import API from "../API";
 import PropTypes from "prop-types";
-import DocumentSidePanel from "./DocumentSidePanel";
 import getKirunaArea from "./KirunaArea";
 import MapStyleToggle from "./MapStyleToggle";
 import FeedbackContext from "../contexts/FeedbackContext";
 import { getIconForDocument } from "../utils/iconMapping";
 import LegendModal from "./Legend";
 import SearchBar from "./SearchBar.jsx";
-import DocumentsSideList from "./DocumentsSideList.jsx";
+import DocumentOffcanvas from "./SidePanel";
+import "./MapUI.css";
 
 const ZoomToMarker = ({ position, zoomLevel }) => {
   const map = useMap();
@@ -39,16 +39,14 @@ const MapKiruna = () => {
   const [areas, setAreas] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [selectedArea, setSelectedArea] = useState(null);
-  const [showDocumentSidePanel, setShowDocumentSidePanel] = useState(true);
-  const [showDocumentSideList, setShowDocumentSideList] = useState(true);
+  const [showSidePanel, setShowSidePanel] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState(null);
+  const [tileLayer, setTileLayer] = useState("satellite");
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
   const kirunaPosition = [67.84, 20.2253];
   const zoomLevel = 12;
-  const [tileLayer, setTileLayer] = useState("satellite");
-  const { setFeedbackFromError, shouldRefresh } = useContext(FeedbackContext);
-  const [filteredDocuments, setFilteredDocuments] = useState([]);
   const kirunaBorderCoordinates = getKirunaArea();
+  const { setFeedbackFromError, shouldRefresh } = useContext(FeedbackContext);
 
   // Reference for dynamic Polygon
   const kirunaPolygonRef = useRef(null);
@@ -68,12 +66,16 @@ const MapKiruna = () => {
       .catch((error) => setFeedbackFromError(error));
   }, [setFeedbackFromError, shouldRefresh]);
 
+  const clearHighlightedArea = (map) => {
+    if (map && kirunaPolygonRef.current) {
+      map.removeLayer(kirunaPolygonRef.current);
+      kirunaPolygonRef.current = null;
+    }
+  };
+
   const highlightArea = (area, map) => {
     if (area.geometry) {
-      if (kirunaPolygonRef.current) {
-        map.removeLayer(kirunaPolygonRef.current);
-        kirunaPolygonRef.current = null;
-      }
+      clearHighlightedArea(map);
       if (map) {
         const polygon = L.polygon(
           area.geometry.coordinates.map((coord) => [coord[1], coord[0]]),
@@ -84,31 +86,36 @@ const MapKiruna = () => {
           }
         ).addTo(map);
         kirunaPolygonRef.current = polygon;
+
+        // Calculate the bounds of the polygon
+        const bounds = polygon.getBounds();
+        // Adjust the map view to fit the bounds of the polygon
+        map.flyToBounds(bounds, { duration: 1.5 });
       }
     }
   };
 
   const handleDocumentClick = async (document, map) => {
-    if (kirunaPolygonRef.current) {
-      map.removeLayer(kirunaPolygonRef.current);
-      kirunaPolygonRef.current = null;
-    }
-    setShowDocumentSideList(false);
+    clearHighlightedArea(map);
+    setShowSidePanel(false);
     try {
       const response = await API.getDocumentById(document.id);
       setSelectedDocument(response);
-      setShowDocumentSidePanel(true);
+      setShowSidePanel(true);
 
       const position =
         document.geolocation.pointCoordinates?.coordinates ||
         document.geolocation.area.areaCentroid;
-      setSelectedPosition(position);
 
       if (document.geolocation.area) {
         const areaResponse = await API.getAreaById(
           document.geolocation.area.areaId
         );
         highlightArea(areaResponse, map);
+      } else {
+        map.flyTo([position.latitude, position.longitude], 11, {
+          duration: 1.5,
+        });
       }
     } catch (error) {
       setFeedbackFromError(error);
@@ -116,28 +123,29 @@ const MapKiruna = () => {
   };
 
   const handleAreaClick = async (area, map) => {
-    setShowDocumentSidePanel(false);
+    setShowSidePanel(false);
     await API.getAreaById(area.id)
       .then((response) => {
         setSelectedArea(response);
         highlightArea(response, map);
       })
-      .then(setSelectedPosition(area.centroid))
       .catch((error) => setFeedbackFromError(error));
 
-    setShowDocumentSideList(true);
+    setShowSidePanel(true);
   };
 
-  const closeSidePanel = () => {
-    setShowDocumentSidePanel(false);
-    selectedDocument ? setSelectedDocument(null) : setSelectedArea(null);
+  const closeSidePanel = (map) => {
+    clearHighlightedArea(map);
+    setShowSidePanel(false);
+    setSelectedDocument(null);
+    setSelectedArea(null);
   };
 
   const handleSearch = async ({
     keyword = "",
-    documentTypes = [],
-    stakeholders = [],
-    scales = [],
+    // documentTypes = [],
+    // stakeholders = [],
+    // scales = [],
   }) => {
     if (!keyword) {
       setFilteredDocuments(documents);
@@ -205,25 +213,15 @@ const MapKiruna = () => {
         onClick={() => {
           setShowLegend(!showLegend);
         }}
-        style={{
-          position: "absolute",
-          top: "10px",
-          right: "10px",
-          zIndex: 1000,
-        }}
+        className="legend-button"
       >
         <i className="bi bi-question-circle"></i>
       </Button>
       <Button
         title={"center-map"}
         variant="white"
-        onClick={() => setShowDocumentSidePanel(!showDocumentSidePanel)}
-        style={{
-          position: "absolute",
-          top: "50px",
-          right: "10px",
-          zIndex: 1000,
-        }}
+        onClick={() => setShowSidePanel(!showSidePanel)}
+        className="center-map-button"
       >
         <i className="bi bi-geo-alt"></i>
       </Button>
@@ -254,27 +252,13 @@ const MapKiruna = () => {
             />
             <AreaMarkers areas={areas} handleAreaClick={handleAreaClick} />
           </MarkerClusterGroup>
-          {selectedDocument || selectedArea ? (
-            <ZoomToMarker
-              position={[selectedPosition.latitude, selectedPosition.longitude]}
-              zoomLevel={10}
-            />
-          ) : (
-            <ZoomToMarker position={kirunaPosition} zoomLevel={12} />
-          )}
         </MapContainer>
       </div>
-
-      {selectedDocument && showDocumentSidePanel && (
-        <DocumentSidePanel
+      {showSidePanel && (
+        <DocumentOffcanvas
           document={selectedDocument}
-          onClose={closeSidePanel}
-        />
-      )}
-      {selectedArea && showDocumentSideList && (
-        <DocumentsSideList
           area={selectedArea}
-          onClose={() => setShowDocumentSideList(false)}
+          onClose={() => closeSidePanel()}
         />
       )}
       {showLegend && (
@@ -284,12 +268,7 @@ const MapKiruna = () => {
   );
 };
 
-const DocumentMarkers = ({
-  filteredDocuments,
-  handleDocumentClick,
-  kirunaPolygonRef,
-  kirunaBorderCoordinates,
-}) => {
+const DocumentMarkers = ({ filteredDocuments, handleDocumentClick }) => {
   return filteredDocuments.map((doc, index) => {
     const position = doc.geolocation.pointCoordinates
       ? [
@@ -320,7 +299,6 @@ const DocumentMarkers = ({
         eventHandlers={{
           click: (e) => handleDocumentClick(doc, e.target._map),
           mouseover: handleMouseOver,
-          //   mouseout: handleMouseOut,
         }}
       />
     );

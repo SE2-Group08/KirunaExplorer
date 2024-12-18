@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { Dropdown } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import "./MapStyleToggle.css";
+import "./MapUI.css";
 
 const MapStyleToggle = ({ setTileLayer }) => {
     return (
