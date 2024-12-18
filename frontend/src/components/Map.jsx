@@ -52,7 +52,7 @@ const MapKiruna = () => {
   const kirunaPolygonRef = useRef(null);
 
   useEffect(() => {
-    API.getAllDocumentSnippets()
+    API.getAllDocumentSnippets("point-only")
       .then((docs) => {
         setDocuments(docs);
         setFilteredDocuments(docs);
@@ -98,6 +98,7 @@ const MapKiruna = () => {
   const handleDocumentClick = async (document, map) => {
     clearHighlightedArea(map);
     setShowSidePanel(false);
+    setSelectedArea(null);
     try {
       const response = await API.getDocumentById(document.id);
       setSelectedDocument(response);
@@ -124,6 +125,7 @@ const MapKiruna = () => {
 
   const handleAreaClick = async (area, map) => {
     setShowSidePanel(false);
+    setSelectedDocument(null);
     await API.getAreaById(area.id)
       .then((response) => {
         setSelectedArea(response);

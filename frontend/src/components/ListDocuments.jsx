@@ -172,9 +172,9 @@ export default function ListDocuments({
 
   const handleSearch = async ({
     keyword = "",
-    documentTypes = [],
-    stakeholders = [],
-    scales = [],
+    // documentTypes = [],
+    // stakeholders = [],
+    // scales = [],
   }) => {
     try {
       const response = await API.searchDocuments(keyword);

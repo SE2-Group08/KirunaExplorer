@@ -187,8 +187,8 @@ const deleteLink = async (linkId, token) => {
  * ************************** */
 
 // Retrieve all documents snippets
-const getAllDocumentSnippets = async () => {
-  const documents = await fetch(`${SERVER_URL}/documents/map`)
+const getAllDocumentSnippets = async (filter) => {
+  const documents = await fetch(`${SERVER_URL}/documents/map?filter=${filter}`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
     .then(mapAPISnippetsToSnippet);
