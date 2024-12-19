@@ -224,7 +224,7 @@ const FullPageChart = () => {
           const linkType = link.linkType;
 
           // Genera un identificativo unico per la coppia di documenti e il tipo di link
-          const linkId = [document.id, targetDocument.id].sort().join("-") + `-${linkType}`;
+          const linkId = [document.id, targetDocument.id].sort((a, b) => a - b).join("-") + `-${linkType}`;
 
           // Disegna la linea solo se questa coppia di documenti con questo tipo non è già stata processata
           if (!drawnLinks.has(linkId)) {
