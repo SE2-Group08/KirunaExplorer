@@ -27,11 +27,11 @@ jobs:
       - name: Build and Push Backend Image
         run: |
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t ghcr.io/${REPO_NAME}/backend:latest -f backend/Dockerfile ./backend
-          docker push ghcr.io/${REPO_NAME}/backend:latest
+          docker build -t ghcr.io/${REPO_NAME}/backend:v1.0.0 -f backend/Dockerfile ./backend
+          docker push ghcr.io/${REPO_NAME}/backend:v1.0.0
 
       - name: Build and Push Frontend Image
         run: |
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t ghcr.io/${REPO_NAME}/frontend:latest -f frontend/Dockerfile ./frontend
-          docker push ghcr.io/${REPO_NAME}/frontend:latest
+          docker build -t ghcr.io/${REPO_NAME}/frontend:v1.0.0 -f frontend/Dockerfile ./frontend
+          docker push ghcr.io/${REPO_NAME}/frontend:v1.0.0
