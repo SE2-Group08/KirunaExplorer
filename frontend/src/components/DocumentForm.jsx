@@ -1538,7 +1538,7 @@ function DocumentFormFields({
                   <div className="mt-2 position-relative" ref={dropdownRef}>
                     <div
                         className="dropdown-menu show custom-scroll"
-                        style={{ maxHeight: "200px", overflowY: "auto" }}
+                        style={{ maxHeight: "200px", overflowY: "auto", zIndex: 1050 }}
                     >
                       {filteredLanguages.map((language, index) => (
                           <button
