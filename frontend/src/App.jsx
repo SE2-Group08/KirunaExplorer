@@ -66,10 +66,15 @@ function App() {
   };
 
   const handleLogout = async () => {
-      setUserInfo(null);
-      setAuthToken(null); // Clear the token from state
-      setLoggedIn(false);
-      navigate("/login");
+        try {
+          await API.logOut(authToken);
+          setUserInfo(null);
+          setAuthToken(null);
+          setLoggedIn(false);
+          navigate("/login");
+        } catch (err) {
+          setFeedbackFromError(err);
+        }
   };
 
   return (
