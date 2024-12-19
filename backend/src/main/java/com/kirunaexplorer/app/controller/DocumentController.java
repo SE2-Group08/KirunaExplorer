@@ -3,6 +3,7 @@ package com.kirunaexplorer.app.controller;
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentDiagramResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.service.DocumentService;
 import com.kirunaexplorer.app.validation.groups.document.PostDocument;
@@ -99,6 +100,17 @@ public class DocumentController {
     @GetMapping("/area/{areaName}")
     public ResponseEntity<List<DocumentBriefResponseDTO>> getDocumentsByArea(@PathVariable String areaName) {
         return ResponseEntity.ok(documentService.getDocumentsByAreaName(areaName));
+    }
+
+    /**
+     * Endpoint to get all documents in brief format for the diagram
+     *
+     * @return List of DocumentBriefLinksResponseDTO
+     */
+    @GetMapping("/diagram")
+    public ResponseEntity<List<DocumentDiagramResponseDTO>> getDocumentsForDiagram() {
+        System.out.println("getDocumentsForDiagram");
+        return ResponseEntity.ok(documentService.getDocumentsForDiagram());
     }
 }
 

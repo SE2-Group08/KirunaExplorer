@@ -1,9 +1,11 @@
 package com.kirunaexplorer.app.service;
 
 import com.kirunaexplorer.app.constants.FilterOptionForMap;
+import com.kirunaexplorer.app.dto.inout.LinksDocumentDTO;
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentDiagramResponseDTO;
 import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.*;
@@ -177,6 +179,24 @@ public class DocumentService {
             documentScaleRepository.save(newScale);
         }
     }
+
+    /**
+     * Get all documents formatted for diagram representation.
+     *
+     * @return List of DocumentDiagramResponseDTO
+     */
+    public List<DocumentDiagramResponseDTO> getDocumentsForDiagram() {
+        return documentRepository.findAll().stream()
+            .map(document -> {
+                List<DocumentLink> documentLinks = documentLinkRepository.findByDocumentOrLinkedDocument(document, document);
+                List<LinksDocumentDTO> linksDTOs = documentLinks.stream()
+                    .map(documentLink -> documentLink.toLinksDocumentDTO(document.getId()))
+                    .toList();
+                return document.toDocumentDiagramResponseDTO(linksDTOs);
+            })
+            .toList();
+    }
+
 
     private void storeGeolocation(DocumentRequestDTO documentRequest, Document document) {
         if (documentRequest.geolocation().area() != null) {

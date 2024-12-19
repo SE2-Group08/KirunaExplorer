@@ -32,6 +32,7 @@ import "../App.scss";
 import getKirunaArea from "./KirunaArea.jsx";
 import { Document } from "../model/Document.mjs";
 import { validateForm } from "../utils/formValidation.js";
+import { allowedLanguages } from "../utils/allowedLanguages.js";
 
 export default function DocumentFormComponent({ document, show, onHide, authToken }) {
   const kirunaBorderCoordinates = getKirunaArea();
@@ -609,6 +610,7 @@ function DocumentFormFields({
   const [languageOptions, setLanguageOptions] = useState([
     "Swedish",
     "English",
+<<<<<<< HEAD
   ]);
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const safeLatitude = document?.geolocation?.pointCoordinates?.coordinates?.latitude === "" || document?.geolocation?.pointCoordinates?.coordinates?.latitude == null
@@ -617,6 +619,23 @@ function DocumentFormFields({
   const safeLongitude = document?.geolocation?.pointCoordinates?.coordinates?.longitude === "" || document?.geolocation?.pointCoordinates?.coordinates?.longitude == null
       ? null
       : parseFloat(document.geolocation.pointCoordinates.coordinates.longitude);
+=======
+  ]);
+  const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
+  const [markerPosition, setMarkerPosition] = useState([
+    document.geolocation.latitude
+      ? document.geolocation.latitude
+      : defaultPosition[0],
+    document.geolocation.longitude
+      ? document.geolocation.longitude
+      : defaultPosition[1],
+  ]);
+  const [filteredLanguages, setFilteredLanguages] = useState([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+  const languageRefs = useRef([]);
+  const dropdownRef = useRef(null);
+>>>>>>> origin/dev
 
   const finalPosition = (Number.isFinite(safeLatitude) && Number.isFinite(safeLongitude))
       ? [safeLatitude, safeLongitude]
@@ -743,9 +762,16 @@ function DocumentFormFields({
       });
     }
   }, [
+<<<<<<< HEAD
     document?.geolocation?.pointCoordinates?.coordinates,
       document.language,
       languageOptions,
+=======
+    document.geolocation.latitude,
+    document.geolocation.longitude,
+    document.language,
+    languageOptions,
+>>>>>>> origin/dev
   ]);
   useEffect(() => {
     const loadAreaGeometry = async () => {
@@ -799,9 +825,19 @@ function DocumentFormFields({
   function calculateCentroid(coordinates) {
     let latSum = 0, lngSum = 0, numPoints = coordinates.length;
 
+<<<<<<< HEAD
     coordinates.forEach(([lat, lng]) => {
       latSum += lat;
       lngSum += lng;
+=======
+  const handleMapClick = (e) => {
+    const { lat, lng } = e.latlng;
+    setMarkerPosition([lat, lng]);
+    handleChange("geolocation", {
+      latitude: lat,
+      longitude: lng,
+      municipality: "",
+>>>>>>> origin/dev
     });
 
     return {
@@ -891,6 +927,7 @@ function DocumentFormFields({
   }
 
   const handleLatitudeChange = (e) => {
+<<<<<<< HEAD
     const latitude = e.target.value === "" ? null : parseFloat(e.target.value);
 
     handleChange("geolocation", {
@@ -1040,6 +1077,52 @@ function DocumentFormFields({
 
     } else {
       console.warn("Unsupported geometry type:", type);
+=======
+    const value = e.target.value;
+    const lat = value === "" ? "" : parseFloat(value);
+    handleChange("geolocation", {
+      ...document.geolocation,
+      latitude: lat,
+      municipality: "",
+    });
+    if (lat != "" && document.geolocation.longitude != "") {
+      setMarkerPosition([lat, document.geolocation.longitude]);
+    }
+  };
+
+  const handleLongitudeChange = (e) => {
+    const value = e.target.value;
+    const lng = value === "" ? "" : parseFloat(value);
+    handleChange("geolocation", {
+      ...document.geolocation,
+      longitude: lng,
+      municipality: "",
+    });
+    if (document.geolocation.latitude != "" && lng != "") {
+      setMarkerPosition([document.geolocation.latitude, lng]);
+    }
+  };
+
+  const handleLanguageChange = (e) => {
+    const value = e.target.value;
+    handleChange("customLanguage", value);
+
+    if (value) {
+      const filtered = Array.from(allowedLanguages)
+        .filter((language) =>
+          language.toLowerCase().includes(value.toLowerCase())
+        )
+        .sort((a, b) => {
+          const aStartsWith = a.toLowerCase().startsWith(value.toLowerCase());
+          const bStartsWith = b.toLowerCase().startsWith(value.toLowerCase());
+          if (aStartsWith && !bStartsWith) return -1;
+          if (!aStartsWith && bStartsWith) return 1;
+          return a.localeCompare(b);
+        });
+      setFilteredLanguages(filtered);
+    } else {
+      setFilteredLanguages([]);
+>>>>>>> origin/dev
     }
   };
 
@@ -1053,6 +1136,7 @@ function DocumentFormFields({
     if (filteredLanguages.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
+<<<<<<< HEAD
         setHighlightedIndex((prevIndex) =>
           prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0
         );
@@ -1061,6 +1145,20 @@ function DocumentFormFields({
         setHighlightedIndex((prevIndex) =>
           prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1
         );
+=======
+        setHighlightedIndex((prevIndex) => {
+          const newIndex = prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0;
+          languageRefs.current[newIndex]?.scrollIntoView({ block: "nearest" });
+          return newIndex;
+        });
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((prevIndex) => {
+          const newIndex = prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1;
+          languageRefs.current[newIndex]?.scrollIntoView({ block: "nearest" });
+          return newIndex;
+        });
+>>>>>>> origin/dev
       } else if (e.key === "Enter" && highlightedIndex >= 0) {
         e.preventDefault();
         handleLanguageSelect(filteredLanguages[highlightedIndex]);
@@ -1068,6 +1166,7 @@ function DocumentFormFields({
     }
   };
 
+<<<<<<< HEAD
   const zoomOnMunicipality = () => {
     if (mapRef.current && kirunaBorderCoordinates?.length) {
       const bounds = L.latLngBounds(kirunaBorderCoordinates);
@@ -1080,6 +1179,38 @@ function DocumentFormFields({
       mapRef.current.flyTo([point.latitude, point.longitude], 10);
     }
   };
+=======
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        !refs.languageRef.current.contains(event.target)
+      ) {
+        setFilteredLanguages([]);
+      }
+    };
+
+    const handleLanguageInputClick = () => {
+      setFilteredLanguages([]);
+    };
+
+    const handleClickOutsideEvent = (event) => handleClickOutside(event);
+    window.addEventListener("mousedown", handleClickOutsideEvent);
+
+    const languageInput = refs.languageRef.current;
+    if (languageInput) {
+      languageInput.addEventListener("click", handleLanguageInputClick);
+    }
+
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutsideEvent);
+      if (languageInput) {
+        languageInput.removeEventListener("click", handleLanguageInputClick);
+      }
+    };
+  }, [refs.languageRef]);
+>>>>>>> origin/dev
 
   return (
     <>
@@ -1422,7 +1553,14 @@ function DocumentFormFields({
             <Form.Control
               as="select"
               value={document.language}
+<<<<<<< HEAD
               onChange={(e) => handleChange("language", e.target.value)}
+=======
+              onChange={(e) => {
+                handleChange("language", e.target.value);
+                handleLanguageInputClick();
+              }}
+>>>>>>> origin/dev
               isInvalid={!!errors.language}
               ref={refs.languageRef}
             >
@@ -1441,9 +1579,16 @@ function DocumentFormFields({
                   type="text"
                   placeholder="Enter custom language"
                   value={document.customLanguage || ""}
+<<<<<<< HEAD
                   onChange={(e) =>
                     handleChange("customLanguage", e.target.value)
                   }
+=======
+                  onChange={(e) => {
+                    handleChange("customLanguage", e.target.value);
+                    handleLanguageChange(e);
+                  }}
+>>>>>>> origin/dev
                   isInvalid={!!errors.language}
                   className="me-2"
                   onKeyDown={handleKeyDown}
@@ -1469,11 +1614,23 @@ function DocumentFormFields({
               </div>
             )}
             {filteredLanguages.length > 0 && (
+<<<<<<< HEAD
               <div className="mt-2 position-relative">
                 <div className="dropdown-menu show">
                   {filteredLanguages.map((language, index) => (
                     <button
                       key={language}
+=======
+              <div className="mt-2 position-relative" ref={dropdownRef}>
+                <div
+                  className="dropdown-menu show custom-scroll"
+                  style={{ maxHeight: "200px", overflowY: "auto" }}
+                >
+                  {filteredLanguages.map((language, index) => (
+                    <button
+                      key={language}
+                      ref={(el) => (languageRefs.current[index] = el)}
+>>>>>>> origin/dev
                       className={`dropdown-item ${
                         index === highlightedIndex ? "active" : ""
                       }`}
@@ -1519,6 +1676,7 @@ function DocumentFormFields({
             <div className="divider"
                  style={{width: "1px", height: "20px", backgroundColor: "#ccc", margin: "0 10px"}}/>
             <Form.Control
+<<<<<<< HEAD
                 as="select"
                 value={locationMode}
                 onChange={(e) => {
@@ -1732,6 +1890,68 @@ function DocumentFormFields({
                     Click on the map to set the location. Latitude and Longitude fields will update automatically.
                   </Form.Text>
               )}
+=======
+              type="number"
+              min={67.3564329180828}
+              max={69.05958911620179}
+              step={0.00001}
+              value={document.geolocation.latitude || ""}
+              onChange={handleLatitudeChange}
+              id="formDocumentGeolocationLatitude"
+              disabled={
+                document.geolocation.municipality === "Entire municipality"
+              }
+              isInvalid={!!errors.latitude}
+              refs={refs.latitudeRef}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.latitude}
+            </Form.Control.Feedback>
+            <Form.Range
+              min={67.3564329180828}
+              max={69.05958911620179}
+              step={0.00001}
+              value={document.geolocation.latitude || ""}
+              onChange={handleLatitudeChange}
+              disabled={
+                document.geolocation.municipality === "Entire municipality"
+              }
+            />
+          </Col>
+          <Col md={12}>
+            <Form.Label>Longitude</Form.Label>
+            <div className="divider" />
+            <Form.Control
+              type="number"
+              value={document.geolocation.longitude || ""}
+              min={17.89900836116174}
+              max={23.28669305841499}
+              step={0.00001}
+              isInvalid={!!errors.longitude}
+              onChange={handleLongitudeChange}
+              id="formDocumentGeolocationLongitude"
+              disabled={
+                document.geolocation.municipality === "Entire municipality"
+              }
+              refs={refs.longitudeRef}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.longitude}
+            </Form.Control.Feedback>
+            <Form.Range
+              min={17.89900836116174}
+              max={23.28669305841499}
+              step={0.00001}
+              value={document.geolocation.longitude || ""}
+              onChange={handleLongitudeChange}
+              disabled={
+                document.geolocation.municipality === "Entire municipality"
+              }
+            />
+          </Col>
+          <Col md={12}>
+            <div style={{ height: "300px", marginBottom: "15px" }}>
+>>>>>>> origin/dev
               <MapContainer
                   ref={mapRef}
                   center={markerPosition}
@@ -1745,6 +1965,7 @@ function DocumentFormFields({
                 )}
                 {locationMode === "entire_municipality" ? (
                   <Polygon positions={kirunaBorderCoordinates} />
+<<<<<<< HEAD
                 ) : null}
 
                 <Polygon
@@ -1816,6 +2037,10 @@ function DocumentFormFields({
                     Number.isFinite(safeLongitude) && (
                         <Marker position={[safeLatitude, safeLongitude]} />
                     )}
+=======
+                ) : undefined}
+                <MapClickHandler />
+>>>>>>> origin/dev
               </MapContainer>
             </div>
           </Form.Group>

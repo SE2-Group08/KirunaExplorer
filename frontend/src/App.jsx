@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import API from "./API";  // Make sure this is pointing to the updated API code
 import "./App.scss";
 import FeedbackContext from "./contexts/FeedbackContext";
+import Diagram from "./components/Diagram";
 
 function App() {
   const [userInfo, setUserInfo] = useState(null);
@@ -72,6 +73,7 @@ function App() {
   };
 
   return (
+<<<<<<< HEAD
       <FeedbackContext.Provider
           value={{ setFeedback, setFeedbackFromError, setShouldRefresh }}
       >
@@ -105,6 +107,42 @@ function App() {
                 />
               </Route>
             </Routes>
+=======
+    <FeedbackContext.Provider
+      value={{ setFeedback, setFeedbackFromError, setShouldRefresh }}
+    >
+      <div>
+        <Header />
+        <Container fluid className="d-flex flex-column min-vh-100 p-0 mt-5">
+          <Routes>
+            <Route
+              element={
+                <>
+                  <Outlet />
+                </>
+              }
+            >
+              <Route
+                path="/documents"
+                element={<ListDocuments shouldRefresh={shouldRefresh} />}
+              />
+              <Route path="/map" element={<Map />} />
+              <Route path="/diagram" element={<Diagram />} />
+              <Route path="/" element={<SplashPage />} />
+              <Route
+                path="*"
+                element={
+                  <Container className="d-flex justify-content-center align-items-center min-vh-100">
+                    <Row className="text-center">
+                      <h1>404 Not Found</h1>
+                      <p>Try searching for something else</p>
+                    </Row>
+                  </Container>
+                }
+              />
+            </Route>
+          </Routes>
+>>>>>>> origin/dev
           <Toast
             show={feedback !== ""}
             autohide

@@ -27,6 +27,7 @@ export default function HomePage({ loggedIn }) {
                 </div>
             </div>
 
+<<<<<<< HEAD
             {/* Card Section */}
             <Container className="py-4">
                 <Row className="text-center d-flex justify-content-center">
@@ -61,6 +62,54 @@ export default function HomePage({ loggedIn }) {
             </Container>
         </div>
     );
+=======
+      {/* Sezione Card */}
+      <Container className="py-4">
+        <Row className="text-center d-flex justify-content-center">
+          <Col md={3}>
+            <Card className="h-100">
+              <Card.Body>
+                <FaFileAlt size={40} className="mb-3" />
+                <Card.Title>Document Management</Card.Title>
+                <Card.Text>
+                  Easily upload, manage, and access important documents related
+                  to the urban transformation of Kiruna.
+                </Card.Text>
+              </Card.Body>
+              <a href="/documents" className="stretched-link"></a>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="h-100">
+              <Card.Body>
+                <FaMapMarkedAlt size={40} className="mb-3" />
+                <Card.Title>Map Integration</Card.Title>
+                <Card.Text>
+                  Visualize and analyze geolocated data through our interactive
+                  map tools.
+                </Card.Text>
+              </Card.Body>
+              <a href="/map" className="stretched-link"></a>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="h-100">
+              <Card.Body>
+                <FaMapMarkedAlt size={40} className="mb-3" />
+                <Card.Title>Diagram tool</Card.Title>
+                <Card.Text>
+                  Generate and interact with the dynamic diagram to better
+                  understand data and processes.
+                </Card.Text>
+              </Card.Body>
+              <a href="/diagram" className="stretched-link"></a>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </div>
+  );
+>>>>>>> origin/dev
 }
 
 HomePage.propTypes = {
