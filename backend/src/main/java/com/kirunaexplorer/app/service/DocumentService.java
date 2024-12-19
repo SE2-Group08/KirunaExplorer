@@ -224,7 +224,8 @@ public class DocumentService {
             return;
         }
 
-        GeoReference geoReference = new GeoReference(document.getId(), document);                                 // No geolocation specified in the request
+        //GeoReference geoReference = new GeoReference(document.getId(), document);                                 // No geolocation specified in the request
+        GeoReference geoReference = new GeoReference(document, null, null);
         geoReferenceRepository.save(geoReference);
     }
 
