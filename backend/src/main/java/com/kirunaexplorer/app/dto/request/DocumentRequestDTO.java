@@ -66,12 +66,13 @@ public record DocumentRequestDTO(
      *
      * @return Document object
      */
-    public Document toDocument() {
+    public Document toDocument(List<Stakeholder> stakeholders) {
         return new Document(
             id,
             title,
             description,
-            stakeholders.stream().map(Stakeholder::new).toList(),
+            stakeholders,
+            //stakeholders.stream().map(Stakeholder::new).toList(),
             type,
             scale,
             parseIssuanceDate(issuanceDate),

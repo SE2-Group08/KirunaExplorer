@@ -103,8 +103,10 @@ public class DocumentService {
         // Store new stakeholders, type and scale
         storeNewStakeholdersTypeScale(documentRequest);
 
+        List<Stakeholder> stakeholdersReference = stakeholderRepository.findByNameIn(documentRequest.stakeholders());
+
         // Save document
-        Document document = documentRequest.toDocument();
+        Document document = documentRequest.toDocument(stakeholdersReference);
         document = documentRepository.save(document);
 
         storeGeolocation(documentRequest, document);
@@ -127,8 +129,10 @@ public class DocumentService {
         // Store new stakeholders, type and scale
         storeNewStakeholdersTypeScale(documentRequest);
 
+        List<Stakeholder> stakeholdersReference = stakeholderRepository.findByNameIn(documentRequest.stakeholders());
+
         // Update document
-        document.updateFromDocumentRequestDTO(documentRequest);
+        document.updateFromDocumentRequestDTO(documentRequest, stakeholdersReference);
         documentRepository.save(document);
 
         GeoReference geoReference = geoReferenceRepository.findById(document.getId())

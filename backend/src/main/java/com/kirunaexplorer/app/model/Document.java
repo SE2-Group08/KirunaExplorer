@@ -42,9 +42,9 @@ public class Document {
     private String description;
     @ManyToMany
     @JoinTable(
-            name = "document_stakeholders",
-            joinColumns = @JoinColumn(name = "document_id"),
-            inverseJoinColumns = @JoinColumn(name = "stakeholder_id")
+        name = "document_stakeholders",
+        joinColumns = @JoinColumn(name = "document_id"),
+        inverseJoinColumns = @JoinColumn(name = "stakeholder_id")
     )
     private List<Stakeholder> stakeholders;
     private String type;
@@ -119,6 +119,7 @@ public class Document {
 
     /**
      * Converts the Document object to a DocumentDiagramResponseDTO object.
+     *
      * @param linksDTOs List of LinksDocumentDTO objects
      * @return DocumentDiagramResponseDTO object
      */
@@ -175,10 +176,11 @@ public class Document {
      * Update the document from a DocumentRequestDTO
      * @param dto DocumentRequestDTO
      */
-    public void updateFromDocumentRequestDTO(DocumentRequestDTO dto) {
+    public void updateFromDocumentRequestDTO(DocumentRequestDTO dto, List<Stakeholder> stakeholders) {
         this.title = dto.title();
         this.description = dto.description();
-        this.stakeholders = dto.stakeholders().stream().map(this::convertToStakeholder).toList();
+        this.stakeholders = stakeholders;
+        //this.stakeholders = dto.stakeholders().stream().map(this::convertToStakeholder).toList();
         this.type = dto.type();
         this.scale = dto.scale();
         this.issuanceDate = dto.parseIssuanceDate(dto.issuanceDate());
