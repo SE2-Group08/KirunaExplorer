@@ -6,6 +6,7 @@ import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.dto.inout.GeoReferenceDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.Document;
+import com.kirunaexplorer.app.model.Stakeholder;
 import com.kirunaexplorer.app.repository.DocumentLinkRepository;
 import com.kirunaexplorer.app.repository.DocumentRepository;
 import com.kirunaexplorer.app.repository.GeoReferenceRepository;
@@ -67,7 +68,7 @@ class DocumentServiceTest {
         when(documentLinkRepository.countByDocumentId(1L)).thenReturn(5);
         when(mockDocument.getId()).thenReturn(1L);
         when(mockDocument.getTitle()).thenReturn("Sample Title");
-        when(mockDocument.getStakeholders()).thenReturn(List.of("Stakeholder A", "Stakeholder B").toString());
+        when(mockDocument.getStakeholders()).thenReturn(List.of(new Stakeholder("Stakeholder A"), new Stakeholder("Stakeholder B")));
         when(mockDocument.getScale()).thenReturn("National");
         when(mockDocument.getIssuanceDate()).thenReturn(LocalDate.parse(issuanceDate));
         when(mockDocument.getType()).thenReturn("Report");

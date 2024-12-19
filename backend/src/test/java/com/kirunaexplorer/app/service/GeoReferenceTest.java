@@ -41,19 +41,19 @@ public class GeoReferenceTest {
 
     @BeforeEach
     void setUp() {
-        geometryFactory = new GeometryFactory();
-
-        document = new Document();
-        document.setId(1L);
-        document.setTitle("Test Document");
-
-        geoReference = new GeoReference();
-        geoReference.setDocumentId(1L);
-        geoReference.setDocument(document);
-        geoReference.setEntireMunicipality(false);
-        geoReference.setLocation(geometryFactory.createPoint(new org.locationtech.jts.geom.Coordinate(21.0, 65.0)));
-
-        geoReferenceDTO = new GeoReferenceDTO(66.0, 22.0, null); // Specific location
+//        geometryFactory = new GeometryFactory();
+//
+//        document = new Document();
+//        document.setId(1L);
+//        document.setTitle("Test Document");
+//
+//        geoReference = new GeoReference();
+//        geoReference.setDocumentId(1L);
+//        geoReference.setDocument(document);
+//        geoReference.setEntireMunicipality(false);
+//        geoReference.setLocation(geometryFactory.createPoint(new org.locationtech.jts.geom.Coordinate(21.0, 65.0)));
+//
+//        geoReferenceDTO = new GeoReferenceDTO(66.0, 22.0, null); // Specific location
     }
 
     /*@Test
@@ -132,17 +132,17 @@ public class GeoReferenceTest {
 
     private DocumentRequestDTO createRequestDTO(GeoReferenceDTO geoReferenceDTO) {
         return new DocumentRequestDTO(
-                document.getId(),
-                "Updated Title",
-                List.of("Stakeholder A"),
-                "1:100",
-                null,
-                "null",
-                0,
-                "Swedish",
-                150,
-                geoReferenceDTO,
-                null
+            document.getId(),
+            "Updated Title",
+            List.of("Stakeholder A"),
+            "1:100",
+            null,
+            "null",
+            0,
+            "Swedish",
+            150,
+            geoReferenceDTO,
+            null
         );
     }
 

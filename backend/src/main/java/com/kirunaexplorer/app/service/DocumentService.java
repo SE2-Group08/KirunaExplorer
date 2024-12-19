@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -144,6 +145,9 @@ public class DocumentService {
     public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type, List<String> stakeholderNames, String scale, int pageNo) {
         Pageable pageable = PageRequest.of(pageNo, PAGE_SIZE);
         Page<Document> documents = documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable);
+        if (documents == null) {
+            return Collections.emptyList();
+        }
         return documents.stream().map(Document::toDocumentBriefResponseDTO).toList();
     }
 

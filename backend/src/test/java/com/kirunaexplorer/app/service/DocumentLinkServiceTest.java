@@ -8,6 +8,7 @@ import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.Document;
 import com.kirunaexplorer.app.model.DocumentLink;
 import com.kirunaexplorer.app.model.GeoReference;
+import com.kirunaexplorer.app.model.Stakeholder;
 import com.kirunaexplorer.app.repository.DocumentLinkRepository;
 import com.kirunaexplorer.app.repository.DocumentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -224,13 +225,15 @@ class DocumentLinkServiceTest {
         private Document document;
         private DocumentLink documentLink;
         private List<DocumentLink> documentLinks;
+        private List<Stakeholder> stakeholders;
 
         @BeforeEach
         void setUp() {
             documentId = 1L;
             document = new Document();
             document.setId(documentId);
-            document.setStakeholders("");
+            stakeholders = List.of(new Stakeholder("stakeholder1"), new Stakeholder("stakeholder2"));
+            document.setStakeholders(stakeholders);
 
             Document linkedDocument = new Document();
             linkedDocument.setId(2L);
@@ -250,7 +253,7 @@ class DocumentLinkServiceTest {
         @Test
         void testGetDocumentLinks_successful() {
             // Create the main document
-            document.setStakeholders("stakeholder1/stakeholder2");
+            document.setStakeholders(stakeholders);
             document.setDatePrecision(Document.DatePrecision.FULL_DATE);
             document.setIssuanceDate(LocalDate.now());
             document.setGeoReference(new GeoReference());
@@ -258,14 +261,14 @@ class DocumentLinkServiceTest {
             // Create the linked documents
             Document linkedDocument1 = new Document();
             linkedDocument1.setId(2L);
-            linkedDocument1.setStakeholders("stakeholder3/stakeholder4");
+            linkedDocument1.setStakeholders(stakeholders);
             linkedDocument1.setDatePrecision(Document.DatePrecision.FULL_DATE);
             linkedDocument1.setIssuanceDate(LocalDate.now());
             linkedDocument1.setGeoReference(new GeoReference());
 
             Document linkedDocument2 = new Document();
             linkedDocument2.setId(3L);
-            linkedDocument2.setStakeholders("stakeholder5/stakeholder6");
+            linkedDocument2.setStakeholders(stakeholders);
             linkedDocument2.setDatePrecision(Document.DatePrecision.FULL_DATE);
             linkedDocument2.setIssuanceDate(LocalDate.now());
             linkedDocument2.setGeoReference(new GeoReference());

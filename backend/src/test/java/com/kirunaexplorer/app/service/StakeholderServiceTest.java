@@ -32,8 +32,10 @@ public class StakeholderServiceTest {
 
     @Test
     void testGetAllStakeholders() {
-        Stakeholder stakeholder1 = new Stakeholder(1L, "Stakeholder 1");
-        Stakeholder stakeholder2 = new Stakeholder(2L, "Stakeholder 2");
+        Stakeholder stakeholder1 = new Stakeholder("Stakeholder 1");
+        stakeholder1.setId(1L);
+        Stakeholder stakeholder2 = new Stakeholder("Stakeholder 2");
+        stakeholder2.setId(2L);
         List<Stakeholder> stakeholders = List.of(stakeholder1, stakeholder2);
 
         when(stakeholderRepository.findAll()).thenReturn(stakeholders);
@@ -48,8 +50,9 @@ public class StakeholderServiceTest {
     @Test
     void testCreateStakeholder() {
         StakeholderRequestDTO requestDTO = new StakeholderRequestDTO(null, "New Stakeholder");
-        Stakeholder stakeholder = new Stakeholder(null, "New Stakeholder");
-        Stakeholder savedStakeholder = new Stakeholder(1L, "New Stakeholder");
+        Stakeholder stakeholder = new Stakeholder("New Stakeholder");
+        Stakeholder savedStakeholder = new Stakeholder("New Stakeholder");
+        savedStakeholder.setId(1L);
 
         when(stakeholderRepository.existsByName(requestDTO.name())).thenReturn(false);
         when(stakeholderRepository.save(any(Stakeholder.class))).thenReturn(savedStakeholder);

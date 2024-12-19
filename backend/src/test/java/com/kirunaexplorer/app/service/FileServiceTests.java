@@ -14,10 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 
@@ -61,7 +58,7 @@ class FileServiceTests {
         when(documentRepository.findById(documentId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-                () -> fileService.storeFiles(documentId, request));
+            () -> fileService.storeFiles(documentId, request));
 
         verify(fileRepository, never()).saveAll(any());
     }
@@ -87,7 +84,7 @@ class FileServiceTests {
         when(fileRepository.findById(fileId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-                () -> fileService.getFile(fileId));
+            () -> fileService.getFile(fileId));
     }
 
     @Test
@@ -115,7 +112,7 @@ class FileServiceTests {
         when(fileRepository.findById(fileId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-                () -> fileService.deleteFile(fileId));
+            () -> fileService.deleteFile(fileId));
 
         verify(fileRepository, never()).delete(any());
         verify(documentRepository, never()).save(any());
@@ -131,7 +128,9 @@ class FileServiceTests {
 
         when(documentRepository.findById(documentId)).thenReturn(Optional.of(document));
 
-        List<FileSnippetResponseDTO> result = fileService.getFilesSnippet(documentId);
+        List<FileSnippetResponseDTO> result = new ArrayList<>(fileService.getFilesSnippet(documentId));
+
+        result.sort(Comparator.comparing(FileSnippetResponseDTO::name));
 
         Assertions.assertEquals(2, result.size());
         Assertions.assertEquals("file1", result.get(0).name());
@@ -146,7 +145,7 @@ class FileServiceTests {
         when(documentRepository.findById(documentId)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(ResourceNotFoundException.class,
-                () -> fileService.getFilesSnippet(documentId));
+            () -> fileService.getFilesSnippet(documentId));
 
         verify(documentRepository).findById(documentId);
     }

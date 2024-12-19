@@ -6,10 +6,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
 import com.kirunaexplorer.app.model.Document;
 import com.kirunaexplorer.app.model.GeoReference;
+import com.kirunaexplorer.app.model.Stakeholder;
 import com.kirunaexplorer.app.repository.DocumentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,42 +42,54 @@ class DocumentSearchTest {
         // Setup
         String keyword = "example";
         String type = "pdf";
-        Document document = new Document(1L, "example1", "description", "stakeholder1", type, "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
+        List<String> stakeholderNames = List.of("Stakeholder 1");
+        String scale = "scale";
+        List<Stakeholder> stakeholders = List.of(new Stakeholder("Stakeholder 1"));
+        Document document = new Document(1L, "example1", "description", stakeholders, type, scale, LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        GeoReference geoReference = new GeoReference(document, null, null);
+        document.setGeoReference(geoReference);
 
-        List<Document> documents = Arrays.asList(document);
-        when(documentRepository.searchDocuments(keyword, type)).thenReturn(documents);
+        List<Document> documents = List.of(document);
+        Pageable pageable = PageRequest.of(0, 16);
+        Page<Document> documentPage = new PageImpl<>(documents, pageable, documents.size());
+        when(documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, type);
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("example1", result.get(0).title());
-        verify(documentRepository, times(1)).searchDocuments(keyword, type);
+        verify(documentRepository, times(1)).searchDocuments(keyword, type, stakeholderNames, scale, pageable);
     }
 
     // Test senza keyword e tipo (entrambi null)
     @Test
     void testSearchDocuments_withNoKeywordAndType() {
         // Setup
-        Document document = new Document(1L, "doc1", "description", "stakeholder1", "pdf", "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
+        List<String> stakeholderNames = List.of("Stakeholder 1");
+        String scale = "scale";
+        List<Stakeholder> stakeholders = List.of(new Stakeholder("Stakeholder 1"));
+        Document document = new Document(1L, "doc1", "description", stakeholders, null, scale, LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        GeoReference geoReference = new GeoReference(document, null, null);
+        document.setGeoReference(geoReference);
 
-        List<Document> documents = Arrays.asList(document);
-        when(documentRepository.searchDocuments(null, null)).thenReturn(documents);
+        List<Document> documents = List.of(document);
+        Pageable pageable = PageRequest.of(0, 16);
+        Page<Document> documentPage = new PageImpl<>(documents, pageable, documents.size());
+        when(documentRepository.searchDocuments(null, null, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(null, null);
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(null, null, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("doc1", result.get(0).title());
-        verify(documentRepository, times(1)).searchDocuments(null, null);
+        verify(documentRepository, times(1)).searchDocuments(null, null, stakeholderNames, scale, pageable);
     }
 
     // Test con keyword specificato ma tipo null
@@ -80,21 +97,27 @@ class DocumentSearchTest {
     void testSearchDocuments_withKeywordAndNullType() {
         // Setup
         String keyword = "example";
-        Document document = new Document(1L, "example1", "description", "stakeholder1", "pdf", "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
+        List<String> stakeholderNames = List.of("Stakeholder 1");
+        String scale = "scale";
+        List<Stakeholder> stakeholders = List.of(new Stakeholder("Stakeholder 1"));
+        Document document = new Document(1L, "example1", "description", stakeholders, null, scale, LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        GeoReference geoReference = new GeoReference(document, null, null);
+        document.setGeoReference(geoReference);
 
-        List<Document> documents = Arrays.asList(document);
-        when(documentRepository.searchDocuments(keyword, null)).thenReturn(documents);
+        List<Document> documents = List.of(document);
+        Pageable pageable = PageRequest.of(0, 16);
+        Page<Document> documentPage = new PageImpl<>(documents, pageable, documents.size());
+        when(documentRepository.searchDocuments(keyword, null, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, null);
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, null, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("example1", result.get(0).title());
-        verify(documentRepository, times(1)).searchDocuments(keyword, null);
+        verify(documentRepository, times(1)).searchDocuments(keyword, null, stakeholderNames, scale, pageable);
     }
 
     // Test con tipo specificato ma keyword null
@@ -102,114 +125,151 @@ class DocumentSearchTest {
     void testSearchDocuments_withNullKeywordAndType() {
         // Setup
         String type = "pdf";
-        Document document = new Document(1L, "example1", "description", "stakeholder1", type, "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
+        List<String> stakeholderNames = List.of("Stakeholder 1");
+        String scale = "scale";
+        List<Stakeholder> stakeholders = List.of(new Stakeholder("Stakeholder 1"));
+        Document document = new Document(1L, "example1", "description", stakeholders, type, scale, LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        GeoReference geoReference = new GeoReference(document, null, null);
+        document.setGeoReference(geoReference);
 
-        List<Document> documents = Arrays.asList(document);
-        when(documentRepository.searchDocuments(null, type)).thenReturn(documents);
+        List<Document> documents = List.of(document);
+        Pageable pageable = PageRequest.of(0, 16);
+        Page<Document> documentPage = new PageImpl<>(documents, pageable, documents.size());
+        when(documentRepository.searchDocuments(null, type, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(null, type);
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(null, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("example1", result.get(0).title());
-        verify(documentRepository, times(1)).searchDocuments(null, type);
+        verify(documentRepository, times(1)).searchDocuments(null, type, stakeholderNames, scale, pageable);
     }
 
     // Test senza risultati
     @Test
     void testSearchDocuments_noResults() {
         // Setup
-        when(documentRepository.searchDocuments("nonexistent", "txt")).thenReturn(Collections.emptyList());
+        List<String> stakeholderNames = List.of("Stakeholder 1");
+        String scale = "scale";
+        Pageable pageable = PageRequest.of(0, 16);
+        Page<Document> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(documentRepository.searchDocuments("nonexistent", "txt", stakeholderNames, scale, pageable)).thenReturn(emptyPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments("nonexistent", "txt");
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments("nonexistent", "txt", stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(documentRepository, times(1)).searchDocuments("nonexistent", "txt");
+        verify(documentRepository, times(1)).searchDocuments("nonexistent", "txt", stakeholderNames, scale, pageable);
     }
 
     // Test con documenti nulli nel repository
     @Test
     void testSearchDocuments_repositoryReturnsNull() {
         // Setup
-        when(documentRepository.searchDocuments("example", "pdf")).thenReturn(null);
+        String keyword = "example";
+        String type = "pdf";
+        List<String> stakeholderNames = List.of("Stakeholder 1");
+        String scale = "scale";
+        Pageable pageable = PageRequest.of(0, 16);
+
+        when(documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable)).thenReturn(null);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments("example", "pdf");
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(documentRepository, times(1)).searchDocuments("example", "pdf");
+        verify(documentRepository, times(1)).searchDocuments(keyword, type, stakeholderNames, scale, pageable);
     }
 
     // Test con un solo documento
     @Test
     void testSearchDocuments_singleResult() {
         // Setup
-        Document document = new Document(1L, "doc1", "description", "stakeholder1", "pdf", "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
+        String keyword = "doc1";
+        String type = "pdf";
+        List<String> stakeholderNames = List.of("stakeholder1");
+        String scale = "scale";
+        List<Stakeholder> stakeholders = List.of(new Stakeholder("stakeholder1"));
+        Document document = new Document(1L, "doc1", "description", stakeholders, type, scale, LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        GeoReference geoReference = new GeoReference(document, null, null);
+        document.setGeoReference(geoReference);
 
-        List<Document> documents = Collections.singletonList(document);
-        when(documentRepository.searchDocuments("doc1", "pdf")).thenReturn(documents);
+        List<Document> documents = List.of(document);
+        Pageable pageable = PageRequest.of(0, 16);
+        Page<Document> documentPage = new PageImpl<>(documents, pageable, documents.size());
+        when(documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments("doc1", "pdf");
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("doc1", result.get(0).title());
-        verify(documentRepository, times(1)).searchDocuments("doc1", "pdf");
+        verify(documentRepository, times(1)).searchDocuments(keyword, type, stakeholderNames, scale, pageable);
     }
 
     // Test con keyword vuoto e tipo vuoto
     @Test
     void testSearchDocuments_emptyKeywordAndType() {
         // Setup
-        Document document = new Document(1L, "doc1", "description", "stakeholder1", "pdf", "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
+        List<String> stakeholderNames = List.of("Stakeholder 1");
+        String scale = "scale";
+        List<Stakeholder> stakeholders = List.of(new Stakeholder("Stakeholder 1"));
+        Document document = new Document(1L, "doc1", "description", stakeholders, null, scale, LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        GeoReference geoReference = new GeoReference(document, null, null);
+        document.setGeoReference(geoReference);
 
-        List<Document> documents = Arrays.asList(document);
-        when(documentRepository.searchDocuments("", "")).thenReturn(documents);
+        List<Document> documents = List.of(document);
+        Pageable pageable = PageRequest.of(0, 16);
+        Page<Document> documentPage = new PageImpl<>(documents, pageable, documents.size());
+        when(documentRepository.searchDocuments("", "", stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments("", "");
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments("", "", stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(documentRepository, times(1)).searchDocuments("", "");
+        assertEquals("doc1", result.get(0).title());
+        verify(documentRepository, times(1)).searchDocuments("", "", stakeholderNames, scale, pageable);
     }
 
     // Test con keyword lunga e tipo specifico
     @Test
     void testSearchDocuments_longKeyword() {
         // Setup
-        String longKeyword = "a".repeat(1000); // Keyword lunga
+        String longKeyword = "a".repeat(1000); // Long keyword
         String type = "pdf";
-        Document document = new Document(1L, longKeyword, "description", "stakeholder1", type, "scale", LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
+        List<String> stakeholderNames = List.of("stakeholder1");
+        String scale = "scale";
+        List<Stakeholder> stakeholders = List.of(new Stakeholder("stakeholder1"));
+        Document document = new Document(1L, longKeyword, "description", stakeholders, type, scale, LocalDate.now(), Document.DatePrecision.FULL_DATE, "en", 10, LocalDateTime.now(), LocalDateTime.now(), null, null, null);
 
-        document.setGeoReference(new GeoReference(document, false, null));
+        GeoReference geoReference = new GeoReference(document, null, null);
+        document.setGeoReference(geoReference);
 
-        List<Document> documents = Arrays.asList(document);
-        when(documentRepository.searchDocuments(longKeyword, type)).thenReturn(documents);
+        List<Document> documents = List.of(document);
+        Pageable pageable = PageRequest.of(0, 16);
+        Page<Document> documentPage = new PageImpl<>(documents, pageable, documents.size());
+        when(documentRepository.searchDocuments(longKeyword, type, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(longKeyword, type);
+        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(longKeyword, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(longKeyword, result.get(0).title());
-        verify(documentRepository, times(1)).searchDocuments(longKeyword, type);
+        verify(documentRepository, times(1)).searchDocuments(longKeyword, type, stakeholderNames, scale, pageable);
     }
 }
