@@ -28,6 +28,7 @@ public class DocumentFile {
     private Long size;
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] content;
 
 

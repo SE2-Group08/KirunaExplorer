@@ -10,6 +10,7 @@ const ListDocumentLinks = ({
                              documentId,
                              isOpen,
                              onClose,
+                               authToken,
                              // onSnippetClick,
                              // document,
                            }) => {
@@ -22,7 +23,7 @@ const ListDocumentLinks = ({
 
   useEffect(() => {
     if (isOpen) {
-      API.getAllLinksOfDocument(documentId)
+      API.getAllLinksOfDocument(documentId, authToken)
           .then((response) => {
             setSnippets(response);
           })
@@ -132,6 +133,7 @@ ListDocumentLinks.propTypes = {
   onClose: PropTypes.func.isRequired,
   onSnippetClick: PropTypes.func.isRequired,
   document: PropTypes.object.isRequired,
+    authToken: PropTypes.string.isRequired,
 };
 
 export default ListDocumentLinks;

@@ -77,20 +77,20 @@ class DocumentServiceTest {
         // when(mockDocument.getGeoReference()).thenReturn(mockGeoReference);
 
         DocumentResponseDTO expectedResponse = new DocumentResponseDTO(
-                1,
-                "Sample Title",
-                List.of("Stakeholder A", "Stakeholder B"),
-                "National",
-                issuanceDate,
-                "Report",
-                5,
-                "English",
-                100,
-                mockGeoReference,
-                "Sample description"
+            1,
+            "Sample Title",
+            List.of("Stakeholder A", "Stakeholder B"),
+            "National",
+            issuanceDate,
+            "Report",
+            5,
+            "English",
+            100,
+            mockGeoReference,
+            "Sample description"
         );
 
-        when(mockDocument.toResponseDTO(5)).thenReturn(expectedResponse);
+        when(mockDocument.toDocumentResponseDTO(5)).thenReturn(expectedResponse);
 
         DocumentResponseDTO result = documentService.getDocumentById(1L);
 
@@ -105,7 +105,7 @@ class DocumentServiceTest {
         when(documentRepository.findById(1L)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(ResourceNotFoundException.class,
-                () -> documentService.getDocumentById(1L));
+            () -> documentService.getDocumentById(1L));
 
         assertEquals("Document not found with ID 1", exception.getMessage());
         verify(documentRepository, times(1)).findById(1L);
@@ -156,7 +156,7 @@ class DocumentServiceTest {
         when(documentRepository.findById(1L)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(ResourceNotFoundException.class,
-                () -> documentService.updateDocument(mockRequestDTO));
+            () -> documentService.updateDocument(mockRequestDTO));
 
         assertEquals("Document not found with ID 1", exception.getMessage());
         verify(documentRepository, times(1)).findById(1L);

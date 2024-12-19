@@ -1,4 +1,5 @@
 import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
 import {
@@ -19,9 +20,16 @@ import { getIconUrlForDocument } from "../utils/iconMapping";
 import LegendModal from "./Legend";
 import DocumentFormComponent from "./DocumentForm";
 import DocumentDescriptionComponent from "./DocumentDescription";
+import SearchBar from "./SearchBar"; // Import the updated SearchBar component
 
-export default function ListDocuments({ shouldRefresh }) {
+export default function ListDocuments({
+  shouldRefresh,
+  loggedIn,
+  isUrbanPlanner,
+  authToken,
+}) {
   const [allDocuments, setAllDocuments] = useState([]);
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -37,17 +45,25 @@ export default function ListDocuments({ shouldRefresh }) {
   const [allLinksOfSelectedDocument, setAllLinksOfSelectedDocument] = useState(
     []
   );
+  const navigate = useNavigate();
   const { setFeedbackFromError, setShouldRefresh } =
     useContext(FeedbackContext);
+
+  useEffect(() => {
+    if (!loggedIn || !isUrbanPlanner) {
+      navigate("/login");
+    }
+  }, [loggedIn, isUrbanPlanner, navigate]);
 
   useEffect(() => {
     // Scroll to top of the page
     window.scrollTo(0, 0);
 
     // Fetch documents by page number
-    API.getDocumentsByPageNumber(currentPage)
+    API.getDocumentsByPageNumber(currentPage, authToken)
       .then((response) => {
         setAllDocuments(response[0].documentSnippets);
+        setFilteredDocuments(response[0].documentSnippets); // Initialize filtered documents
         setTotalPages(response[0].totalPages);
       })
       .then(() => setShouldRefresh(false))
@@ -55,7 +71,7 @@ export default function ListDocuments({ shouldRefresh }) {
 
     // Fetch all links of the selected document if linking is true
     if (linking) {
-      API.getAllLinksOfDocument(selectedDocumentToLink.id)
+      API.getAllLinksOfDocument(selectedDocumentToLink.id, authToken)
         .then(setAllLinksOfSelectedDocument)
         .catch((error) => setFeedbackFromError(error));
     }
@@ -82,9 +98,10 @@ export default function ListDocuments({ shouldRefresh }) {
       setSelectedDocument(newDoc);
 
       if (linking) {
-        const dLinks = await API.getAllLinksOfDocument(newDoc.id).catch(
-          (error) => setFeedbackFromError(error)
-        );
+        const dLinks = await API.getAllLinksOfDocument(
+          newDoc.id,
+          authToken
+        ).catch((error) => setFeedbackFromError(error));
         setLinks(dLinks);
         if (
           selectedDocumentToLink &&
@@ -122,6 +139,56 @@ export default function ListDocuments({ shouldRefresh }) {
       (selectedLinkDocuments.some((doc) => doc.id === document.id) ||
         selectedDocumentToLink?.id === document.id)
     );
+  };
+
+  const handleSearchInput = ({
+    keyword = "",
+    documentTypes = [],
+    stakeholders = [],
+    scales = [],
+  }) => {
+    const lowerCaseKeyword = keyword.toLowerCase();
+
+    const filtered = allDocuments.filter((doc) => {
+      const matchesKeyword =
+        !keyword || doc.title.toLowerCase().includes(lowerCaseKeyword);
+      const matchesDocumentTypes =
+        documentTypes.length === 0 || documentTypes.includes(doc.type);
+      const matchesStakeholders =
+        stakeholders.length === 0 ||
+        stakeholders.some((id) => doc.stakeholders.includes(id));
+      const matchesScales = scales.length === 0 || scales.includes(doc.scale);
+
+      return (
+        matchesKeyword &&
+        matchesDocumentTypes &&
+        matchesStakeholders &&
+        matchesScales
+      );
+    });
+
+    setFilteredDocuments(filtered);
+  };
+
+  const handleSearch = async ({
+    keyword = "",
+    documentTypes = [],
+    stakeholders = [],
+    scales = [],
+  }) => {
+    try {
+      const params = new URLSearchParams();
+      if (keyword) params.append("keyword", keyword);
+      if (documentTypes.length > 0) params.append("type", documentTypes.join(","));
+      if (stakeholders.length > 0) params.append("stakeholderNames", stakeholders.join(","));
+      if (scales.length > 0) params.append("scale", scales.join(","));
+
+      const response = await API.searchDocuments(params.toString());
+      setAllDocuments(response); // Update the master list with backend results
+      setFilteredDocuments(response); // Update the filtered list
+    } catch (error) {
+      setFeedbackFromError(error);
+    }
   };
 
   return (
@@ -179,15 +246,26 @@ export default function ListDocuments({ shouldRefresh }) {
           </Button>
         </Col>
       </Row>
+
+      {/* SearchBar Component */}
+      <Row className="my-4">
+        <Col>
+          <SearchBar
+            onSearch={handleSearch}
+            onRealTimeSearch={handleSearchInput}
+          />
+        </Col>
+      </Row>
+
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
         {allDocuments.length === 0 ? (
-          <Spinner animation="border" role="status" className="mx-auto">
-            <span className="visually-hidden">Loading...</span>
+          <Spinner animation="border" className="mx-auto">
+            <output className="visually-hidden">Loading...</output>
           </Spinner>
         ) : compactView ? (
           <Row className="g-4 mx-auto">
             <DocumentSnippetTableComponent
-              documents={allDocuments}
+              documents={filteredDocuments}
               onSelect={handleSelection}
               isLinkedDocument={isLinkedDocument}
               allLinksOfSelectedDocument={allLinksOfSelectedDocument}
@@ -196,7 +274,7 @@ export default function ListDocuments({ shouldRefresh }) {
           </Row>
         ) : (
           <Row xs={1} sm={2} md={3} lg={4} className="g-4 mx-auto">
-            {allDocuments.map((document) => (
+            {filteredDocuments.map((document) => (
               <DocumentSnippetCardComponent
                 key={document.id}
                 document={document}
@@ -208,13 +286,15 @@ export default function ListDocuments({ shouldRefresh }) {
             ))}
           </Row>
         )}
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
-
+        {totalPages > 1 && (
+          <div style={{ position: "fixed", bottom: 100, width: "100%" }}>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
         {/* Modal for viewing a document's description */}
         {selectedDocument && (
           <DocumentDescriptionComponent
@@ -227,6 +307,7 @@ export default function ListDocuments({ shouldRefresh }) {
             document={selectedDocument}
             onSnippetClick={handleSelection}
             // handleDelete={handleDelete}
+            authToken={authToken}
           />
         )}
         {selectedDocumentToLink && showLinkModal && (
@@ -242,6 +323,7 @@ export default function ListDocuments({ shouldRefresh }) {
             onLinkConfirm={handleLinkConfirm}
             links={links}
             selectedDocumentToLink={selectedDocumentToLink}
+            authToken={authToken}
           />
         )}
         {showFormModal && (
@@ -249,6 +331,7 @@ export default function ListDocuments({ shouldRefresh }) {
             document={undefined}
             show={showFormModal}
             onHide={() => setShowFormModal(false)}
+            authToken={authToken}
           />
         )}
       </Row>
@@ -257,8 +340,10 @@ export default function ListDocuments({ shouldRefresh }) {
 }
 
 ListDocuments.propTypes = {
-  thinCardLayout: PropTypes.bool,
   shouldRefresh: PropTypes.bool.isRequired,
+  loggedIn: PropTypes.bool.isRequired,
+  isUrbanPlanner: PropTypes.bool.isRequired,
+  authToken: PropTypes.string,
 };
 
 function DocumentSnippetTableComponent({
@@ -363,11 +448,9 @@ DocumentSnippetTableComponent.propTypes = {
   documents: PropTypes.array.isRequired,
   onSelect: PropTypes.func.isRequired,
   isLinkedDocument: PropTypes.func.isRequired,
-  // allLinksOfSelectedDocument: PropTypes.array.isRequired,
-  // linking: PropTypes.bool.isRequired,
 };
 
-const DocumentSnippetCardComponent = ({
+ export const DocumentSnippetCardComponent = ({
   document,
   isLinkedDocument,
   onSelect,

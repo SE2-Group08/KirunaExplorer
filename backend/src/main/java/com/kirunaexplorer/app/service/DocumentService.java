@@ -1,12 +1,17 @@
 package com.kirunaexplorer.app.service;
 
+import com.kirunaexplorer.app.constants.FilterOptionForMap;
 import com.kirunaexplorer.app.dto.inout.LinksDocumentDTO;
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
-import com.kirunaexplorer.app.dto.response.*;
+import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentDiagramResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.repository.*;
 import com.kirunaexplorer.app.util.DocumentFieldsChecker;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -22,6 +27,8 @@ public class DocumentService {
     private final DocumentScaleRepository documentScaleRepository;
     private final StakeholderRepository stakeholderRepository;
     private final DocumentTypeRepository documentTypeRepository;
+    private final AreaRepository areaRepository;
+    private final PointCoordinatesRepository pointCoordinatesRepository;
 
     private static final int PAGE_SIZE = 16;
 
@@ -31,7 +38,9 @@ public class DocumentService {
         DocumentLinkRepository documentLinkRepository,
         StakeholderRepository stakeholderRepository,
         DocumentTypeRepository documentTypeRepository,
-        DocumentScaleRepository documentScaleRepository
+        DocumentScaleRepository documentScaleRepository,
+        AreaRepository areaRepository,
+        PointCoordinatesRepository pointCoordinatesRepository
     ) {
         this.geoReferenceRepository = geoReferenceRepository;
         this.documentRepository = documentRepository;
@@ -39,6 +48,8 @@ public class DocumentService {
         this.stakeholderRepository = stakeholderRepository;
         this.documentTypeRepository = documentTypeRepository;
         this.documentScaleRepository = documentScaleRepository;
+        this.areaRepository = areaRepository;
+        this.pointCoordinatesRepository = pointCoordinatesRepository;
     }
 
     /**
@@ -58,6 +69,7 @@ public class DocumentService {
      * @param pageNo Page number
      * @return List of DocumentBriefPageResponseDTO
      */
+    @Transactional
     public List<DocumentBriefPageResponseDTO> getDocumentsByPageNumber(int pageNo) {
         Page<Document> pagedResult = documentRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNo, PAGE_SIZE));
 
@@ -70,11 +82,12 @@ public class DocumentService {
      * @param id Document id
      * @return DocumentResponseDTO
      */
+    @Transactional
     public DocumentResponseDTO getDocumentById(Long id) {
 
         return documentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID " + id))
-            .toResponseDTO(documentLinkRepository.countByDocumentId(id));
+            .toDocumentResponseDTO(documentLinkRepository.countByDocumentId(id));
     }
 
     /**
@@ -93,9 +106,7 @@ public class DocumentService {
         Document document = documentRequest.toDocument();
         document = documentRepository.save(document);
 
-        // Save geolocation
-        GeoReference geoReference = documentRequest.geolocation().toGeoReference(document);
-        geoReferenceRepository.save(geoReference);
+        storeGeolocation(documentRequest, document);
 
         return document.getId();
     }
@@ -122,8 +133,7 @@ public class DocumentService {
         GeoReference geoReference = geoReferenceRepository.findById(document.getId())
             .orElseGet(() -> new GeoReference(document.getId(), document)); // Create new if not exist
 
-        geoReference.updateFromDTO(documentRequest.geolocation()); // Update geolocation
-        geoReferenceRepository.save(geoReference);
+        updateGeolocation(documentRequest, geoReference);
     }
 
     public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
@@ -184,6 +194,75 @@ public class DocumentService {
                     .toList();
                 return document.toDocumentDiagramResponseDTO(linksDTOs);
             })
+            .toList();
+    }
+
+
+    private void storeGeolocation(DocumentRequestDTO documentRequest, Document document) {
+        if (documentRequest.geolocation().area() != null) {
+            Area existingArea = areaRepository.findById(documentRequest.geolocation().area().areaId())              // Area specified in the request
+                .orElseThrow(() -> new ResourceNotFoundException("Area not found with ID " + documentRequest.geolocation().area().areaId()));
+
+            GeoReference newGeoReference = new GeoReference(document, existingArea, null);
+            geoReferenceRepository.save(newGeoReference);
+
+            return;
+        }
+
+        if (documentRequest.geolocation().pointCoordinates() != null) {                                             // PointCoordinates specified in the request
+            PointCoordinates existingPointCoordinates = pointCoordinatesRepository.findById(documentRequest.geolocation().pointCoordinates().pointId())
+                .orElseThrow(() -> new ResourceNotFoundException("PointCoordinates not found with ID " + documentRequest.geolocation().pointCoordinates().pointId()));
+
+            GeoReference newGeoReference = new GeoReference(document, null, existingPointCoordinates);
+            geoReferenceRepository.save(newGeoReference);
+
+            return;
+        }
+
+        GeoReference geoReference = new GeoReference(document.getId(), document);                                 // No geolocation specified in the request
+        geoReferenceRepository.save(geoReference);
+    }
+
+    private void updateGeolocation(DocumentRequestDTO documentRequest, GeoReference geoReference) {
+        if (documentRequest.geolocation().area() != null) {
+            Area existingArea = areaRepository.findById(documentRequest.geolocation().area().areaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Area not found with ID " + documentRequest.geolocation().area().areaId()));
+
+            geoReference.setArea(existingArea);
+            geoReferenceRepository.save(geoReference);
+        } else if (documentRequest.geolocation().pointCoordinates() != null) {
+            PointCoordinates existingPointCoordinates = pointCoordinatesRepository.findById(documentRequest.geolocation().pointCoordinates().pointId())
+                .orElseThrow(() -> new ResourceNotFoundException("PointCoordinates not found with ID " + documentRequest.geolocation().pointCoordinates().pointId()));
+
+            geoReference.setPointCoordinates(existingPointCoordinates);
+            geoReferenceRepository.save(geoReference);
+        } else {
+            geoReference.setArea(null);
+        }
+    }
+
+    @Transactional
+    public List<DocumentBriefResponseDTO> getDocumentsByAreaName(String areaName) {
+        Area area = areaRepository.findAreaByName(areaName)
+            .orElseThrow(() -> new ResourceNotFoundException("Area not found with name " + areaName));
+
+        return documentRepository.findByGeoReferenceArea(area).stream()
+            .map(Document::toDocumentBriefResponseDTO)
+            .toList();
+    }
+
+    @Transactional
+    public List<DocumentBriefResponseDTO> getDocumentsForMap(String filter) {
+        FilterOptionForMap filterEnum = FilterOptionForMap.valueOf(filter.replace("-", "_").toUpperCase());
+
+        List<Document> documents = switch (filterEnum) {
+            case AREA_ONLY -> documentRepository.findByGeoReferenceAreaIsNotNull();
+            case POINT_ONLY -> documentRepository.findByGeoReferencePointCoordinatesIsNotNull();
+            case NO_GEOLOCATION -> documentRepository.findByGeoReferenceIsNull();
+            default -> documentRepository.findAll();
+        };
+        return documents.stream()
+            .map(Document::toDocumentBriefResponseDTO)
             .toList();
     }
 }

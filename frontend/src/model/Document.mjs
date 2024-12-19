@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 export class Document {
   constructor(
     id,
@@ -18,7 +16,7 @@ export class Document {
     this.title = title;
     this.stakeholders = stakeholders;
     this.scale = scale;
-    this.issuanceDate = issuanceDate ? issuanceDate : "-";
+    this.issuanceDate = issuanceDate || "-";
     this.type = type;
     this.nrConnections = nrConnections;
     this.language = language;
@@ -41,7 +39,7 @@ export class DocumentSnippet {
     this.id = id;
     this.title = title;
     this.scale = scale;
-    this.issuanceDate = issuanceDate ? issuanceDate : "-";
+    this.issuanceDate = issuanceDate || "-";
     this.type = type;
     this.geolocation = geolocation;
     this.stakeholders = stakeholders;
