@@ -1,11 +1,15 @@
 package com.kirunaexplorer.app.controller;
 
 import com.kirunaexplorer.app.dto.request.DocumentRequestDTO;
-import com.kirunaexplorer.app.dto.response.*;
+import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentDiagramResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentResponseDTO;
 import com.kirunaexplorer.app.service.DocumentService;
 import com.kirunaexplorer.app.validation.groups.document.PostDocument;
 import com.kirunaexplorer.app.validation.groups.document.PutDocument;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.groups.Default;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -47,13 +51,17 @@ public class DocumentController {
     }
 
     /**
-     * Endpoint to get all documents in brief format
+     * Endpoint to get documents for the map view based on a filter.
      *
+     * @param filter Filter criteria for documents (all, area-only, point-only, no-geolocation)
      * @return List of DocumentBriefResponseDTO
      */
     @GetMapping("/map")
-    public ResponseEntity<List<DocumentBriefResponseDTO>> getAllDocuments() {
-        return ResponseEntity.ok(documentService.getAllDocuments());
+    public ResponseEntity<List<DocumentBriefResponseDTO>> getDocumentsForMap(
+        @RequestParam(value = "filter", required = false, defaultValue = "all")
+        @Pattern(regexp = "^(all|area-only|point-only|no-geolocation)$", message = "Invalid filter value") String filter
+    ) {
+        return ResponseEntity.ok(documentService.getDocumentsForMap(filter));
     }
 
     /**
@@ -91,6 +99,11 @@ public class DocumentController {
                                                           @RequestParam(required = false) String scale,
                                                           @RequestParam(value = "pageNo", required = false, defaultValue = "0") @Min(0) int pageNo) {
         return documentService.searchDocuments(keyword, type, stakeholderNames, scale, pageNo);
+    }
+
+    @GetMapping("/area/{areaName}")
+    public ResponseEntity<List<DocumentBriefResponseDTO>> getDocumentsByArea(@PathVariable String areaName) {
+        return ResponseEntity.ok(documentService.getDocumentsByAreaName(areaName));
     }
 
     /**
