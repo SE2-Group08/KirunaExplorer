@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import API from "../api";
+import API from "../API";
 import { getIconUrlForDocument } from "../utils/iconMapping";
 import { Button } from "react-bootstrap";
 import LegendModal from "./Legend";
