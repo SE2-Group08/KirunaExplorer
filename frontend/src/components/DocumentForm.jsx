@@ -46,28 +46,28 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
   const [areaModified, setAreaModified] = useState(false);
 
   const [formDocument, setFormDocument] = useState(
-    document || {
-      title: "",
-      stakeholders: [],
-      scale: "",
-      customScale: "",
-      issuanceDate: "",
-      day: "",
-      month: "",
-      year: "",
-      type: "",
-      nrConnections: 0,
-      language: "",
-      nrPages: 0,
-      geolocation: {
-        area: null,
-        pointCoordinates: null,
-      },
-      description: "",
-    }
+      document || {
+        title: "",
+        stakeholders: [],
+        scale: "",
+        customScale: "",
+        issuanceDate: "",
+        day: "",
+        month: "",
+        year: "",
+        type: "",
+        nrConnections: 0,
+        language: "",
+        nrPages: 0,
+        geolocation: {
+          area: null,
+          pointCoordinates: null,
+        },
+        description: "",
+      }
   );
   const { setFeedbackFromError, setShouldRefresh, setFeedback } =
-    useContext(FeedbackContext);
+      useContext(FeedbackContext);
 
   const titleRef = useRef(null);
   const stakeholdersRef = useRef(null);
@@ -93,14 +93,14 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
         customScale: "",
         issuanceDate: document.issuanceDate || "",
         day: document.issuanceDate
-          ? document.issuanceDate.split("-")[2] || ""
-          : "",
+            ? document.issuanceDate.split("-")[2] || ""
+            : "",
         month: document.issuanceDate
-          ? document.issuanceDate.split("-")[1] || ""
-          : "",
+            ? document.issuanceDate.split("-")[1] || ""
+            : "",
         year: document.issuanceDate
-          ? document.issuanceDate.split("-")[0] || ""
-          : "",
+            ? document.issuanceDate.split("-")[0] || ""
+            : "",
         type: document.type || "",
         nrConnections: document.nrConnections || 0,
         language: document.language || "",
@@ -136,11 +136,11 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
     iconUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
     shadowUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   });
 
   const handleValidationErrors = (validationErrors) => {
@@ -174,48 +174,48 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
   };
 
   const createDocument = async (
-    formDocument,
-    combinedIssuanceDate,
-    sanitizedGeolocation
+      formDocument,
+      combinedIssuanceDate,
+      sanitizedGeolocation
   ) => {
     const newDocId = await handleAdd(
-      new Document(
-        undefined,
-        formDocument.title,
-        formDocument.stakeholders,
-        formDocument.scale,
-        combinedIssuanceDate,
-        formDocument.type,
-        formDocument.nrConnections,
-        formDocument.language,
-        formDocument.nrPages,
-        sanitizedGeolocation,
-        formDocument.description
-      )
+        new Document(
+            undefined,
+            formDocument.title,
+            formDocument.stakeholders,
+            formDocument.scale,
+            combinedIssuanceDate,
+            formDocument.type,
+            formDocument.nrConnections,
+            formDocument.language,
+            formDocument.nrPages,
+            sanitizedGeolocation,
+            formDocument.description
+        )
     );
     return newDocId;
   };
 
   const updateDocument = async (
-    document,
-    formDocument,
-    combinedIssuanceDate,
-    sanitizedGeolocation
+      document,
+      formDocument,
+      combinedIssuanceDate,
+      sanitizedGeolocation
   ) => {
     await handleSave(
-      new Document(
-        document.id,
-        formDocument.title,
-        formDocument.stakeholders,
-        formDocument.scale,
-        combinedIssuanceDate,
-        formDocument.type,
-        formDocument.nrConnections,
-        formDocument.language,
-        formDocument.nrPages,
-        sanitizedGeolocation,
-        formDocument.description
-      )
+        new Document(
+            document.id,
+            formDocument.title,
+            formDocument.stakeholders,
+            formDocument.scale,
+            combinedIssuanceDate,
+            formDocument.type,
+            formDocument.nrConnections,
+            formDocument.language,
+            formDocument.nrPages,
+            sanitizedGeolocation,
+            formDocument.description
+        )
     );
   };
 
@@ -233,7 +233,7 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
     if (deletedExistingFiles.length > 0) {
       try {
         await Promise.all(
-          deletedExistingFiles.map((fileId) => API.deleteFile(fileId, authToken))
+            deletedExistingFiles.map((fileId) => API.deleteFile(fileId, authToken))
         );
       } catch (error) {
         setFeedbackFromError(error);
@@ -306,14 +306,14 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
 
   async function createPoint(pointName, coordinates) {
     const newPoint = {
-     pointCoordinates: {
-       pointId: null,
-       pointName: pointName,
-       coordinates: {
-         latitude: coordinates.latitude,
-         longitude: coordinates.longitude,
-       },
-     }
+      pointCoordinates: {
+        pointId: null,
+        pointName: pointName,
+        coordinates: {
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+        },
+      }
     };
 
     try {
@@ -415,7 +415,6 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
           kirunaBorderCoordinates
       );
       setErrors(validationErrors);
-
       if (Object.keys(validationErrors).length > 0) {
         handleValidationErrors(validationErrors);
         return;
@@ -469,14 +468,14 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
 
   const handleSave = async (d) => {
     API.updateDocument(d.id, d, authToken)
-      .then(() => setShouldRefresh(true))
-      .then(() =>
-        setFeedback({
-          type: "success",
-          message: "Document updated successfully",
-        })
-      )
-      .catch((error) => setFeedbackFromError(error));
+        .then(() => setShouldRefresh(true))
+        .then(() =>
+            setFeedback({
+              type: "success",
+              message: "Document updated successfully",
+            })
+        )
+        .catch((error) => setFeedbackFromError(error));
     onHide();
   };
 
@@ -499,84 +498,84 @@ export default function DocumentFormComponent({ document, show, onHide, authToke
   };
 
   return (
-    <Modal
-      show={show}
-      onHide={onHide}
-      centered
-      className="document-modal"
-      size="xl"
-    >
-      <Modal.Header closeButton className="modal-header">
-        <Modal.Title>Enter the values in the following fields</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form style={{ width: "100%" }} className="mx-auto">
-          <DocumentFormFields
-            document={formDocument}
-            setDocument={setFormDocument}
-            errors={errors}
-            handleChange={handleChange}
-            kirunaBorderCoordinates={kirunaBorderCoordinates}
-            refs={{
-              titleRef,
-              stakeholdersRef,
-              typeRef,
-              dayRef,
-              monthRef,
-              yearRef,
-              languageRef,
-              nrPagesRef,
-              latitudeRef,
-              longitudeRef,
-              municipalityRef,
-              descriptionRef,
-            }}
-              locationMode={locationMode}
-              setLocationMode={(val) => {
-                setLocationMode(val);
-                setSelectedAreaId("");
-                setSelectedPointId("");
-                setAreaModified(false);
-                if (val === "entire_municipality") {
-                  handleChange("geolocation", {
-                    pointCoordinates: null,
-                    area: {
-                      areaName: "Entire municipality"
-                    },
-                  });
-                } else {
-                  handleChange("geolocation", {
-                    municipality: "",
-                    // Clear coords/area if needed
-                  });
-                }
-              }}
-              selectedAreaId={selectedAreaId}
-              setSelectedAreaId={setSelectedAreaId}
-              selectedPointId={selectedPointId}
-              setSelectedPointId={setSelectedPointId}
-              areaModified={areaModified}
-              setAreaModified={setAreaModified}
-              authToken={authToken}
-          />
-          <UploadFilesComponent
-            updateFilesToUpload={updateFilesToUpload}
-            existingFiles={existingFiles}
-            handleDeleteExistingFile={handleDeleteExistingFile}
-          />
-          <div className="d-flex justify-content-end">
-            <Button
-              className="mt-4"
-              title="submit"
-              variant="success"
-              onClick={handleSubmit}
-            >
-              <i className="bi bi-check2"></i>
-            </Button>
-          </div>
-        </Form>
-      </Modal.Body>
-    </Modal>
+      <Modal
+          show={show}
+          onHide={onHide}
+          centered
+          className="document-modal"
+          size="xl"
+      >
+        <Modal.Header closeButton className="modal-header">
+          <Modal.Title>Enter the values in the following fields</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form style={{ width: "100%" }} className="mx-auto">
+            <DocumentFormFields
+                document={formDocument}
+                setDocument={setFormDocument}
+                errors={errors}
+                handleChange={handleChange}
+                kirunaBorderCoordinates={kirunaBorderCoordinates}
+                refs={{
+                  titleRef,
+                  stakeholdersRef,
+                  typeRef,
+                  dayRef,
+                  monthRef,
+                  yearRef,
+                  languageRef,
+                  nrPagesRef,
+                  latitudeRef,
+                  longitudeRef,
+                  municipalityRef,
+                  descriptionRef,
+                }}
+                locationMode={locationMode}
+                setLocationMode={(val) => {
+                  setLocationMode(val);
+                  setSelectedAreaId("");
+                  setSelectedPointId("");
+                  setAreaModified(false);
+                  if (val === "entire_municipality") {
+                    handleChange("geolocation", {
+                      pointCoordinates: null,
+                      area: {
+                        areaName: "Entire municipality"
+                      },
+                    });
+                  } else {
+                    handleChange("geolocation", {
+                      municipality: "",
+                      // Clear coords/area if needed
+                    });
+                  }
+                }}
+                selectedAreaId={selectedAreaId}
+                setSelectedAreaId={setSelectedAreaId}
+                selectedPointId={selectedPointId}
+                setSelectedPointId={setSelectedPointId}
+                areaModified={areaModified}
+                setAreaModified={setAreaModified}
+                authToken={authToken}
+            />
+            <UploadFilesComponent
+                updateFilesToUpload={updateFilesToUpload}
+                existingFiles={existingFiles}
+                handleDeleteExistingFile={handleDeleteExistingFile}
+            />
+            <div className="d-flex justify-content-end">
+              <Button
+                  className="mt-4"
+                  title="submit"
+                  variant="success"
+                  onClick={handleSubmit}
+              >
+                <i className="bi bi-check2"></i>
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
   );
 }
 
@@ -588,29 +587,28 @@ DocumentFormComponent.propTypes = {
 };
 
 function DocumentFormFields({
-  document,
-  setDocument,
-  errors,
-  handleChange,
-  kirunaBorderCoordinates,
-  refs,
-  locationMode,
-  setLocationMode,
-  selectedAreaId,
-  setSelectedAreaId,
-  selectedPointId,
-  setSelectedPointId,
-  areaModified,
-  setAreaModified,
-  authToken
-}) {
+                              document,
+                              setDocument,
+                              errors,
+                              handleChange,
+                              kirunaBorderCoordinates,
+                              refs,
+                              locationMode,
+                              setLocationMode,
+                              selectedAreaId,
+                              setSelectedAreaId,
+                              selectedPointId,
+                              setSelectedPointId,
+                              areaModified,
+                              setAreaModified,
+                              authToken
+                            }) {
   const [allStakeholders, setAllStakeholders] = useState([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState([]);
   const [scaleOptions, setScaleOptions] = useState([]);
   const [languageOptions, setLanguageOptions] = useState([
     "Swedish",
     "English",
-<<<<<<< HEAD
   ]);
   const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
   const safeLatitude = document?.geolocation?.pointCoordinates?.coordinates?.latitude === "" || document?.geolocation?.pointCoordinates?.coordinates?.latitude == null
@@ -619,23 +617,6 @@ function DocumentFormFields({
   const safeLongitude = document?.geolocation?.pointCoordinates?.coordinates?.longitude === "" || document?.geolocation?.pointCoordinates?.coordinates?.longitude == null
       ? null
       : parseFloat(document.geolocation.pointCoordinates.coordinates.longitude);
-=======
-  ]);
-  const defaultPosition = [67.84, 20.2253]; // Default center position (Kiruna)
-  const [markerPosition, setMarkerPosition] = useState([
-    document.geolocation.latitude
-      ? document.geolocation.latitude
-      : defaultPosition[0],
-    document.geolocation.longitude
-      ? document.geolocation.longitude
-      : defaultPosition[1],
-  ]);
-  const [filteredLanguages, setFilteredLanguages] = useState([]);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-
-  const languageRefs = useRef([]);
-  const dropdownRef = useRef(null);
->>>>>>> origin/dev
 
   const finalPosition = (Number.isFinite(safeLatitude) && Number.isFinite(safeLongitude))
       ? [safeLatitude, safeLongitude]
@@ -647,6 +628,8 @@ function DocumentFormFields({
   const [filteredLanguages, setFilteredLanguages] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
+  const languageRefs = useRef([]);
+  const dropdownRef = useRef(null);
   useEffect(() => {
     if (locationMode === "area") {
       const areaCentroid = document?.geolocation?.area?.areaCentroid;
@@ -713,31 +696,31 @@ function DocumentFormFields({
         .catch(setFeedbackFromError);
     // Fetch all stakeholders
     API.getAllStakeholders()
-      .then((stakeholders) => {
-        setAllStakeholders(stakeholders);
-      })
-      .catch((e) => setFeedbackFromError(e));
+        .then((stakeholders) => {
+          setAllStakeholders(stakeholders);
+        })
+        .catch((e) => setFeedbackFromError(e));
 
     // Fetch all document types
     API.getAllDocumentTypes()
-      .then((documentTypes) => {
-        setAllDocumentTypes(documentTypes);
-      })
-      .catch((e) => setFeedbackFromError(e));
+        .then((documentTypes) => {
+          setAllDocumentTypes(documentTypes);
+        })
+        .catch((e) => setFeedbackFromError(e));
 
     // Fetch all scales
     API.getAllScales()
-      .then((scales) => {
-        if (document.scale && !scales.some((s) => s.name === document.scale)) {
-          setScaleOptions([
-            ...scales,
-            { id: Date.now(), name: document.scale },
-          ]);
-        } else {
-          setScaleOptions(scales);
-        }
-      })
-      .catch((e) => setFeedbackFromError(e));
+        .then((scales) => {
+          if (document.scale && !scales.some((s) => s.name === document.scale)) {
+            setScaleOptions([
+              ...scales,
+              { id: Date.now(), name: document.scale },
+            ]);
+          } else {
+            setScaleOptions(scales);
+          }
+        })
+        .catch((e) => setFeedbackFromError(e));
   }, [setFeedbackFromError]);
 
   useEffect(() => {
@@ -750,9 +733,9 @@ function DocumentFormFields({
     }
 
     if (
-      document.language &&
-      !languageOptions.includes(document.language) &&
-      document.language !== "Other"
+        document.language &&
+        !languageOptions.includes(document.language) &&
+        document.language !== "Other"
     ) {
       setLanguageOptions((prevLanguageOptions) => {
         if (!prevLanguageOptions.includes(document.language)) {
@@ -762,16 +745,9 @@ function DocumentFormFields({
       });
     }
   }, [
-<<<<<<< HEAD
     document?.geolocation?.pointCoordinates?.coordinates,
-      document.language,
-      languageOptions,
-=======
-    document.geolocation.latitude,
-    document.geolocation.longitude,
     document.language,
     languageOptions,
->>>>>>> origin/dev
   ]);
   useEffect(() => {
     const loadAreaGeometry = async () => {
@@ -825,19 +801,9 @@ function DocumentFormFields({
   function calculateCentroid(coordinates) {
     let latSum = 0, lngSum = 0, numPoints = coordinates.length;
 
-<<<<<<< HEAD
     coordinates.forEach(([lat, lng]) => {
       latSum += lat;
       lngSum += lng;
-=======
-  const handleMapClick = (e) => {
-    const { lat, lng } = e.latlng;
-    setMarkerPosition([lat, lng]);
-    handleChange("geolocation", {
-      latitude: lat,
-      longitude: lng,
-      municipality: "",
->>>>>>> origin/dev
     });
 
     return {
@@ -892,16 +858,16 @@ function DocumentFormFields({
 
 
   const onDeleted = () => {
-   /* setAreaModified(true);
-    const remainingArea = document.geolocation.area.filter((area) => {
-      return !e.layers.getLayers().some((layer) => {
-        const layerArea = layer.toGeoJSON();
-        return JSON.stringify(layerArea) === JSON.stringify(area);
-      });
-    });
+    /* setAreaModified(true);
+     const remainingArea = document.geolocation.area.filter((area) => {
+       return !e.layers.getLayers().some((layer) => {
+         const layerArea = layer.toGeoJSON();
+         return JSON.stringify(layerArea) === JSON.stringify(area);
+       });
+     });
 
-    handleChange("geolocation", { ...document.geolocation, area: remainingArea });*/
-      handleChange("area", null); // Rimuovi il poligono dall'area
+     handleChange("geolocation", { ...document.geolocation, area: remainingArea });*/
+    handleChange("area", null); // Rimuovi il poligono dall'area
   };
 
   function MapClickHandlerForNewPoint() {
@@ -927,7 +893,6 @@ function DocumentFormFields({
   }
 
   const handleLatitudeChange = (e) => {
-<<<<<<< HEAD
     const latitude = e.target.value === "" ? null : parseFloat(e.target.value);
 
     handleChange("geolocation", {
@@ -1061,45 +1026,22 @@ function DocumentFormFields({
 
     if (type === "POLYGON") {
       // Mappa le coordinate in [lat, lng] per Leaflet
-      //const latlngs = coordinates.map(([lng, lat]) => [lat, lng]);
+      const latlngs = coordinates.map(([lng, lat]) => [lat, lng]);
 
-      const bounds = L.latLngBounds(coordinates);
+      const bounds = L.latLngBounds(latlngs);
       mapRef.current.fitBounds(bounds, { padding: [20, 20] });
 
     } else if (type === "MultiPolygon") {
       // Gestisce MultiPolygon se presente
       const latlngs = coordinates.flatMap((polygon) =>
-        polygon.map(([lng, lat]) => [lat, lng])
-    );
+          polygon.map(([lng, lat]) => [lat, lng])
+      );
 
-    const bounds = L.latLngBounds(latlngs);
+      const bounds = L.latLngBounds(latlngs);
       mapRef.current.fitBounds(bounds, { padding: [20, 20] });
 
     } else {
       console.warn("Unsupported geometry type:", type);
-=======
-    const value = e.target.value;
-    const lat = value === "" ? "" : parseFloat(value);
-    handleChange("geolocation", {
-      ...document.geolocation,
-      latitude: lat,
-      municipality: "",
-    });
-    if (lat != "" && document.geolocation.longitude != "") {
-      setMarkerPosition([lat, document.geolocation.longitude]);
-    }
-  };
-
-  const handleLongitudeChange = (e) => {
-    const value = e.target.value;
-    const lng = value === "" ? "" : parseFloat(value);
-    handleChange("geolocation", {
-      ...document.geolocation,
-      longitude: lng,
-      municipality: "",
-    });
-    if (document.geolocation.latitude != "" && lng != "") {
-      setMarkerPosition([document.geolocation.latitude, lng]);
     }
   };
 
@@ -1109,20 +1051,19 @@ function DocumentFormFields({
 
     if (value) {
       const filtered = Array.from(allowedLanguages)
-        .filter((language) =>
-          language.toLowerCase().includes(value.toLowerCase())
-        )
-        .sort((a, b) => {
-          const aStartsWith = a.toLowerCase().startsWith(value.toLowerCase());
-          const bStartsWith = b.toLowerCase().startsWith(value.toLowerCase());
-          if (aStartsWith && !bStartsWith) return -1;
-          if (!aStartsWith && bStartsWith) return 1;
-          return a.localeCompare(b);
-        });
+          .filter((language) =>
+              language.toLowerCase().includes(value.toLowerCase())
+          )
+          .sort((a, b) => {
+            const aStartsWith = a.toLowerCase().startsWith(value.toLowerCase());
+            const bStartsWith = b.toLowerCase().startsWith(value.toLowerCase());
+            if (aStartsWith && !bStartsWith) return -1;
+            if (!aStartsWith && bStartsWith) return 1;
+            return a.localeCompare(b);
+          });
       setFilteredLanguages(filtered);
     } else {
       setFilteredLanguages([]);
->>>>>>> origin/dev
     }
   };
 
@@ -1136,16 +1077,6 @@ function DocumentFormFields({
     if (filteredLanguages.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-<<<<<<< HEAD
-        setHighlightedIndex((prevIndex) =>
-          prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0
-        );
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setHighlightedIndex((prevIndex) =>
-          prevIndex > 0 ? prevIndex - 1 : filteredLanguages.length - 1
-        );
-=======
         setHighlightedIndex((prevIndex) => {
           const newIndex = prevIndex < filteredLanguages.length - 1 ? prevIndex + 1 : 0;
           languageRefs.current[newIndex]?.scrollIntoView({ block: "nearest" });
@@ -1158,7 +1089,6 @@ function DocumentFormFields({
           languageRefs.current[newIndex]?.scrollIntoView({ block: "nearest" });
           return newIndex;
         });
->>>>>>> origin/dev
       } else if (e.key === "Enter" && highlightedIndex >= 0) {
         e.preventDefault();
         handleLanguageSelect(filteredLanguages[highlightedIndex]);
@@ -1166,21 +1096,8 @@ function DocumentFormFields({
     }
   };
 
-<<<<<<< HEAD
-  const zoomOnMunicipality = () => {
-    if (mapRef.current && kirunaBorderCoordinates?.length) {
-      const bounds = L.latLngBounds(kirunaBorderCoordinates);
-      mapRef.current.flyToBounds(bounds, { padding: [50, 50], maxZoom: 10 });
-    }
-  };
-
-  const zoomOnPoint = (point) => {
-    if (mapRef.current && point.latitude && point.longitude) {
-      mapRef.current.flyTo([point.latitude, point.longitude], 10);
-    }
-  };
-=======
   useEffect(() => {
+    handleLanguageInputClick()
     const handleClickOutside = (event) => {
       if (
         dropdownRef.current &&
@@ -1191,9 +1108,7 @@ function DocumentFormFields({
       }
     };
 
-    const handleLanguageInputClick = () => {
-      setFilteredLanguages([]);
-    };
+
 
     const handleClickOutsideEvent = (event) => handleClickOutside(event);
     window.addEventListener("mousedown", handleClickOutsideEvent);
@@ -1210,786 +1125,720 @@ function DocumentFormFields({
       }
     };
   }, [refs.languageRef]);
->>>>>>> origin/dev
+
+  const handleLanguageInputClick = () => {
+    setFilteredLanguages([]);
+  };
+
+  const zoomOnMunicipality = () => {
+    if (mapRef.current && kirunaBorderCoordinates?.length) {
+      const bounds = L.latLngBounds(kirunaBorderCoordinates);
+      mapRef.current.flyToBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+    }
+  };
+
+  const zoomOnPoint = (point) => {
+    if (mapRef.current && point.latitude && point.longitude) {
+      mapRef.current.flyTo([point.latitude, point.longitude], 10);
+    }
+  };
 
   return (
-    <>
-      {/* TITLE*/}
-      <Row className="mb-4">
-        <Col md={12}>
-          <Form.Group controlId="formDocumentTitle">
-            <Form.Label>Title *</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              type="text"
-              value={document.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-              placeholder="Example title"
-              isInvalid={!!errors.title}
-              required
-              ref={refs.titleRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.title}
-            </Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      {/* STAKEHOLDERS */}
-      <Row className="mb-4">
-        <Col md={6}>
-          <Form.Group controlId="formDocumentStakeholders">
-            <Form.Label>Stakeholders *</Form.Label>
-            <div className="divider" />
-            {allStakeholders ? (
-              allStakeholders.map((stakeholderOption) => (
-                <Form.Check
-                  key={stakeholderOption.id}
-                  type="checkbox"
-                  label={stakeholderOption.name}
-                  checked={document.stakeholders.includes(
-                    stakeholderOption.name
-                  )}
-                  onChange={(e) => {
-                    const newStakeholders = e.target.checked
-                      ? [...document.stakeholders, stakeholderOption.name]
-                      : document.stakeholders.filter(
-                          (s) => s !== stakeholderOption.name
-                        );
-                    handleChange("stakeholders", newStakeholders);
-                  }}
-                  isInvalid={!!errors.stakeholders}
-                  ref={refs.stakeholdersRef}
-                />
-              ))
-            ) : (
-              <Spinner animation="border" className="mx-auto">
-                <output>Loading...</output>
-              </Spinner>
-            )}
-            {document.stakeholders
-              .filter(
-                (stakeholder) =>
-                  !allStakeholders.map((s) => s.name).includes(stakeholder)
-              )
-              .map((stakeholder, index) => (
-                <div key={index} className="d-flex mb-2">
-                  <Form.Control
-                    type="text"
-                    value={stakeholder}
-                    onChange={(e) => {
-                      const newStakeholders = [...document.stakeholders];
-                      newStakeholders[
-                        document.stakeholders.findIndex(
-                          (s) => s === stakeholder
-                        )
-                      ] = e.target.value;
-                      handleChange("stakeholders", newStakeholders);
-                    }}
-                    placeholder="Example stakeholder"
-                    isInvalid={!!errors.stakeholders}
-                    className="me-2"
-                    ref={refs.stakeholdersRef}
-                  />
-                  <Button
-                    variant="danger"
-                    onClick={() => {
-                      const newStakeholders = document.stakeholders.filter(
-                        (s) => s !== stakeholder
-                      );
-                      handleChange("stakeholders", newStakeholders);
-                    }}
-                    title="Delete stakeholder"
-                  >
-                    <i className="bi bi-trash"></i>
-                  </Button>
-                </div>
-              ))}
-            <div>
-              <Button
-                className="mt-2"
-                title="Add new stakeholder"
-                variant="primary"
-                onClick={() =>
-                  handleChange("stakeholders", [...document.stakeholders, ""])
-                }
-              >
-                <i className="bi bi-plus-square"></i>
-              </Button>
-            </div>
-            <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-              {errors.stakeholders}
-            </div>
-          </Form.Group>
-        </Col>
-        {/* SCALE */}
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="formDocumentScale">
-            <Form.Label>Scale *</Form.Label>
-            <div className="divider" />
-            {scaleOptions ? (
+      <>
+        {/* TITLE*/}
+        <Row className="mb-4">
+          <Col md={12}>
+            <Form.Group controlId="formDocumentTitle">
+              <Form.Label>Title *</Form.Label>
+              <div className="divider" />
               <Form.Control
-                as="select"
-                value={document.scale}
-                onChange={(e) => handleChange("scale", e.target.value)}
-                isInvalid={!!errors.scale}
-                required
-                ref={refs.scaleRef}
-              >
-                <option value="">Select scale</option>
-                {scaleOptions.map((scaleOption) => (
-                  <option key={scaleOption.id} value={scaleOption.name}>
-                    {scaleOption.name}
-                  </option>
-                ))}
-                <option value="Architectural">Architectural</option>
-                <option value="Other">Other</option>
-              </Form.Control>
-            ) : (
-              <Spinner animation="border" className="mx-auto">
-                <output>Loading...</output>
-              </Spinner>
-            )}
-            {document.scale === "Other" && (
-              <div className="d-flex mt-2">
-                <Form.Control
                   type="text"
-                  placeholder="Enter custom scale"
-                  value={document.customScale || ""}
-                  onChange={(e) => handleChange("customScale", e.target.value)}
-                  isInvalid={!!errors.scale}
-                  className="me-2"
-                />
-                <Button
-                  variant="primary"
-                  disabled={
-                    !document.customScale?.trim() ||
-                    scaleOptions.some(
-                      (s) =>
-                        s.name.toLowerCase() ===
-                        document.customScale.trim().toLowerCase()
-                    ) ||
-                    scaleOptions.some(
-                      (s) => s.name === `1:${document.customScale}`
-                    )
-                  }
-                  onClick={() => {
-                    setScaleOptions([
-                      ...scaleOptions,
-                      { id: Date.now(), name: document.customScale },
-                    ]);
-                    handleChange("scale", document.customScale);
-                  }}
-                  title="Add a custom scale"
-                >
-                  <i className="bi bi-plus-square"></i>
-                </Button>
-              </div>
-            )}
-            {document.scale === "Architectural" && (
-              <div className="d-flex mt-2">
-                <InputGroup className="me-2">
-                  <InputGroup.Text>1 :</InputGroup.Text>
-                  <Form.Control
-                    type="number"
-                    value={document.customScale}
-                    onChange={(e) =>
-                      handleChange("customScale", e.target.value)
-                    }
-                    isInvalid={!!errors.scale}
-                    placeholder="Enter the scale value"
-                  />
-                </InputGroup>
-                <Button
-                  variant="primary"
-                  disabled={
-                    !document.customScale?.trim() ||
-                    scaleOptions.some((s) => s.name === document.customScale) ||
-                    scaleOptions.some(
-                      (s) => s.name === `1:${document.customScale}`
-                    )
-                  }
-                  onClick={() => {
-                    setScaleOptions([
-                      ...scaleOptions,
-                      { id: Date.now(), name: `1:${document.customScale}` },
-                    ]);
-                    handleChange("scale", `1:${document.customScale}`);
-                  }}
-                  title="Add an architectural scale"
-                >
-                  <i className="bi bi-plus-square"></i>
-                </Button>
-              </div>
-            )}
-            <Form.Control.Feedback type="invalid">
-              {errors.scale}
-            </Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      <Row className={"mb-4"}>
-        <Col md={6}>
-          {/* ISSUANCE DATE */}
-          <Form.Group className="mb-3" controlId="formDocumentIssuanceDate">
-            <Form.Label>Issuance Date *</Form.Label>
-            <div className="divider" />
-            <div className="d-flex">
-              <Form.Control
-                type="text"
-                value={document.day}
-                onChange={(e) => handleDayChange(e)}
-                isInvalid={!!errors.issuanceDate}
-                placeholder="DD"
-                className="me-1"
-                ref={refs.dayRef}
-                style={{ width: "80px" }}
+                  value={document.title}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  placeholder="Example title"
+                  isInvalid={!!errors.title}
+                  required
+                  ref={refs.titleRef}
               />
-              <span>/</span>
-              <Form.Control
-                type="text"
-                value={document.month}
-                onChange={(e) => handleMonthChange(e)}
-                isInvalid={!!errors.issuanceDate}
-                placeholder="MM"
-                className="mx-1"
-                ref={refs.monthRef}
-                style={{ width: "80px" }}
-              />
-              <span>/</span>
-              <Form.Control
-                type="text"
-                value={document.year}
-                onChange={(e) => handleYearChange(e)}
-                isInvalid={!!errors.issuanceDate}
-                placeholder="YYYY"
-                className="ms-1"
-                ref={refs.yearRef}
-                style={{ width: "100px" }}
-              />
-            </div>
-            <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-              {errors.issuanceDate}
-            </div>
-          </Form.Group>
-        </Col>
-
-        <Col md={6}>
-          {/* TYPE */}
-          <Form.Group className="mb-3" controlId="formDocumentType">
-            <Form.Label>Type *</Form.Label>
-            <div className="divider" />
-            {allDocumentTypes ? (
-              <Form.Control
-                as="select"
-                value={document.type}
-                onChange={(e) => handleChange("type", e.target.value)}
-                isInvalid={!!errors.type}
-                required
-                ref={refs.typeRef}
-              >
-                <option value="">Select type</option>
-                {allDocumentTypes.map((typeOption) => (
-                  <option key={typeOption.id} value={typeOption.name}>
-                    {typeOption.name}
-                  </option>
-                ))}
-                <option value="Other">Other</option>
-              </Form.Control>
-            ) : (
-              <Spinner animation="border" className="mx-auto">
-                <output>Loading...</output>
-              </Spinner>
-            )}
-            {document.type === "Other" && (
-              <div className="d-flex mt-2">
-                <Form.Control
-                  type="text"
-                  placeholder="Enter custom type"
-                  value={document.customType || ""}
-                  onChange={(e) => handleChange("customType", e.target.value)}
-                  isInvalid={!!errors.type}
-                  className="me-2"
-                />
-                <Button
-                  variant="primary"
-                  disabled={
-                    !document.customType?.trim() ||
-                    (document.customType &&
-                      allDocumentTypes.some(
-                        (t) =>
-                          t.name.toLowerCase() ===
-                          document.customType.trim().toLowerCase()
-                      ))
-                  }
-                  onClick={() => {
-                    setAllDocumentTypes((prevTypes) => [
-                      ...prevTypes,
-                      { id: Date.now(), name: document.customType },
-                    ]);
-                    handleChange("type", document.customType);
-                  }}
-                  title="Add custom type"
-                >
-                  <i className="bi bi-plus-square"></i>
-                </Button>
-              </div>
-            )}
-          </Form.Group>
-          <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
-            {errors.type}
-          </div>
-        </Col>
-      </Row>
-
-      {/* LANGUAGE */}
-      <Row className={"mb-4"}>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="formDocumentLanguage">
-            <Form.Label>Language</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              as="select"
-              value={document.language}
-<<<<<<< HEAD
-              onChange={(e) => handleChange("language", e.target.value)}
-=======
-              onChange={(e) => {
-                handleChange("language", e.target.value);
-                handleLanguageInputClick();
-              }}
->>>>>>> origin/dev
-              isInvalid={!!errors.language}
-              ref={refs.languageRef}
-            >
-              <option value="">Select language</option>
-              {languageOptions.map((languageOption) => (
-                <option key={languageOption} value={languageOption}>
-                  {languageOption}
-                </option>
-              ))}
-              <option value="Other">Other</option>
-              <option value="">None</option>
-            </Form.Control>
-            {document.language === "Other" && (
-              <div className="d-flex mt-2">
-                <Form.Control
-                  type="text"
-                  placeholder="Enter custom language"
-                  value={document.customLanguage || ""}
-<<<<<<< HEAD
-                  onChange={(e) =>
-                    handleChange("customLanguage", e.target.value)
-                  }
-=======
-                  onChange={(e) => {
-                    handleChange("customLanguage", e.target.value);
-                    handleLanguageChange(e);
-                  }}
->>>>>>> origin/dev
-                  isInvalid={!!errors.language}
-                  className="me-2"
-                  onKeyDown={handleKeyDown}
-                />
-                <Button
-                  variant="primary"
-                  disabled={
-                    !document.customLanguage?.trim() ||
-                    (document.customLanguage &&
-                      languageOptions.includes(document.customLanguage))
-                  }
-                  onClick={() => {
-                    setLanguageOptions([
-                      ...languageOptions,
-                      document.customLanguage,
-                    ]);
-                    handleChange("language", document.customLanguage);
-                  }}
-                  title="Add custom language"
-                >
-                  <i className="bi bi-plus-square"></i>
-                </Button>
-              </div>
-            )}
-            {filteredLanguages.length > 0 && (
-<<<<<<< HEAD
-              <div className="mt-2 position-relative">
-                <div className="dropdown-menu show">
-                  {filteredLanguages.map((language, index) => (
-                    <button
-                      key={language}
-=======
-              <div className="mt-2 position-relative" ref={dropdownRef}>
-                <div
-                  className="dropdown-menu show custom-scroll"
-                  style={{ maxHeight: "200px", overflowY: "auto" }}
-                >
-                  {filteredLanguages.map((language, index) => (
-                    <button
-                      key={language}
-                      ref={(el) => (languageRefs.current[index] = el)}
->>>>>>> origin/dev
-                      className={`dropdown-item ${
-                        index === highlightedIndex ? "active" : ""
-                      }`}
-                      onClick={() => handleLanguageSelect(language)}
-                    >
-                      {language}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <Form.Control.Feedback type="invalid">
-              {errors.language}
-            </Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          {/* PAGES */}
-          <Form.Group className="mb-3" controlId="formDocumentNrPages">
-            <Form.Label>Pages</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              type="number"
-              value={document.nrPages}
-              min={0}
-              onChange={(e) => handleChange("nrPages", Number(e.target.value))}
-              isInvalid={!!errors.nrPages}
-              ref={refs.nrPagesRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.nrPages}
-            </Form.Control.Feedback>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      {/* Dropdown for location mode */}
-      <Row className="mb-4">
-        <Col md={3}>
-        <Row>
-          <Form.Group style={{display: "flex", alignItems: "center"}}>
-            <Form.Label style={{marginRight: "10px"}}>Geolocation</Form.Label>
-            <div className="divider"
-                 style={{width: "1px", height: "20px", backgroundColor: "#ccc", margin: "0 10px"}}/>
-            <Form.Control
-<<<<<<< HEAD
-                as="select"
-                value={locationMode}
-                onChange={(e) => {
-                  setLocationMode(e.target.value);
-                  if (e.target.value === "entire_municipality") {
-                    console.log(defaultPosition);
-                    const municipality = allKnownAreas.find(
-                        (p) => p.name === "Entire Municipality"
-                    );
-
-                    if (municipality) {
-                      setSelectedAreaId(municipality.id.toString());
-                    }
-
-                    handleChange("geolocation", {
-                      ...document.geolocation,
-                      area: {
-                        areaId: null,
-                        areaName: "Entire Municipality",
-                        areaCentroid: {
-                          latitude: defaultPosition[0],
-                          longitude: defaultPosition[1],
-                        },
-                        geometry: {
-                          type: "MultiPolygon",
-                          coordinates: kirunaBorderCoordinates,
-                        },
-                      },
-                      pointCoordinates: null, // Clear point selection
-                    });
-                    zoomOnMunicipality();
-                  }
-                }}
-                style={{ flex: 1 }}
-            >
-              <option value=""> -- select --</option>
-              <option value="entire_municipality">Entire municipality</option>
-              <option value="area">Area</option>
-              <option value="point">Coordinates</option>
-            </Form.Control>
-          </Form.Group>
+              <Form.Control.Feedback type="invalid">
+                {errors.title}
+              </Form.Control.Feedback>
+            </Form.Group>
+          </Col>
         </Row>
-          {locationMode === "point" && newPoint && !selectedPointId &&(
-              <Row className="mb-2 mt-3">
-                <Col md={24}>
-                  <Form.Group controlId="formDocumentPointName">
-                    <Form.Control
-                        type="text"
-                        value={pointName || document.geolocation?.pointCoordinates?.pointName || ""}
-                        onChange={(e) => {
-                          const updatedPointName = e.target.value;
-                          setPointName(updatedPointName); // Update local state
 
-                          console.log(updatedPointName)
-                          // Synchronize with geolocation
-                          handleChange("geolocation", {
-                            ...document.geolocation,
-                            pointCoordinates: {
-                              ...document.geolocation.pointCoordinates,
-                              pointName: updatedPointName,
-                            },
-                          });
-                        }}
-                        placeholder="Enter the point name"
-                    />
-
-                    <Form.Text className="text-muted">
-                      This name will help identify the point.
-                    </Form.Text>
-                  </Form.Group>
-                </Col>
-              </Row>
-          )}
-        </Col>
-      {locationMode === "area" && (
-        <Col md={3}>
-          <Form.Group>
-            <Form.Control as="select" value={selectedAreaId} onChange={handleSelectExistingArea}>
-            <option value="">-- Select an existing area --</option>
-                {allKnownAreas
-                    ?.filter((area) => area.name !== "Entire Municipality") // Exclude "Entire Municipality"
-                    .map((area) => (
-                        <option key={area.id} value={area.id}>
-                          {area.name}
+        {/* STAKEHOLDERS */}
+        <Row className="mb-4">
+          <Col md={6}>
+            <Form.Group controlId="formDocumentStakeholders">
+              <Form.Label>Stakeholders *</Form.Label>
+              <div className="divider" />
+              {allStakeholders ? (
+                  allStakeholders.map((stakeholderOption) => (
+                      <Form.Check
+                          key={stakeholderOption.id}
+                          type="checkbox"
+                          label={stakeholderOption.name}
+                          checked={document.stakeholders.includes(
+                              stakeholderOption.name
+                          )}
+                          onChange={(e) => {
+                            const newStakeholders = e.target.checked
+                                ? [...document.stakeholders, stakeholderOption.name]
+                                : document.stakeholders.filter(
+                                    (s) => s !== stakeholderOption.name
+                                );
+                            handleChange("stakeholders", newStakeholders);
+                          }}
+                          isInvalid={!!errors.stakeholders}
+                          ref={refs.stakeholdersRef}
+                      />
+                  ))
+              ) : (
+                  <Spinner animation="border" className="mx-auto">
+                    <output>Loading...</output>
+                  </Spinner>
+              )}
+              {document.stakeholders
+                  .filter(
+                      (stakeholder) =>
+                          !allStakeholders.map((s) => s.name).includes(stakeholder)
+                  )
+                  .map((stakeholder, index) => (
+                      <div key={index} className="d-flex mb-2">
+                        <Form.Control
+                            type="text"
+                            value={stakeholder}
+                            onChange={(e) => {
+                              const newStakeholders = [...document.stakeholders];
+                              newStakeholders[
+                                  document.stakeholders.findIndex(
+                                      (s) => s === stakeholder
+                                  )
+                                  ] = e.target.value;
+                              handleChange("stakeholders", newStakeholders);
+                            }}
+                            placeholder="Example stakeholder"
+                            isInvalid={!!errors.stakeholders}
+                            className="me-2"
+                            ref={refs.stakeholdersRef}
+                        />
+                        <Button
+                            variant="danger"
+                            onClick={() => {
+                              const newStakeholders = document.stakeholders.filter(
+                                  (s) => s !== stakeholder
+                              );
+                              handleChange("stakeholders", newStakeholders);
+                            }}
+                            title="Delete stakeholder"
+                        >
+                          <i className="bi bi-trash"></i>
+                        </Button>
+                      </div>
+                  ))}
+              <div>
+                <Button
+                    className="mt-2"
+                    title="Add new stakeholder"
+                    variant="primary"
+                    onClick={() =>
+                        handleChange("stakeholders", [...document.stakeholders, ""])
+                    }
+                >
+                  <i className="bi bi-plus-square"></i>
+                </Button>
+              </div>
+              <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+                {errors.stakeholders}
+              </div>
+            </Form.Group>
+          </Col>
+          {/* SCALE */}
+          <Col md={6}>
+            <Form.Group className="mb-3" controlId="formDocumentScale">
+              <Form.Label>Scale *</Form.Label>
+              <div className="divider" />
+              {scaleOptions ? (
+                  <Form.Control
+                      as="select"
+                      value={document.scale}
+                      onChange={(e) => handleChange("scale", e.target.value)}
+                      isInvalid={!!errors.scale}
+                      required
+                      ref={refs.scaleRef}
+                  >
+                    <option value="">Select scale</option>
+                    {scaleOptions.map((scaleOption) => (
+                        <option key={scaleOption.id} value={scaleOption.name}>
+                          {scaleOption.name}
                         </option>
                     ))}
-          </Form.Control>
-        </Form.Group>
-        </Col>
-        )}
+                    <option value="Architectural">Architectural</option>
+                    <option value="Other">Other</option>
+                  </Form.Control>
+              ) : (
+                  <Spinner animation="border" className="mx-auto">
+                    <output>Loading...</output>
+                  </Spinner>
+              )}
+              {document.scale === "Other" && (
+                  <div className="d-flex mt-2">
+                    <Form.Control
+                        type="text"
+                        placeholder="Enter custom scale"
+                        value={document.customScale || ""}
+                        onChange={(e) => handleChange("customScale", e.target.value)}
+                        isInvalid={!!errors.scale}
+                        className="me-2"
+                    />
+                    <Button
+                        variant="primary"
+                        disabled={
+                            !document.customScale?.trim() ||
+                            scaleOptions.some(
+                                (s) =>
+                                    s.name.toLowerCase() ===
+                                    document.customScale.trim().toLowerCase()
+                            ) ||
+                            scaleOptions.some(
+                                (s) => s.name === `1:${document.customScale}`
+                            )
+                        }
+                        onClick={() => {
+                          setScaleOptions([
+                            ...scaleOptions,
+                            { id: Date.now(), name: document.customScale },
+                          ]);
+                          handleChange("scale", document.customScale);
+                        }}
+                        title="Add a custom scale"
+                    >
+                      <i className="bi bi-plus-square"></i>
+                    </Button>
+                  </div>
+              )}
+              {document.scale === "Architectural" && (
+                  <div className="d-flex mt-2">
+                    <InputGroup className="me-2">
+                      <InputGroup.Text>1 :</InputGroup.Text>
+                      <Form.Control
+                          type="number"
+                          value={document.customScale}
+                          onChange={(e) =>
+                              handleChange("customScale", e.target.value)
+                          }
+                          isInvalid={!!errors.scale}
+                          placeholder="Enter the scale value"
+                      />
+                    </InputGroup>
+                    <Button
+                        variant="primary"
+                        disabled={
+                            !document.customScale?.trim() ||
+                            scaleOptions.some((s) => s.name === document.customScale) ||
+                            scaleOptions.some(
+                                (s) => s.name === `1:${document.customScale}`
+                            )
+                        }
+                        onClick={() => {
+                          setScaleOptions([
+                            ...scaleOptions,
+                            { id: Date.now(), name: `1:${document.customScale}` },
+                          ]);
+                          handleChange("scale", `1:${document.customScale}`);
+                        }}
+                        title="Add an architectural scale"
+                    >
+                      <i className="bi bi-plus-square"></i>
+                    </Button>
+                  </div>
+              )}
+              <Form.Control.Feedback type="invalid">
+                {errors.scale}
+              </Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+        </Row>
 
-        {locationMode === "point" && (
-            <>
-        <Col md={3}>
-          <Form.Group>
-            <Form.Control as="select" value={selectedPointId} onChange={handleSelectExistingPoint}>
-              <option value="">-- Select an existing point --</option>
-              {allKnownPoints.map((point) => (
-                  <option key={point.id} value={point.id}>
-                    {point.name || `Point ${point.id}`}
-                  </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-      </>
+        <Row className={"mb-4"}>
+          <Col md={6}>
+            {/* ISSUANCE DATE */}
+            <Form.Group className="mb-3" controlId="formDocumentIssuanceDate">
+              <Form.Label>Issuance Date *</Form.Label>
+              <div className="divider" />
+              <div className="d-flex">
+                <Form.Control
+                    type="text"
+                    value={document.day}
+                    onChange={(e) => handleDayChange(e)}
+                    isInvalid={!!errors.issuanceDate}
+                    placeholder="DD"
+                    className="me-1"
+                    ref={refs.dayRef}
+                    style={{ width: "80px" }}
+                />
+                <span>/</span>
+                <Form.Control
+                    type="text"
+                    value={document.month}
+                    onChange={(e) => handleMonthChange(e)}
+                    isInvalid={!!errors.issuanceDate}
+                    placeholder="MM"
+                    className="mx-1"
+                    ref={refs.monthRef}
+                    style={{ width: "80px" }}
+                />
+                <span>/</span>
+                <Form.Control
+                    type="text"
+                    value={document.year}
+                    onChange={(e) => handleYearChange(e)}
+                    isInvalid={!!errors.issuanceDate}
+                    placeholder="YYYY"
+                    className="ms-1"
+                    ref={refs.yearRef}
+                    style={{ width: "100px" }}
+                />
+              </div>
+              <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+                {errors.issuanceDate}
+              </div>
+            </Form.Group>
+          </Col>
+
+          <Col md={6}>
+            {/* TYPE */}
+            <Form.Group className="mb-3" controlId="formDocumentType">
+              <Form.Label>Type *</Form.Label>
+              <div className="divider" />
+              {allDocumentTypes ? (
+                  <Form.Control
+                      as="select"
+                      value={document.type}
+                      onChange={(e) => handleChange("type", e.target.value)}
+                      isInvalid={!!errors.type}
+                      required
+                      ref={refs.typeRef}
+                  >
+                    <option value="">Select type</option>
+                    {allDocumentTypes.map((typeOption) => (
+                        <option key={typeOption.id} value={typeOption.name}>
+                          {typeOption.name}
+                        </option>
+                    ))}
+                    <option value="Other">Other</option>
+                  </Form.Control>
+              ) : (
+                  <Spinner animation="border" className="mx-auto">
+                    <output>Loading...</output>
+                  </Spinner>
+              )}
+              {document.type === "Other" && (
+                  <div className="d-flex mt-2">
+                    <Form.Control
+                        type="text"
+                        placeholder="Enter custom type"
+                        value={document.customType || ""}
+                        onChange={(e) => handleChange("customType", e.target.value)}
+                        isInvalid={!!errors.type}
+                        className="me-2"
+                    />
+                    <Button
+                        variant="primary"
+                        disabled={
+                            !document.customType?.trim() ||
+                            (document.customType &&
+                                allDocumentTypes.some(
+                                    (t) =>
+                                        t.name.toLowerCase() ===
+                                        document.customType.trim().toLowerCase()
+                                ))
+                        }
+                        onClick={() => {
+                          setAllDocumentTypes((prevTypes) => [
+                            ...prevTypes,
+                            { id: Date.now(), name: document.customType },
+                          ]);
+                          handleChange("type", document.customType);
+                        }}
+                        title="Add custom type"
+                    >
+                      <i className="bi bi-plus-square"></i>
+                    </Button>
+                  </div>
+              )}
+            </Form.Group>
+            <div style={{ color: "#dc3545", fontSize: "0.875rem" }}>
+              {errors.type}
+            </div>
+          </Col>
+        </Row>
+
+        {/* LANGUAGE */}
+        <Row className={"mb-4"}>
+          <Col md={6}>
+            <Form.Group className="mb-3" controlId="formDocumentLanguage">
+              <Form.Label>Language</Form.Label>
+              <div className="divider" />
+              <Form.Control
+                  as="select"
+                  value={document.language}
+                  onChange={(e) => {
+                    handleChange("language", e.target.value);
+                    handleLanguageInputClick();
+                  }}
+                  isInvalid={!!errors.language}
+                  ref={refs.languageRef}
+              >
+                <option value="">Select language</option>
+                {languageOptions.map((languageOption) => (
+                    <option key={languageOption} value={languageOption}>
+                      {languageOption}
+                    </option>
+                ))}
+                <option value="Other">Other</option>
+                <option value="">None</option>
+              </Form.Control>
+              {document.language === "Other" && (
+                  <div className="d-flex mt-2">
+                    <Form.Control
+                        type="text"
+                        placeholder="Enter custom language"
+                        value={document.customLanguage || ""}
+                        onChange={(e) => {
+                          handleChange("customLanguage", e.target.value);
+                          handleLanguageChange(e);
+                        }}
+                        isInvalid={!!errors.language}
+                        className="me-2"
+                        onKeyDown={handleKeyDown}
+                    />
+                    <Button
+                        variant="primary"
+                        disabled={
+                            !document.customLanguage?.trim() ||
+                            (document.customLanguage &&
+                                languageOptions.includes(document.customLanguage))
+                        }
+                        onClick={() => {
+                          setLanguageOptions([
+                            ...languageOptions,
+                            document.customLanguage,
+                          ]);
+                          handleChange("language", document.customLanguage);
+                        }}
+                        title="Add custom language"
+                    >
+                      <i className="bi bi-plus-square"></i>
+                    </Button>
+                  </div>
+              )}
+              {filteredLanguages.length > 0 && (
+                  <div className="mt-2 position-relative" ref={dropdownRef}>
+                    <div
+                        className="dropdown-menu show custom-scroll"
+                        style={{ maxHeight: "200px", overflowY: "auto" }}
+                    >
+                      {filteredLanguages.map((language, index) => (
+                          <button
+                              key={language}
+                              ref={(el) => (languageRefs.current[index] = el)}
+                              className={`dropdown-item ${
+                                  index === highlightedIndex ? "active" : ""
+                              }`}
+                              onClick={() => handleLanguageSelect(language)}
+                          >
+                            {language}
+                          </button>
+                      ))}
+                    </div>
+                  </div>
+              )}
+              <Form.Control.Feedback type="invalid">
+                {errors.language}
+              </Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+          <Col md={6}>
+            {/* PAGES */}
+            <Form.Group className="mb-3" controlId="formDocumentNrPages">
+              <Form.Label>Pages</Form.Label>
+              <div className="divider" />
+              <Form.Control
+                  type="number"
+                  value={document.nrPages}
+                  min={0}
+                  onChange={(e) => handleChange("nrPages", Number(e.target.value))}
+                  isInvalid={!!errors.nrPages}
+                  ref={refs.nrPagesRef}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.nrPages}
+              </Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Dropdown for location mode */}
+        <Row className="mb-4">
+          <Col md={3}>
+            <Row>
+              <Form.Group style={{display: "flex", alignItems: "center"}}>
+                <Form.Label style={{marginRight: "10px"}}>Geolocation</Form.Label>
+                <div className="divider"
+                     style={{width: "1px", height: "20px", backgroundColor: "#ccc", margin: "0 10px"}}/>
+                <Form.Control
+                    as="select"
+                    value={locationMode}
+                    onChange={(e) => {
+                      setLocationMode(e.target.value);
+                      if (e.target.value === "entire_municipality") {
+                        console.log(defaultPosition);
+                        const municipality = allKnownAreas.find(
+                            (p) => p.name === "Entire Municipality"
+                        );
+
+                        if (municipality) {
+                          setSelectedAreaId(municipality.id.toString());
+                        }
+
+                        handleChange("geolocation", {
+                          ...document.geolocation,
+                          area: {
+                            areaId: null,
+                            areaName: "Entire Municipality",
+                            areaCentroid: {
+                              latitude: defaultPosition[0],
+                              longitude: defaultPosition[1],
+                            },
+                            geometry: {
+                              type: "MultiPolygon",
+                              coordinates: kirunaBorderCoordinates,
+                            },
+                          },
+                          pointCoordinates: null, // Clear point selection
+                        });
+                        zoomOnMunicipality();
+                      }
+                    }}
+                    style={{ flex: 1 }}
+                >
+                  <option value=""> -- select --</option>
+                  <option value="entire_municipality">Entire municipality</option>
+                  <option value="area">Area</option>
+                  <option value="point">Coordinates</option>
+                </Form.Control>
+              </Form.Group>
+            </Row>
+            {locationMode === "point" && newPoint && !selectedPointId &&(
+                <Row className="mb-2 mt-3">
+                  <Col md={24}>
+                    <Form.Group controlId="formDocumentPointName">
+                      <Form.Control
+                          type="text"
+                          value={pointName || document.geolocation?.pointCoordinates?.pointName || ""}
+                          onChange={(e) => {
+                            const updatedPointName = e.target.value;
+                            setPointName(updatedPointName); // Update local state
+
+                            console.log(updatedPointName)
+                            // Synchronize with geolocation
+                            handleChange("geolocation", {
+                              ...document.geolocation,
+                              pointCoordinates: {
+                                ...document.geolocation.pointCoordinates,
+                                pointName: updatedPointName,
+                              },
+                            });
+                          }}
+                          placeholder="Enter the point name"
+                      />
+
+                      <Form.Text className="text-muted">
+                        This name will help identify the point.
+                      </Form.Text>
+                    </Form.Group>
+                  </Col>
+                </Row>
+            )}
+          </Col>
+          {locationMode === "area" && (
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Control as="select" value={selectedAreaId} onChange={handleSelectExistingArea}>
+                    <option value="">-- Select an existing area --</option>
+                    {allKnownAreas
+                        ?.filter((area) => area.name !== "Entire Municipality") // Exclude "Entire Municipality"
+                        .map((area) => (
+                            <option key={area.id} value={area.id}>
+                              {area.name}
+                            </option>
+                        ))}
+                  </Form.Control>
+                </Form.Group>
+              </Col>
+          )}
+
+          {locationMode === "point" && (
+              <>
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Control as="select" value={selectedPointId} onChange={handleSelectExistingPoint}>
+                      <option value="">-- Select an existing point --</option>
+                      {allKnownPoints.map((point) => (
+                          <option key={point.id} value={point.id}>
+                            {point.name || `Point ${point.id}`}
+                          </option>
+                      ))}
+                    </Form.Control>
+                  </Form.Group>
+                </Col>
+              </>
 
           )}
 
-        {locationMode === "point" && (
-          <>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Latitude</Form.Label>
-                <div className="divider"/>
-                <Form.Control
-                    type="number"
-                    min={67.3564329180828}
-                    max={69.05958911620179}
-                    step={0.00001}
-                    value={document.geolocation?.pointCoordinates?.coordinates?.latitude || ""}
-                    onChange={handleLatitudeChange}
-                    id="formDocumentGeolocationLatitude"
-                    isInvalid={!!errors.latitude}
-                    ref={refs.latitudeRef}
-                />
-                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
-                  {errors.latitude}
-                </div>
-                <Form.Range
-                    min={67.3564329180828}
-                    max={69.05958911620179}
-                    step={0.00001}
-                    value={document.geolocation?.pointCoordinates?.coordinates?.latitude}
-                    onChange={handleLatitudeChange}
-                    disabled={
-                        document.geolocation.municipality === "Entire municipality"
-                    }
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Longitude</Form.Label>
-                <div className="divider"/>
-                <Form.Control
-                    type="number"
-                    value={document.geolocation?.pointCoordinates?.coordinates?.longitude || ""}
-                    min={17.89900836116174}
-                    max={23.28669305841499}
-                    step={0.00001}
-                    isInvalid={!!errors.longitude}
-                    onChange={handleLongitudeChange}
-                    id="formDocumentGeolocationLongitude"
-                    ref={refs.longitudeRef}
-                />
-                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
-                  {errors.longitude}
-                </div>
-                <Form.Range
-                    min={17.89900836116174}
-                    max={23.28669305841499}
-                    step={0.00001}
-                    value={document.geolocation?.pointCoordinates?.coordinates?.longitude}
-                    onChange={handleLongitudeChange}
-                />
-              </Form.Group>
-            </Col>
-          </>
+          {locationMode === "point" && (
+              <>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Latitude</Form.Label>
+                    <div className="divider"/>
+                    <Form.Control
+                        type="number"
+                        min={67.3564329180828}
+                        max={69.05958911620179}
+                        step={0.00001}
+                        value={document.geolocation?.pointCoordinates?.coordinates?.latitude || ""}
+                        onChange={handleLatitudeChange}
+                        id="formDocumentGeolocationLatitude"
+                        isInvalid={!!errors.latitude}
+                        ref={refs.latitudeRef}
+                    />
+                    <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
+                      {errors.latitude}
+                    </div>
+                    <Form.Range
+                        min={67.3564329180828}
+                        max={69.05958911620179}
+                        step={0.00001}
+                        value={document.geolocation?.pointCoordinates?.coordinates?.latitude}
+                        onChange={handleLatitudeChange}
+                        disabled={
+                            document.geolocation.municipality === "Entire municipality"
+                        }
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Longitude</Form.Label>
+                    <div className="divider"/>
+                    <Form.Control
+                        type="number"
+                        value={document.geolocation?.pointCoordinates?.coordinates?.longitude || ""}
+                        min={17.89900836116174}
+                        max={23.28669305841499}
+                        step={0.00001}
+                        isInvalid={!!errors.longitude}
+                        onChange={handleLongitudeChange}
+                        id="formDocumentGeolocationLongitude"
+                        ref={refs.longitudeRef}
+                    />
+                    <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
+                      {errors.longitude}
+                    </div>
+                    <Form.Range
+                        min={17.89900836116174}
+                        max={23.28669305841499}
+                        step={0.00001}
+                        value={document.geolocation?.pointCoordinates?.coordinates?.longitude}
+                        onChange={handleLongitudeChange}
+                    />
+                  </Form.Group>
+                </Col>
+              </>
+          )}
+
+        </Row>
+
+
+        {locationMode === "area" && areaModified && (
+            <Row className="mb-4">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Area name</Form.Label>
+                  <div className="divider" />
+                  <Form.Control
+                      type="text"
+                      value={document.geolocation.area?.areaName || ""}
+                      onChange={(e) => {
+                        const updatedAreaName = e.target.value;
+
+                        handleChange("geolocation", {
+                          ...document.geolocation,
+                          area: {
+                            ...document.geolocation.area,
+                            areaName: updatedAreaName, // Aggiorna solo il nome dell'area
+                          },
+                        });
+                      }}
+                      isInvalid={!!errors.areaName}
+                  />
+                  <Form.Control.Feedback type="invalid">{errors.areaName}</Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+
         )}
 
-      </Row>
-
-
-      {locationMode === "area" && areaModified && (
-          <Row className="mb-4">
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>Area name</Form.Label>
-                <div className="divider" />
-                <Form.Control
-                    type="text"
-                    value={document.geolocation.area?.areaName || ""}
-                    onChange={(e) => {
-                      const updatedAreaName = e.target.value;
-
-                      handleChange("geolocation", {
-                        ...document.geolocation,
-                        area: {
-                          ...document.geolocation.area,
-                          areaName: updatedAreaName, // Aggiorna solo il nome dell'area
-                        },
-                      });
-                    }}
-                    isInvalid={!!errors.areaName}
-                />
-                <Form.Control.Feedback type="invalid">{errors.areaName}</Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-          </Row>
-
-      )}
-
-      {/* MAP */}
-      <Row className="mb-4">
-        <Col md={12}>
-          <Form.Group>
-            <div style={{ height: "400px", marginBottom: "15px" }}>
-              {locationMode === "point" && (
-                  <Form.Text className="text-muted">
-                    Click on the map to set the location. Latitude and Longitude fields will update automatically.
-                  </Form.Text>
-              )}
-=======
-              type="number"
-              min={67.3564329180828}
-              max={69.05958911620179}
-              step={0.00001}
-              value={document.geolocation.latitude || ""}
-              onChange={handleLatitudeChange}
-              id="formDocumentGeolocationLatitude"
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-              isInvalid={!!errors.latitude}
-              refs={refs.latitudeRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.latitude}
-            </Form.Control.Feedback>
-            <Form.Range
-              min={67.3564329180828}
-              max={69.05958911620179}
-              step={0.00001}
-              value={document.geolocation.latitude || ""}
-              onChange={handleLatitudeChange}
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-            />
-          </Col>
+        {/* MAP */}
+        <Row className="mb-4">
           <Col md={12}>
-            <Form.Label>Longitude</Form.Label>
-            <div className="divider" />
-            <Form.Control
-              type="number"
-              value={document.geolocation.longitude || ""}
-              min={17.89900836116174}
-              max={23.28669305841499}
-              step={0.00001}
-              isInvalid={!!errors.longitude}
-              onChange={handleLongitudeChange}
-              id="formDocumentGeolocationLongitude"
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-              refs={refs.longitudeRef}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.longitude}
-            </Form.Control.Feedback>
-            <Form.Range
-              min={17.89900836116174}
-              max={23.28669305841499}
-              step={0.00001}
-              value={document.geolocation.longitude || ""}
-              onChange={handleLongitudeChange}
-              disabled={
-                document.geolocation.municipality === "Entire municipality"
-              }
-            />
-          </Col>
-          <Col md={12}>
-            <div style={{ height: "300px", marginBottom: "15px" }}>
->>>>>>> origin/dev
-              <MapContainer
-                  ref={mapRef}
-                  center={markerPosition}
-                  zoom={10}
-                  style={{ height: "100%", width: "100%" }}
-                  key={JSON.stringify(document.area)}
-              >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {locationMode === "point" && markerPosition && (
-                    <Marker position={markerPosition} />
+            <Form.Group>
+              <div style={{ height: "400px", marginBottom: "15px" }}>
+                {locationMode === "point" && (
+                    <Form.Text className="text-muted">
+                      Click on the map to set the location. Latitude and Longitude fields will update automatically.
+                    </Form.Text>
                 )}
-                {locationMode === "entire_municipality" ? (
-                  <Polygon positions={kirunaBorderCoordinates} />
-<<<<<<< HEAD
-                ) : null}
+                <MapContainer
+                    ref={mapRef}
+                    center={markerPosition}
+                    zoom={10}
+                    style={{ height: "100%", width: "100%" }}
+                    key={JSON.stringify(document.area)}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  {locationMode === "point" && markerPosition && (
+                      <Marker position={markerPosition} />
+                  )}
+                  {locationMode === "entire_municipality" ? (
+                      <Polygon positions={kirunaBorderCoordinates} />
+                  ) : null}
 
-                <Polygon
-                    positions={kirunaBorderCoordinates}
-                    color="purple"
-                    weight={3}
-                    fillOpacity={0}
-                />
-                {locationMode === "point" && <MapClickHandlerForNewPoint />}
-                {locationMode === "area" && (
-                    <FeatureGroup>
-                      <EditControl
-                          position="topright"
-                          onCreated={onCreated}
-                          onDeleted={onDeleted}
-                          draw={{
-                            rectangle: false,
-                            polygon: true,
-                            polyline: false,
-                            circle: false,
-                            circlemarker: false,
-                            marker: false,
-                          }}
-                          edit={{ remove: true }}
+                  <Polygon
+                      positions={kirunaBorderCoordinates}
+                      color="purple"
+                      weight={3}
+                      fillOpacity={0}
+                  />
+                  {locationMode === "point" && <MapClickHandlerForNewPoint />}
+                  {locationMode === "area" && (
+                      <FeatureGroup>
+                        <EditControl
+                            position="topright"
+                            onCreated={onCreated}
+                            onDeleted={onDeleted}
+                            draw={{
+                              rectangle: false,
+                              polygon: true,
+                              polyline: false,
+                              circle: false,
+                              circlemarker: false,
+                              marker: false,
+                            }}
+                            edit={{ remove: true }}
                         />
                     </FeatureGroup>
                 )}
@@ -1998,8 +1847,8 @@ function DocumentFormFields({
                       const { type, coordinates } = document.geolocation.area.geometry;
 
                       if (type === "POLYGON" || type === "Polygon") {
-                        //const polygonCoords = coordinates.map(([lng, lat]) => [lat, lng]);
-                        return <Polygon positions={coordinates} color="green" />;
+                        const polygonCoords = coordinates.map(([lng, lat]) => [lat, lng]);
+                        return <Polygon positions={polygonCoords} color="green" />;
                       } else if (type === "MULTIPOLYGON" || type === "MultiPolygon") {
 
                         const coordinates = kirunaBorderCoordinates;
@@ -2026,26 +1875,22 @@ function DocumentFormFields({
                         }
                       }
 
-                      console.warn(`Unsupported geometry type: ${type}`);
-                      return null;
-                    })()}
+                        console.warn(`Unsupported geometry type: ${type}`);
+                        return null;
+                      })()}
 
 
 
-                {locationMode === "point" &&
-                    Number.isFinite(safeLatitude) &&
-                    Number.isFinite(safeLongitude) && (
-                        <Marker position={[safeLatitude, safeLongitude]} />
-                    )}
-=======
-                ) : undefined}
-                <MapClickHandler />
->>>>>>> origin/dev
-              </MapContainer>
-            </div>
-          </Form.Group>
-        </Col>
-      </Row>
+                  {locationMode === "point" &&
+                      Number.isFinite(safeLatitude) &&
+                      Number.isFinite(safeLongitude) && (
+                          <Marker position={[safeLatitude, safeLongitude]} />
+                      )}
+                </MapContainer>
+              </div>
+            </Form.Group>
+          </Col>
+        </Row>
 
       {/* DESCRIPTION */}
       <Row className={"mb-4"}>
@@ -2124,11 +1969,11 @@ function UploadFilesComponent({
 
     if (oversizedFiles.length > 0) {
       setFeedbackFromError(
-        new Error(
-          `The following files are too large (max 25 MB): ${oversizedFiles.join(
-            ", "
-          )}`
-        )
+          new Error(
+              `The following files are too large (max 25 MB): ${oversizedFiles.join(
+                  ", "
+              )}`
+          )
       );
       return;
     }
@@ -2163,73 +2008,73 @@ function UploadFilesComponent({
     });
   };
   return (
-    <>
-      {/* UPLOAD */}
-      <Row className="mb-4">
-        <Col md={12}>
-          <Form.Group controlId="formDocumentFiles">
-            <Form.Label>Upload resources</Form.Label>
-            <div className="divider" />
-            <div className="d-flex align-items-center">
-              <Form.Control
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="d-none"
-                ref={fileInputRef}
-              />
-              <Button
-                variant="primary"
-                onClick={() => fileInputRef.current.click()}
-                className="me-3"
-              >
-                <i className="bi bi-upload"></i>
-              </Button>
-              <Form.Text className="text-muted">
-                {files.length} new file{files.length !== 1 && "s"} uploaded
-              </Form.Text>
-            </div>
-
-            {/* Display Selected Files */}
-            {files.length > 0 && (
-              <div className="mt-3">
-                <h6>Selected files:</h6>
-                <ListGroup variant="flush">
-                  {files.map((file, index) => (
-                    <ListGroup.Item
-                      key={index}
-                      className="d-flex justify-content-between align-items-center"
-                    >
-                      {file.name}
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDeleteNewFile(index)}
-                        title="Remove file"
-                      >
-                        <i className="bi bi-trash"></i>
-                      </Button>
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
-              </div>
-            )}
-
-            {existingFiles && existingFiles.length > 0 && (
-              <div className="mt-3">
-                <h6>Existing files:</h6>
-                <DocumentResources
-                  resources={existingFiles}
-                  onDelete={handleDeleteExistingFile}
-                  viewMode={"list"}
-                  isEditable={true}
+      <>
+        {/* UPLOAD */}
+        <Row className="mb-4">
+          <Col md={12}>
+            <Form.Group controlId="formDocumentFiles">
+              <Form.Label>Upload files</Form.Label>
+              <div className="form-divider" />
+              <div className="d-flex align-items-center">
+                <Form.Control
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="d-none"
+                    ref={fileInputRef}
                 />
+                <Button
+                    variant="primary"
+                    onClick={() => fileInputRef.current.click()}
+                    className="me-3"
+                >
+                  <i className="bi bi-upload"></i>
+                </Button>
+                <Form.Text className="text-muted">
+                  {files.length} new file{files.length !== 1 && "s"} uploaded
+                </Form.Text>
               </div>
-            )}
-          </Form.Group>
-        </Col>
-      </Row>
-    </>
+
+              {/* Display Selected Files */}
+              {files.length > 0 && (
+                  <div className="mt-3">
+                    <h6>Selected files:</h6>
+                    <ListGroup variant="flush">
+                      {files.map((file, index) => (
+                          <ListGroup.Item
+                              key={index}
+                              className="d-flex justify-content-between align-items-center"
+                          >
+                            {file.name}
+                            <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => handleDeleteNewFile(index)}
+                                title="Remove file"
+                            >
+                              <i className="bi bi-trash"></i>
+                            </Button>
+                          </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+                  </div>
+              )}
+
+              {existingFiles && existingFiles.length > 0 && (
+                  <div className="mt-3">
+                    <h6>Existing files:</h6>
+                    <DocumentResources
+                        resources={existingFiles}
+                        onDelete={handleDeleteExistingFile}
+                        viewMode={"list"}
+                        isEditable={true}
+                    />
+                  </div>
+              )}
+            </Form.Group>
+          </Col>
+        </Row>
+      </>
   );
 }
 

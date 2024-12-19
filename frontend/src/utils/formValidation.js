@@ -47,13 +47,10 @@ export const validateForm = (
   }
 
   const geolocationErrors = validateGeolocation(
-    document.geolocation,
-    kirunaBorderCoordinates
+      document.geolocation,
+      kirunaBorderCoordinates
   );
-<<<<<<< HEAD
   console.log(geolocationErrors)
-=======
->>>>>>> origin/dev
   if (Object.keys(geolocationErrors).length > 0) {
     newErrors.geolocation = geolocationErrors;
   }
@@ -155,7 +152,6 @@ const validateLanguage = (language) => {
   }
   return null;
 };
-<<<<<<< HEAD
 
 const validateNrPages = (nrPages) => {
   if (nrPages) {
@@ -219,61 +215,12 @@ const validateGeolocation = (geolocation, kirunaBorderCoordinates) => {
       }
     }
 
-    console.log(insideAnyPolygon);
     if (!insideAnyPolygon) {
-=======
-
-const validateNrPages = (nrPages) => {
-  if (nrPages) {
-    if (!Number.isInteger(nrPages)) {
-      return "Number of pages must be an integer.";
-    } else if (nrPages < 1) {
-      return "Number of pages must be a positive integer.";
-    }
-  }
-  return null;
-};
-
-const validateGeolocation = (geolocation, kirunaBorderCoordinates) => {
-  const newErrors = {};
-  if (geolocation.latitude && geolocation.longitude) {
-    const point = { lat: geolocation.latitude, lng: geolocation.longitude };
-    const kirunaBorderCoordinatesLngLat = kirunaBorderCoordinates.map(
-      ([lat, lng]) => [lng, lat]
-    );
-    const polygon = [
-      ...kirunaBorderCoordinatesLngLat,
-      kirunaBorderCoordinatesLngLat[0],
-    ]; // Close the loop
-    const [x, y] = [point.lng, point.lat]; // Ensure [lng, lat]
-    let inside = false;
-
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const [xi, yi] = polygon[i];
-      const [xj, yj] = polygon[j];
-
-      const intersect =
-        yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-      if (intersect) inside = !inside;
-    }
-
-    if (!inside) {
->>>>>>> origin/dev
       newErrors.latitude = "Geolocation must be within the Kiruna boundary.";
       newErrors.longitude = "Geolocation must be within the Kiruna boundary.";
     }
   }
-<<<<<<< HEAD
 
-=======
-  if (
-    (geolocation.latitude || geolocation.longitude) &&
-    geolocation.municipality === "Entire municipality"
-  ) {
-    newErrors.municipality =
-      "Geolocation must be 'Entire municipality' or a valid coordinate.";
-  }
->>>>>>> origin/dev
   return newErrors;
 };
 

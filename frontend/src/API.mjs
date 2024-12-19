@@ -692,7 +692,6 @@ const API = {
   getAllDocumentTypes,
   addDocumentType,
   /* Scale */
-  searchDocuments,
   getAllScales,
   addScale,
   /* File */
@@ -700,7 +699,6 @@ const API = {
   deleteFile,
   getDocumentFiles,
   downloadFile,
-<<<<<<< HEAD
   logIn,
   getUserInfo,
   logOut,
@@ -711,9 +709,6 @@ const API = {
   addGeolocatedPoint,
   getAllAreasSnippets,
   addGeolocatedArea,
-  getAreaById,
-=======
-
->>>>>>> origin/dev
+  getAreaById
 };
 export default API;
