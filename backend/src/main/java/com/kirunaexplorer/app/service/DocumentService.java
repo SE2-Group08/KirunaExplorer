@@ -14,6 +14,7 @@ import com.kirunaexplorer.app.util.DocumentFieldsChecker;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -136,16 +137,11 @@ public class DocumentService {
         updateGeolocation(documentRequest, geoReference);
     }
 
-    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type) {
-        List<Document> documents = documentRepository.searchDocuments(keyword, type);
-        if (documents == null) {
-            return List.of();
-        }
-        return documents.stream()
-            .map(Document::toDocumentBriefResponseDTO)
-            .toList();
+    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type, List<String> stakeholderNames, String scale, int pageNo) {
+        Pageable pageable = PageRequest.of(pageNo, PAGE_SIZE);
+        Page<Document> documents = documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable);
+        return documents.stream().map(Document::toDocumentBriefResponseDTO).toList();
     }
-
     /**
      * Store new stakeholders, type and scale
      *

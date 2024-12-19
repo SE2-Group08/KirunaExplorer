@@ -2,6 +2,7 @@ package com.kirunaexplorer.app.dto.request;
 
 import com.kirunaexplorer.app.dto.inout.GeoReferenceDTO;
 import com.kirunaexplorer.app.model.Document;
+import com.kirunaexplorer.app.model.Stakeholder;
 import com.kirunaexplorer.app.validation.groups.document.PostDocument;
 import com.kirunaexplorer.app.validation.groups.document.PutDocument;
 import jakarta.validation.Valid;
@@ -70,7 +71,7 @@ public record DocumentRequestDTO(
             id,
             title,
             description,
-            String.join("/", stakeholders),
+            stakeholders.stream().map(Stakeholder::new).toList(),
             type,
             scale,
             parseIssuanceDate(issuanceDate),
