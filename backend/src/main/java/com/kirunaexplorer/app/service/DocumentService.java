@@ -142,6 +142,7 @@ public class DocumentService {
         Page<Document> documents = documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable);
         return documents.stream().map(Document::toDocumentBriefResponseDTO).toList();
     }
+
     /**
      * Store new stakeholders, type and scale
      *
@@ -150,42 +151,29 @@ public class DocumentService {
     private void storeNewStakeholdersTypeScale(DocumentRequestDTO documentRequest) {
         // Remove duplicates stakeholders
         DocumentFieldsChecker.removeStakeholderDuplicates(documentRequest);
-
         // Get existing stakeholders
         List<Stakeholder> existingStakeholders = stakeholderRepository.findAll();
-
         // Get new stakeholders to add to the database
         List<Stakeholder> newStakeholders = DocumentFieldsChecker.getNewStakeholders(documentRequest.stakeholders(), existingStakeholders);
-
         // Add new stakeholders to the database
-        if (!newStakeholders.isEmpty()) {
-            System.err.println(newStakeholders.get(0));
-            stakeholderRepository.saveAll(newStakeholders);
-            stakeholderRepository.flush();  // Ensure they're flushed to the database
-        }
+        stakeholderRepository.saveAll(newStakeholders);
 
         // Get existing document types
         List<DocumentType> existingDocumentTypes = documentTypeRepository.findAll();
-
         // Get new document type to add to the database
         DocumentType newDocumentType = DocumentFieldsChecker.getNewDocumentType(documentRequest.type(), existingDocumentTypes);
-
         // Add new document type to the database
         if (newDocumentType != null) {
             documentTypeRepository.save(newDocumentType);
-            documentTypeRepository.flush();  // Ensure it's flushed to the database
         }
 
         // Get existing scales
         List<DocumentScale> existingScales = documentScaleRepository.findAll();
-
         // Get new scale to add to the db
         DocumentScale newScale = DocumentFieldsChecker.getNewDocumentScale(documentRequest.scale(), existingScales);
-
         // Add new scale to the db
         if (newScale != null) {
             documentScaleRepository.save(newScale);
-            documentScaleRepository.flush();  // Ensure it's flushed to the database
         }
     }
 
