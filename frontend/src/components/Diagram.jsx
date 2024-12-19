@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import API from "../api";
+import API from "../API";
 import { getIconUrlForDocument } from "../utils/iconMapping";
 import { Button } from "react-bootstrap";
 import LegendModal from "./Legend";
@@ -224,7 +224,7 @@ const FullPageChart = () => {
           const linkType = link.linkType;
 
           // Genera un identificativo unico per la coppia di documenti e il tipo di link
-          const linkId = [document.id, targetDocument.id].sort().join("-") + `-${linkType}`;
+          const linkId = [document.id, targetDocument.id].sort((a, b) => a - b).join("-") + `-${linkType}`;
 
           // Disegna la linea solo se questa coppia di documenti con questo tipo non è già stata processata
           if (!drawnLinks.has(linkId)) {
