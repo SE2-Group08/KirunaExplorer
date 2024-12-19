@@ -12,7 +12,7 @@ const SERVER_URL = "http://localhost:8080/api/v1";
 // Given a credentials object containing username and password it executes login
 const logIn = async (credentials) => {
   try {
-    const response = await fetch(SERVER_URL + "/auth/authenticate", {
+    const response = await fetch(SERVER_URL + "/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -34,9 +34,18 @@ const getUserInfo = async (token) => {
 };
 
 const logOut = async (token) => {
-  // If your back-end requires an API call to invalidate the session, do it here.
-  // In this snippet, we simply log the user out. The caller will handle removing the token from state.
-  console.log("User successfully logged out.");
+  try {
+    const response = await fetch(SERVER_URL + "/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      }
+    });
+    console.log("User successfully logged out.");
+  } catch (error) {
+    throw error;
+  }
 };
 
 /* ********************* *
