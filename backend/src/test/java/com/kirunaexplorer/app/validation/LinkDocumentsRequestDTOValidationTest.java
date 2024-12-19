@@ -49,7 +49,7 @@ class LinkDocumentsRequestDTOValidationTest {
         Set<ConstraintViolation<LinkDocumentsRequestDTO>> violations = validator.validate(dto, PostLink.class);
 
         assertEquals(1, violations.size());
-        assertEquals("deve essere null", violations.iterator().next().getMessage());
+        assertEquals("must be null", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -58,7 +58,7 @@ class LinkDocumentsRequestDTOValidationTest {
         Set<ConstraintViolation<LinkDocumentsRequestDTO>> violations = validator.validate(dto, PostLink.class);
 
         assertEquals(1, violations.size());
-        assertEquals("non deve essere null", violations.iterator().next().getMessage());
+        assertEquals("must not be null", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -84,7 +84,7 @@ class LinkDocumentsRequestDTOValidationTest {
         Set<ConstraintViolation<LinkDocumentsRequestDTO>> violations = validator.validate(dto, PutLink.class);
 
         assertEquals(1, violations.size());
-        assertEquals("non deve essere null", violations.iterator().next().getMessage());
+        assertEquals("must not be null", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -93,6 +93,6 @@ class LinkDocumentsRequestDTOValidationTest {
         Set<ConstraintViolation<LinkDocumentsRequestDTO>> violations = validator.validate(dto, PutLink.class);
 
         assertEquals(1, violations.size());
-        assertEquals("deve essere null", violations.iterator().next().getMessage());
+        assertEquals("must be null", violations.iterator().next().getMessage());
     }
 }

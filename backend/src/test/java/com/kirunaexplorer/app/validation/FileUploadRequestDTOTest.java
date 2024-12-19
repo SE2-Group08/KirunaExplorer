@@ -78,7 +78,7 @@ public class FileUploadRequestDTOTest {
         Set<ConstraintViolation<FileUploadRequestDTO>> violations = validator.validate(requestDTO);
 
         assertFalse(violations.isEmpty());
-        assertEquals("non deve essere null", violations.iterator().next().getMessage());
+        assertEquals("must not be null", violations.iterator().next().getMessage());
     }
 
     /*@Test
