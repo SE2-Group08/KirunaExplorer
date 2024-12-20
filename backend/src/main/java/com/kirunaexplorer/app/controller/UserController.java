@@ -42,7 +42,7 @@ public class UserController {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        LoginResponse response = new LoginResponse(user.getId(), user.getUsername(), token);
+        LoginResponse response = new LoginResponse(user.getId(), user.getUsername(), token, "URBAN_PLANNER");
 
         return ResponseEntity.ok(response);
     }
