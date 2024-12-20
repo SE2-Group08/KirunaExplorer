@@ -235,8 +235,7 @@ public class DataInitializer implements CommandLineRunner {
     private void storeResource(Long documentId, String fileName, String extension) throws IOException {
         // Load the file from the resources folder
         ClassPathResource resource = new ClassPathResource("documentFiles/" + fileName + "." + extension);
-        Path path = resource.getFile().toPath();
-        byte[] content = Files.readAllBytes(path);
+        byte[] content = resource.getInputStream().readAllBytes();
 
         // Create a DocumentFile
         DocumentFile documentFile = new DocumentFile();
