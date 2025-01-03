@@ -24,12 +24,12 @@ import technical_LKAB from "../public/icons/technical doc LKAB.png"
 import technical_kommun from "../public/icons/technical doc municipalty.png"
 import technical_kommun_whiteArkitekter from "../public/icons/technical doc municipalty+ firms.png"
 import agreement_County from "../public/icons/agreement county.png"
-import agreement_County_kommun_LKAB from "/public/icons/agreement municipalty +county +lkab.png"
-import agreement_kommun_LKAB from "/public/icons/agreement municipalty +lkab.png"
-import agreement_kommun from "/public/icons/agreement municipalty.png"
-import conflict_kommun_county from "/public/icons/conflict Municipalty+ county.png"
-import consultation_LKAB_kommun from "/public/icons/Consultation LKAB+municipalty.png"
-import consultation_kommun_residents from "/public/icons/Consultation municipalty+citizens.png"
+import agreement_County_kommun_LKAB from "../public/icons/agreement municipalty +county +lkab.png"
+import agreement_kommun_LKAB from "../public/icons/agreement municipalty +lkab.png"
+import agreement_kommun from "../public/icons/agreement municipalty.png"
+import conflict_kommun_county from "../public/icons/conflict Municipalty+ county.png"
+import consultation_LKAB_kommun from "../public/icons/Consultation LKAB+municipalty.png"
+import consultation_kommun_residents from "../public/icons/Consultation municipalty+citizens.png"
 
 // Icon mapping
 const iconMapping = {
