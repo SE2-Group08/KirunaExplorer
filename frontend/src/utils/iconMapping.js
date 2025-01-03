@@ -34,7 +34,7 @@ import consultation_kommun_residents from "/public/icons/Consultation municipalt
 // Icon mapping
 const iconMapping = {
   "Consultation": {
-    "LKAB,Kiruna kommun": new L.Icon({
+    "Kiruna kommun,LKAB": new L.Icon({
       iconUrl: consultation_LKAB_kommun,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
