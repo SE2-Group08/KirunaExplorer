@@ -60,27 +60,27 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
 
-        userRepository.save(new User(null, "kiruna_user", new BCryptPasswordEncoder().encode("kiruna_password")));
-
-        DocumentType prescriptiveDocument = documentTypeRepository.save(new DocumentType(null, "Prescriptive document"));
-        DocumentType informativeDocument = documentTypeRepository.save(new DocumentType(null, "Informative document"));
-        DocumentType designDocument = documentTypeRepository.save(new DocumentType(null, "Design document"));
-        DocumentType materialEffect = documentTypeRepository.save(new DocumentType(null, "Material effect"));
-        DocumentType technicalDocument = documentTypeRepository.save(new DocumentType(null, "Technical document"));
-
-        Stakeholder LKAB = stakeholderRepository.save(new Stakeholder("LKAB"));
-        Stakeholder kirunakommun = stakeholderRepository.save(new Stakeholder("Kiruna kommun"));
-        Stakeholder whiteArkitekter = stakeholderRepository.save(new Stakeholder("White Arkitekter"));
-        Stakeholder others = stakeholderRepository.save(new Stakeholder("Others"));
-        Stakeholder residents = stakeholderRepository.save(new Stakeholder("Residents"));
-        Stakeholder country = stakeholderRepository.save(new Stakeholder("Country"));
-
-
-        storeDocument2();
-        storeDocument4();
-        storeDocument15();
-        storeDocument18();
-        storeDocument41();
+//        userRepository.save(new User(null, "kiruna_user", new BCryptPasswordEncoder().encode("kiruna_password")));
+//
+//        DocumentType prescriptiveDocument = documentTypeRepository.save(new DocumentType(null, "Prescriptive document"));
+//        DocumentType informativeDocument = documentTypeRepository.save(new DocumentType(null, "Informative document"));
+//        DocumentType designDocument = documentTypeRepository.save(new DocumentType(null, "Design document"));
+//        DocumentType materialEffect = documentTypeRepository.save(new DocumentType(null, "Material effect"));
+//        DocumentType technicalDocument = documentTypeRepository.save(new DocumentType(null, "Technical document"));
+//
+//        Stakeholder LKAB = stakeholderRepository.save(new Stakeholder("LKAB"));
+//        Stakeholder kirunakommun = stakeholderRepository.save(new Stakeholder("Kiruna kommun"));
+//        Stakeholder whiteArkitekter = stakeholderRepository.save(new Stakeholder("White Arkitekter"));
+//        Stakeholder others = stakeholderRepository.save(new Stakeholder("Others"));
+//        Stakeholder residents = stakeholderRepository.save(new Stakeholder("Residents"));
+//        Stakeholder country = stakeholderRepository.save(new Stakeholder("Country"));
+//
+//
+//        storeDocument2();
+//        storeDocument4();
+//        storeDocument15();
+//        storeDocument18();
+//        storeDocument41();
 
     }
 
