@@ -18,14 +18,69 @@ import design_others from "../public/icons/design doc others.png"
 import material_LKAB from "../public/icons/material action LKAB.png"
 import material_others from "../public/icons/material action others.png"
 import technical_whiteArkitekter from "../public/icons/technical doc architecture firms.png"
-import technical_Country from "../public/icons/technical doc County.png"
+import technical_County from "../public/icons/technical doc County.png"
 import technical_LKAB_whiteArkitekter from "../public/icons/technical doc LKAB + architecture firms.png"
 import technical_LKAB from "../public/icons/technical doc LKAB.png"
 import technical_kommun from "../public/icons/technical doc municipalty.png"
 import technical_kommun_whiteArkitekter from "../public/icons/technical doc municipalty+ firms.png"
+import agreement_County from "../public/icons/agreement county.png"
+import agreement_County_kommun_LKAB from "/public/icons/agreement municipalty +county +lkab.png"
+import agreement_kommun_LKAB from "/public/icons/agreement municipalty +lkab.png"
+import agreement_kommun from "/public/icons/agreement municipalty.png"
+import conflict_kommun_county from "/public/icons/conflict Municipalty+ county.png"
+import consultation_LKAB_kommun from "/public/icons/Consultation LKAB+municipalty.png"
+import consultation_kommun_residents from "/public/icons/Consultation municipalty+citizens.png"
 
 // Icon mapping
 const iconMapping = {
+  "Consultation": {
+    "LKAB,Kiruna kommun": new L.Icon({
+      iconUrl: consultation_LKAB_kommun,
+      iconSize: [40, 40],
+      iconAnchor: [20, 35],
+      popupAnchor: [1, -25],
+    }),
+    "Kiruna kommun,Residents": new L.Icon({
+      iconUrl: consultation_kommun_residents,
+      iconSize: [40, 40],
+      iconAnchor: [20, 35],
+      popupAnchor: [1, -25],
+    }),
+  },
+  "Conflict": {
+    "County,Kiruna kommun": new L.Icon({
+      iconUrl: conflict_kommun_county,
+      iconSize: [40, 40],
+      iconAnchor: [20, 35],
+      popupAnchor: [1, -25],
+    }),
+  },
+  "Agreement": {
+    "County": new L.Icon({
+      iconUrl: agreement_County,
+      iconSize: [40, 40],
+      iconAnchor: [20, 35],
+      popupAnchor: [1, -25],
+    }),
+    "County,Kiruna kommun,LKAB": new L.Icon({
+      iconUrl: agreement_County_kommun_LKAB,
+      iconSize: [40, 40],
+      iconAnchor: [20, 35],
+      popupAnchor: [1, -25],
+    }),
+    "Kiruna kommun,LKAB": new L.Icon({
+      iconUrl: agreement_kommun_LKAB,
+      iconSize: [40, 40],
+      iconAnchor: [20, 35],
+      popupAnchor: [1, -25],
+    }),
+    "Kiruna kommun": new L.Icon({
+      iconUrl: agreement_kommun,
+      iconSize: [40, 40],
+      iconAnchor: [20, 35],
+      popupAnchor: [1, -25],
+    }),
+  },
   "Prescriptive document": {
     "LKAB": new L.Icon({
       iconUrl: prescriptive_LKAB,
@@ -149,8 +204,8 @@ const iconMapping = {
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
     }),
-    "Country": new L.Icon({
-      iconUrl: technical_Country,
+    "County": new L.Icon({
+      iconUrl: technical_County,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
