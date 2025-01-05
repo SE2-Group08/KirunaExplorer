@@ -10,11 +10,9 @@ export default function LegendModal({ diagram, show, onHide }) {
         <Modal.Title>Legend</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Col>
-          <Row>
-            <strong>Document types:</strong>
-          </Row>
-          <Row>
+            <Row className="g-4">
+      <Col xs={12} md={4}>
+          <h5 className="mb-2">Document types:</h5>
             <ul style={{ listStyleType: "none", padding: 0 }}>
               <li style={{ display: "flex", alignItems: "center" }}>
                 <img
@@ -61,15 +59,10 @@ export default function LegendModal({ diagram, show, onHide }) {
                 />
                 Material effect
               </li>
-            </ul>
-          </Row>
-        </Col>
-        <div className="divider-vertical"></div>
-        <Col>
-          <Row>
-            <strong>Stakeholders:</strong>
-          </Row>
-          <Row>
+          </ul>
+      </Col>
+      <Col xs={12} md={4}>
+          <h5 className="mb-2">Stakeholders:</h5>
             <ul style={{ listStyleType: "none", padding: 0 }}>
               <li style={{ display: "flex", alignItems: "center" }}>
                 <div
@@ -138,15 +131,10 @@ export default function LegendModal({ diagram, show, onHide }) {
                 Others
               </li>
             </ul>
-          </Row>
         </Col>
-        <div className="divider-vertical"></div>
-        <Col>
-          <Row>
-            <strong>Link type:</strong>
-          </Row>
-          <Row>
-            <ul style={{ listStyleType: "none", padding: 0 }}>
+        <Col xs={12} md={4}>
+          <h5 className="mb-2">Link type:</h5>
+            <ul style={{listStyleType: "none", padding: 0}}>
             {diagram ? (
                 <>
                   <li style={{ display: "flex", alignItems: "center" }}>
@@ -257,14 +245,15 @@ export default function LegendModal({ diagram, show, onHide }) {
               </>
               )}
             </ul>
-          </Row>
         </Col>
+    </Row>
       </Modal.Body>
     </Modal>
   );
 }
 
 LegendModal.propTypes = {
+    diagram: PropTypes.bool,
     show: PropTypes.bool.isRequired,
     onHide: PropTypes.func.isRequired,
 };
