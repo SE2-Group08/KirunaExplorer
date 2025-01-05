@@ -30,6 +30,7 @@ import agreement_kommun from "../public/icons/agreement municipalty.png"
 import conflict_kommun_county from "../public/icons/conflict Municipalty+ county.png"
 import consultation_LKAB_kommun from "../public/icons/Consultation LKAB+municipalty.png"
 import consultation_kommun_residents from "../public/icons/Consultation municipalty+citizens.png"
+import default_doc from "../public/icons/default doc.png"
 
 // Icon mapping
 const iconMapping = {
@@ -238,12 +239,10 @@ const iconMapping = {
 };
 
 const defaultIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
+  iconUrl: default_doc,
+  iconSize: [40, 40],
+  iconAnchor: [20, 35],
+  popupAnchor: [1, -25],
 });
 
 const getIconForDocument = (type, stakeholders) => {
