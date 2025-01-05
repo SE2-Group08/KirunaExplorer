@@ -20,7 +20,7 @@ public record DocumentRequestDTO(
     Long id,
 
     @NotNull
-    @Size(min = 2, max = 64)
+    @Size(min = 2, max = 300)
     String title,
 
     @NotNull
@@ -52,7 +52,7 @@ public record DocumentRequestDTO(
     @Valid
     GeoReferenceDTO geolocation,
 
-    @Size(max = 1000)
+    @Size(max = 2000)
     String description
 ) {
 

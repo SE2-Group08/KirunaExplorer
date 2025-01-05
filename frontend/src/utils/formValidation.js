@@ -66,7 +66,7 @@ export const validateForm = (
 const validateTitle = (title) => {
   if (typeof title !== "string" || !title.trim()) {
     return "Title is required and must be a non-empty string.";
-  } else if (title.trim().length < 2 || title.length > 64) {
+  } else if (title.trim().length < 2 || title.length > 300) {
     return "Title must be between 2 and 64 characters.";
   }
 
@@ -225,7 +225,7 @@ const validateGeolocation = (geolocation, kirunaBorderCoordinates) => {
 };
 
 const validateDescription = (description) => {
-  if (description && description.length > 1000) {
+  if (description && description.length > 2000) {
     return "Description must not exceed 1000 characters.";
   }
   return null;
