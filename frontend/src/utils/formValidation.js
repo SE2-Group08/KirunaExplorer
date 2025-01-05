@@ -7,7 +7,9 @@ dayjs.extend(customParseFormat);
 export const validateForm = (
   document,
   combinedIssuanceDate,
-  kirunaBorderCoordinates
+  kirunaBorderCoordinates,
+  locationMode,
+  selectedAreaId,
 ) => {
   const newErrors = {};
 
@@ -48,7 +50,9 @@ export const validateForm = (
 
   const geolocationErrors = validateGeolocation(
       document.geolocation,
-      kirunaBorderCoordinates
+      kirunaBorderCoordinates,
+      locationMode,
+      selectedAreaId
   );
   console.log(geolocationErrors)
   if (Object.keys(geolocationErrors).length > 0) {
@@ -164,8 +168,77 @@ const validateNrPages = (nrPages) => {
   return null;
 };
 
-const validateGeolocation = (geolocation, kirunaBorderCoordinates) => {
+const validateGeolocation = (geolocation, kirunaBorderCoordinates, locationMode, selectedAreaId) => {
   const newErrors = {};
+  if (locationMode === "area" && !selectedAreaId) {
+    if (
+        !geolocation.area?.areaName ||
+        !geolocation.area.areaName.trim()
+    ) {
+      newErrors.areaName = "Please provide a name for the area.";
+    }
+
+    if (
+        !geolocation.area?.geometry?.coordinates ||
+        geolocation.area.geometry.coordinates.length === 0
+    ) {
+      newErrors.areaCoordinates =
+          "No polygon found. Please draw an area on the map.";
+    } else {
+
+      const polygonCoordinates = geolocation.area.geometry.coordinates[0];
+
+      if (!Array.isArray(polygonCoordinates) || polygonCoordinates.length === 0) {
+        newErrors.areaCoordinates = "No valid polygon coordinates found.";
+      } else {
+        for (const [lng, lat] of polygonCoordinates) {
+          const point = [Number(lng), Number(lat)]; // [x, y] = [lng, lat]
+          let insideAnyPolygon = false;
+
+          const switchCoordinates = (polygon) =>
+              polygon.map((ring) =>
+                  ring.map(([rLat, rLng]) => [rLng, rLat])
+              );
+
+          const isPointInRing = (pt, ring) => {
+            let inside = false;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+              const [xi, yi] = ring[i];
+              const [xj, yj] = ring[j];
+              const intersect =
+                  yi > pt[1] !== yj > pt[1] &&
+                  pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi;
+              if (intersect) inside = !inside;
+            }
+            return inside;
+          };
+
+          const isPointInPolygon = (pt, polygon) => {
+            const [outerRing, ...holes] = polygon;
+            if (!isPointInRing(pt, outerRing)) return false;
+            for (const hole of holes) {
+              if (isPointInRing(pt, hole)) return false;
+            }
+            return true;
+          };
+
+          for (const borderPolygon of kirunaBorderCoordinates) {
+            const switchedPolygon = switchCoordinates(borderPolygon);
+            if (isPointInPolygon(point, switchedPolygon)) {
+              insideAnyPolygon = true;
+              break;
+            }
+          }
+
+          if (!insideAnyPolygon) {
+            newErrors.areaCoordinates =
+                "Your polygon must be fully within the Kiruna boundary.";
+            break;
+          }
+        }
+      }
+    }
+  }
   if (geolocation.pointCoordinates) {
     const point = {
       lat: geolocation.pointCoordinates.coordinates.latitude,

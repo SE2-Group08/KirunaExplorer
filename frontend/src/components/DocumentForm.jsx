@@ -84,6 +84,7 @@ export default function DocumentFormComponent({document, show, onHide, authToken
     const municipalityRef = useRef(null);
     const descriptionRef = useRef(null);
     const areaNameRef = useRef(null);
+    const areaCoordinatesRef = useRef(null);
 
     useEffect(() => {
         if (document?.id) {
@@ -113,7 +114,6 @@ export default function DocumentFormComponent({document, show, onHide, authToken
                 description: document.description || "",
             });
             if (document.geolocation?.area) {
-                console.log(document.geolocation)
                 if (document.geolocation.area.areaName === "Entire Municipality") {
                     setLocationMode("entire_municipality");
                 } else {
@@ -161,16 +161,18 @@ export default function DocumentFormComponent({document, show, onHide, authToken
             languageRef.current.focus();
         } else if (validationErrors.nrPages) {
             nrPagesRef.current.focus();
-        } else if (validationErrors.latitude) {
-            latitudeRef.current.focus();
-        } else if (validationErrors.longitude) {
-            longitudeRef.current.focus();
-        } else if (validationErrors.municipality) {
-            municipalityRef.current.focus();
+        } else if (validationErrors.geolocation) {
+            const geo = validationErrors.geolocation;
+            if (geo.areaName) {
+                areaNameRef.current.focus();
+            } else if (geo.latitude) {
+                latitudeRef.current.focus();
+                longitudeRef.current.focus();
+            } else if (geo.areaCoordinates) {
+                areaCoordinatesRef.current.focus();
+            }
         } else if (validationErrors.description) {
             descriptionRef.current.focus();
-        } else if (validationErrors.areaName) {
-            areaNameRef.current.focus();
         }
     };
 
@@ -335,14 +337,23 @@ export default function DocumentFormComponent({document, show, onHide, authToken
             formDocument.month ? "-" + formDocument.month.padStart(2, "0") : ""
         }${formDocument.day ? "-" + formDocument.day.padStart(2, "0") : ""}`;
 
-        if (locationMode === "area" && !selectedAreaId && formDocument.geolocation.area.areaName.trim() === "") {
-            setErrors({areaName: "Please provide a name for the area."});
-            return;
-        }
-
 
         let updatedGeolocation = {...formDocument.geolocation};
         try {
+            const validationErrors = validateForm(
+                formDocument,
+                combinedIssuanceDate,
+                kirunaBorderCoordinates,
+                locationMode,
+                selectedAreaId,
+            );
+            setErrors(validationErrors);
+
+            if (Object.keys(validationErrors).length > 0) {
+                handleValidationErrors(validationErrors);
+                return;
+            }
+
             if (locationMode === "area") {
                 if (selectedAreaId) {
                     updatedGeolocation = {
@@ -403,23 +414,11 @@ export default function DocumentFormComponent({document, show, onHide, authToken
                 }
             }
 
-            // Prepara la geolocation finale
             const sanitizedGeolocation = {
                 area: (locationMode === "area" || locationMode === "entire_municipality") ? updatedGeolocation.area : null,
                 pointCoordinates:
                     locationMode === "point" ? updatedGeolocation.pointCoordinates : null,
             };
-
-            const validationErrors = validateForm(
-                formDocument,
-                combinedIssuanceDate,
-                kirunaBorderCoordinates
-            );
-            setErrors(validationErrors);
-            if (Object.keys(validationErrors).length > 0) {
-                handleValidationErrors(validationErrors);
-                return;
-            }
 
             if (!document) {
                 const newDocId = await createDocument(
@@ -530,6 +529,8 @@ export default function DocumentFormComponent({document, show, onHide, authToken
                             longitudeRef,
                             municipalityRef,
                             descriptionRef,
+                            areaNameRef,
+                            areaCoordinatesRef,
                         }}
                         locationMode={locationMode}
                         setLocationMode={(val) => {
@@ -638,7 +639,6 @@ function DocumentFormFields({
             if (areaCentroid?.latitude && areaCentroid?.longitude) {
                 setMarkerPosition([areaCentroid.latitude, areaCentroid.longitude]);
             } else {
-                console.warn("Area centroid is missing or invalid. Resetting marker position.");
                 setMarkerPosition(defaultPosition); // Fallback to default position if centroid is invalid
             }
 
@@ -848,26 +848,42 @@ function DocumentFormFields({
 
 
     const onEdited = (e) => {
-        const updatedAreas = [];
-        e.layers.eachLayer((layer) => {
-            const updatedArea = layer.toGeoJSON();
-            updatedAreas.push(updatedArea);
-        });
+        setAreaModified(true);
+        let updatedGeolocation = null;
 
-        handleChange("area", updatedAreas[0]); // Salva il primo poligono come area principale
+        e.layers.eachLayer((layer) => {
+            const editedArea = layer.toGeoJSON();
+            const coordinates = editedArea.geometry.coordinates[0];
+            const centroid = calculateCentroid(
+                coordinates.map(([lat, lng]) => [lng, lat]) // swap order for centroid function
+            );
+            updatedGeolocation = {
+                area: {
+                    areaId: null,
+                    areaName: "",
+                    areaCentroid: centroid,
+                    geometry: {
+                        type: "Polygon",
+                        coordinates: [coordinates], // Maintain the GeoJSON format
+                    },
+                },
+                pointCoordinates: null,
+            };
+        });
+        if (updatedGeolocation) {
+            handleChange("geolocation", updatedGeolocation);
+            setDocument((prev) => ({
+                ...prev,
+                geolocation: updatedGeolocation,
+            }));
+
+            setSelectedAreaId("");
+        }
     };
 
 
-    const onDeleted = () => {
-        /* setAreaModified(true);
-         const remainingArea = document.geolocation.area.filter((area) => {
-           return !e.layers.getLayers().some((layer) => {
-             const layerArea = layer.toGeoJSON();
-             return JSON.stringify(layerArea) === JSON.stringify(area);
-           });
-         });
 
-         handleChange("geolocation", { ...document.geolocation, area: remainingArea });*/
+    const onDeleted = () => {
         handleChange("area", null); // Rimuovi il poligono dall'area
     };
 
@@ -912,6 +928,7 @@ function DocumentFormFields({
             latitude,
             document.geolocation.pointCoordinates?.coordinates?.longitude || defaultPosition[1],
         ]);
+
     };
 
     const handleLongitudeChange = (e) => {
@@ -947,7 +964,6 @@ function DocumentFormFields({
                 throw new Error("Area data is missing or invalid");
             }
 
-            console.log("Fetched Area:", area);
 
             // Update the selected area ID state
             setSelectedAreaId(areaId);
@@ -980,11 +996,9 @@ function DocumentFormFields({
 
     const handleSelectExistingPoint = (e) => {
         const pointId = e.target.value; // Get selected pointId from the dropdown
-        console.log("Selected point ID:", pointId);
 
         // Safely find the point using a stricter condition
         const point = allKnownPoints?.find((p) => {
-            console.log("Checking point:", p.id, "against", pointId);
             return p.id.toString() === pointId.toString();
         });
 
@@ -993,7 +1007,6 @@ function DocumentFormFields({
             return;
         }
 
-        console.log("Existing point found:", point);
 
         setSelectedPointId(pointId);
 
@@ -1594,7 +1607,6 @@ function DocumentFormFields({
                                 onChange={(e) => {
                                     setLocationMode(e.target.value);
                                     if (e.target.value === "entire_municipality") {
-                                        console.log(defaultPosition);
                                         const municipality = allKnownAreas.find(
                                             (p) => p.name === "Entire Municipality"
                                         );
@@ -1642,7 +1654,6 @@ function DocumentFormFields({
                                             const updatedPointName = e.target.value;
                                             setPointName(updatedPointName); // Update local state
 
-                                            console.log(updatedPointName)
                                             // Synchronize with geolocation
                                             handleChange("geolocation", {
                                                 ...document.geolocation,
@@ -1712,12 +1723,12 @@ function DocumentFormFields({
                                     value={document.geolocation?.pointCoordinates?.coordinates?.latitude || ""}
                                     onChange={handleLatitudeChange}
                                     id="formDocumentGeolocationLatitude"
-                                    isInvalid={!!errors.latitude}
+                                    isInvalid={!!errors.geolocation?.latitude}
                                     ref={refs.latitudeRef}
                                 />
-                                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
-                                    {errors.latitude}
-                                </div>
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.geolocation?.latitude}
+                                </Form.Control.Feedback>
                                 <Form.Range
                                     min={67.3564329180828}
                                     max={69.05958911620179}
@@ -1740,14 +1751,14 @@ function DocumentFormFields({
                                     min={17.89900836116174}
                                     max={23.28669305841499}
                                     step={0.00001}
-                                    isInvalid={!!errors.longitude}
+                                    isInvalid={!!errors.geolocation?.longitude}
                                     onChange={handleLongitudeChange}
                                     id="formDocumentGeolocationLongitude"
                                     ref={refs.longitudeRef}
                                 />
-                                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
-                                    {errors.longitude}
-                                </div>
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.geolocation?.longitude}
+                                </Form.Control.Feedback>
                                 <Form.Range
                                     min={17.89900836116174}
                                     max={23.28669305841499}
@@ -1763,7 +1774,7 @@ function DocumentFormFields({
             </Row>
 
 
-            {locationMode === "area" && areaModified && (
+            {locationMode === "area" && areaModified && !selectedAreaId &&(
                 <Row className="mb-4">
                     <Col md={6}>
                         <Form.Group>
@@ -1783,9 +1794,10 @@ function DocumentFormFields({
                                         },
                                     });
                                 }}
-                                isInvalid={!!errors.areaName}
+                                isInvalid={!!errors.geolocation?.areaName}
+                                ref={refs.areaNameRef}
                             />
-                            <Form.Control.Feedback type="invalid">{errors.areaName}</Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid">{errors.geolocation?.areaName}</Form.Control.Feedback>
                         </Form.Group>
                     </Col>
                 </Row>
@@ -1796,12 +1808,18 @@ function DocumentFormFields({
             <Row className="mb-4">
                 <Col md={12}>
                     <Form.Group>
-                        <div style={{height: "400px", marginBottom: "15px"}}>
+                        <div style={{height: "400px", marginBottom: "15px"}}
+                             ref={refs.areaCoordinatesRef}>
                             {locationMode === "point" && (
                                 <Form.Text className="text-muted">
                                     Click on the map to set the location. Latitude and Longitude fields will update
                                     automatically.
                                 </Form.Text>
+                            )}
+                            {locationMode === "area" && !selectedAreaId && errors.geolocation?.areaCoordinates && (
+                                <div style={{color: "#dc3545", fontSize: "0.875rem"}}>
+                                    {errors.geolocation?.areaCoordinates}
+                                </div>
                             )}
                             <MapContainer
                                 ref={mapRef}
@@ -1830,6 +1848,7 @@ function DocumentFormFields({
                                         <EditControl
                                             position="topright"
                                             onCreated={onCreated}
+                                            onEdited={onEdited}
                                             onDeleted={onDeleted}
                                             draw={{
                                                 rectangle: false,
@@ -1942,8 +1961,8 @@ function UploadFilesComponent({
                               }) {
     const [files, setFiles] = useState([]);
     const [filePreviews, setFilePreviews] = useState({});
+    const [fileError, setFileError] = useState(""); // Add a state for the file error
     const fileInputRef = useRef(null);
-    const {setFeedbackFromError} = useContext(FeedbackContext);
 
     useEffect(() => {
         // Cleanup function to revoke object URLs
@@ -1968,15 +1987,15 @@ function UploadFilesComponent({
         });
 
         if (oversizedFiles.length > 0) {
-            setFeedbackFromError(
-                new Error(
-                    `The following files are too large (max 100 MB): ${oversizedFiles.join(
-                        ", "
-                    )}`
-                )
+            setFileError(
+                `The following files are too large (max 100 MB): ${oversizedFiles.join(
+                    ", "
+                )}`
             );
             return;
         }
+
+        setFileError(""); // Clear the error if all files are valid
 
         const validFiles = newFiles.filter((file) => file.size <= MAX_FILE_SIZE);
 
@@ -2007,14 +2026,14 @@ function UploadFilesComponent({
             return newFilesToUpload;
         });
     };
+
     return (
         <>
-            {/* UPLOAD */}
             <Row className="mb-4">
                 <Col md={12}>
                     <Form.Group controlId="formDocumentFiles">
-                        <Form.Label>Upload files</Form.Label>
-                        <div className="form-divider"/>
+                        <Form.Label>Upload resources</Form.Label>
+                        <div className="divider"/>
                         <div className="d-flex align-items-center">
                             <Form.Control
                                 type="file"
@@ -2022,6 +2041,7 @@ function UploadFilesComponent({
                                 onChange={handleFileChange}
                                 className="d-none"
                                 ref={fileInputRef}
+                                isInvalid={!!fileError} // Link error state
                             />
                             <Button
                                 variant="primary"
@@ -2034,8 +2054,11 @@ function UploadFilesComponent({
                                 {files.length} new file{files.length !== 1 && "s"} uploaded
                             </Form.Text>
                         </div>
-
-                        {/* Display Selected Files */}
+                        {fileError && (
+                            <Form.Control.Feedback type="invalid" style={{ display: "block" }}>
+                                {fileError}
+                            </Form.Control.Feedback>
+                        )}
                         {files.length > 0 && (
                             <div className="mt-3">
                                 <h6>Selected files:</h6>
@@ -2059,7 +2082,6 @@ function UploadFilesComponent({
                                 </ListGroup>
                             </div>
                         )}
-
                         {existingFiles && existingFiles.length > 0 && (
                             <div className="mt-3">
                                 <h6>Existing files:</h6>

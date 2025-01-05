@@ -42,7 +42,6 @@ const logOut = async (token) => {
         "Authorization": `Bearer ${token}`,
       }
     });
-    console.log("User successfully logged out.");
   } catch (error) {
     throw error;
   }
@@ -207,11 +206,9 @@ const getAllDocumentSnippets = async (filter) => {
 
 // Retrieve all documents snippets for the diagram
 const getAllDocumentSnippetsWithLinks = async () => {
-  console.log("API GET ALL DOCUMENTS WITH LINKS");
   const documents = await fetch(`${SERVER_URL}/documents/diagram`)
     .then(handleInvalidResponse)
     .then((response) => response.json())
-    console.log("API DOCUMENTS: ", documents);
   return documents;
 };
 
@@ -407,7 +404,6 @@ const addGeolocatedPoint = async (point, token) => {
 
     const pointId = location.split("/").pop(); // Estrarre l'ID dal percorso
 
-    console.log(pointId);
     return pointId;
   } catch (error) {
     console.error("Error while adding point:", error);
@@ -456,7 +452,6 @@ const getAllAreasSnippets = async (token) => {
 // Create a new area
 const addGeolocatedArea = async (area, token) => {
   try {
-    console.log(area);
     const response = await fetch(`${SERVER_URL}/areas`, {
       method: "POST",
       headers: {
@@ -506,7 +501,6 @@ const getAreaById = async (id, authToken) => {
     // Parse the JSON data
     const data = await response.json();
 
-    console.log(data);
     // Map the response to the required format
     return {
       id: data.id, // Unique area identifier
