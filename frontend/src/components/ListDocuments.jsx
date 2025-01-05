@@ -179,8 +179,10 @@ export default function ListDocuments({
     try {
       const params = new URLSearchParams();
       if (keyword) params.append("keyword", keyword);
-      if (documentTypes.length > 0) params.append("type", documentTypes.join(","));
-      if (stakeholders.length > 0) params.append("stakeholderNames", stakeholders.join(","));
+      if (documentTypes.length > 0)
+        params.append("type", documentTypes.join(","));
+      if (stakeholders.length > 0)
+        params.append("stakeholderNames", stakeholders.join(","));
       if (scales.length > 0) params.append("scale", scales.join(","));
 
       const response = await API.searchDocuments(params.toString());
@@ -190,6 +192,54 @@ export default function ListDocuments({
       setFeedbackFromError(error);
     }
   };
+
+  let content;
+
+  if (!allDocuments) {
+    content = (
+      <Spinner animation="border" className="mx-auto">
+        <output className="visually-hidden">Loading...</output>
+      </Spinner>
+    );
+  } else if (allDocuments.length === 0) {
+    content = (
+      <>
+        <p className="text-center">
+          No document has been stored yet.
+        </p>
+        {loggedIn && isUrbanPlanner && (
+          <p className="text-center">Click on the plus button in the top right to add a new one</p>
+        )}
+      </>
+    );
+  } else if (compactView) {
+    content = (
+      <Row className="g-4 mx-auto">
+        <DocumentSnippetTableComponent
+          documents={filteredDocuments}
+          onSelect={handleSelection}
+          isLinkedDocument={isLinkedDocument}
+          allLinksOfSelectedDocument={allLinksOfSelectedDocument}
+          linking={linking}
+        />
+      </Row>
+    );
+  } else {
+    content = (
+      <Row xs={1} sm={2} md={3} lg={4} className="g-4 mx-auto">
+        {filteredDocuments.map((document) => (
+          <DocumentSnippetCardComponent
+            key={document.id}
+            document={document}
+            isLinkedDocument={isLinkedDocument}
+            onSelect={handleSelection}
+            allLinksOfSelectedDocument={allLinksOfSelectedDocument}
+            linking={linking}
+          />
+        ))}
+      </Row>
+    );
+  }
 
   return (
     <Container fluid className="scrollable-list-documents">
@@ -258,34 +308,7 @@ export default function ListDocuments({
       </Row>
 
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
-        {allDocuments.length === 0 ? (
-          <Spinner animation="border" className="mx-auto">
-            <output className="visually-hidden">Loading...</output>
-          </Spinner>
-        ) : compactView ? (
-          <Row className="g-4 mx-auto">
-            <DocumentSnippetTableComponent
-              documents={filteredDocuments}
-              onSelect={handleSelection}
-              isLinkedDocument={isLinkedDocument}
-              allLinksOfSelectedDocument={allLinksOfSelectedDocument}
-              linking={linking}
-            />
-          </Row>
-        ) : (
-          <Row xs={1} sm={2} md={3} lg={4} className="g-4 mx-auto">
-            {filteredDocuments.map((document) => (
-              <DocumentSnippetCardComponent
-                key={document.id}
-                document={document}
-                isLinkedDocument={isLinkedDocument}
-                onSelect={handleSelection}
-                allLinksOfSelectedDocument={allLinksOfSelectedDocument}
-                linking={linking}
-              />
-            ))}
-          </Row>
-        )}
+        {content}
         {totalPages > 1 && (
           <div style={{ position: "fixed", bottom: 100, width: "100%" }}>
             <Pagination
@@ -450,7 +473,7 @@ DocumentSnippetTableComponent.propTypes = {
   isLinkedDocument: PropTypes.func.isRequired,
 };
 
- export const DocumentSnippetCardComponent = ({
+export const DocumentSnippetCardComponent = ({
   document,
   isLinkedDocument,
   onSelect,
