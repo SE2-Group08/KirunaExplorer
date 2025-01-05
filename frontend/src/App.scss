@@ -22,18 +22,51 @@ html, body {
   flex-grow: 1;
 }
 
+
 .header-navbar {
-  color: map-get($theme-colors, "white");
-}
+  color: map-get($theme-colors, "dark") !important;
 
-.header-navbar a {
-  color: map-get($theme-colors, "white");
-}
+  .container {
+    margin: 0;
+    justify-content: space-between;
+  }
 
-.header-navbar a:hover {
-  color: #ddd; /* Cambia colore al passaggio del mouse */
-}
+  a:hover,
+  .navbar-brand:hover {
+    color: #ddd !important;
+    text-decoration: none;
+  }
 
+  a.active,
+  .navbar-brand.active {
+    font-weight: bold;
+  }
+
+  .brand-bold {
+    font-weight: bold;
+  }
+
+
+  .navbar-toggler {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .navbar-toggler:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .navbar-toggler:active {
+    background-color: transparent !important;
+    border: none;
+  }
+
+  .navbar-toggler:hover {
+    background-color: transparent !important;
+  }
+
+}
 
 .scrollable-list-documents {
   padding: 1rem;

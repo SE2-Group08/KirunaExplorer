@@ -114,7 +114,7 @@ const FullPageChart = () => {
         .style("border-radius", "4px")
         .style("pointer-events", "none")
         .style("font-size", "12px")
-        .style("height", "auto")
+        .style("height", "auto");
 
     // **ZOOM: Definizione e gestione**
     const zoom = d3.zoom()
@@ -274,6 +274,7 @@ const FullPageChart = () => {
     // Cleanup
     return () => {
       d3.select(svgRef.current).selectAll("*").remove();
+      tooltip.remove();
     };
   }, [documentsToShow]);
 
