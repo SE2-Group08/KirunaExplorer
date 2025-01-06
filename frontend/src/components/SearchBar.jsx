@@ -219,7 +219,7 @@ function SearchBar({ onSearch, onRealTimeSearch }) {
                         ))}
                         {scaleFilter.map((filter, index) => (
                             <Col key={`scale-${index}`} xs="auto" className="mb-2">
-                                <Badge className="p-2" text="info">
+                                <Badge bg="white" className="p-2" text="info">
                                     {filter}{" "}
                                     <i
                                         className="bi bi-x-circle ms-1"

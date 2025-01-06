@@ -7,38 +7,81 @@ import LegendModal from "./Legend";
 
 const FullPageChart = () => {
   const svgRef = useRef();
+
+  // Track documents to show
   const [documentsToShow, setDocumentsToShow] = useState([]);
+
+  // Track current zoom level
   const [zoomLevel, setZoomLevel] = useState(1);
+
+  // Track visibility of legend
   const [showLegend, setShowLegend] = useState(false);
 
-  useEffect(() => {
-    const margin = { top: 70, right: 80, bottom: 50, left: 100 };
-    const width = window.innerWidth - margin.left - margin.right;
-    const height = window.innerHeight * 0.85 - margin.top - margin.bottom;
+  // Track chart dimensions in state
+  const [dimensions, setDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
 
+  // Dynamically recalculate chart dimensions on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      // You can adjust margins, or factor in other layout constraints here
+      const margin = { top: 70, right: 80, bottom: 50, left: 100 };
+
+      const newWidth = window.innerWidth - margin.left - margin.right;
+      const newHeight = window.innerHeight * 0.85 - margin.top - margin.bottom;
+
+      setDimensions({
+        width: newWidth,
+        height: newHeight,
+      });
+    };
+
+    // Initial calculation
+    handleResize();
+
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+
+    // Remove listener on cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Main effect to draw the chart
+  useEffect(() => {
+    // If we have no width or height, do not draw
+    if (!dimensions.width || !dimensions.height) return;
+
+    // Extract dimensions and define margins
+    const margin = { top: 70, right: 80, bottom: 50, left: 100 };
+    const { width, height } = dimensions;
+
+    // Some custom domains for your yScale
     const nonNumericDomain = [" ", "Text", "Concept"];
     const numericDomain = ["1:100000", "1:10000", "1:5000", "1:1000"];
     const blueprints = ["Blueprints/effects", ""];
+    const fixedYDomain = [
+      ...nonNumericDomain,
+      ...numericDomain,
+      ...blueprints,
+    ];
 
-    const fixedYDomain = [...nonNumericDomain, ...numericDomain, ...blueprints];
-
-    // Funzione per determinare il colore della linea in base al tipo di collegamento
-    const getLinkColor = (linkType) => {
-      return "black";
-    };
+    // Functions for link style
+    const getLinkColor = (linkType) => "black";
 
     const getLinkDashArray = (linkType) => {
       switch (linkType) {
         case "DIRECT_CONSEQUENCE":
-          return "none"; // Linea continua
+          return "none"; // solid
         case "COLLATERAL_CONSEQUENCE":
-          return "5,5"; // Linea tratteggiata
+          return "5,5"; // dashed
         case "PREVISION":
-          return "1,5"; // Linea puntinata
-        case "UPDATE": // Un altro tipo di link se necessario
-          return "10,5,1,5"; // Linea tratto-punto
+          return "1,5"; // dotted
+        case "UPDATE":
+          return "10,5,1,5"; // dash-dot
         default:
-          return "none"; // Linea continua di default
+          return "none";
       }
     };
 
@@ -54,38 +97,42 @@ const FullPageChart = () => {
       return match ? parseInt(match[1]) : null;
     };
 
+    // Clear the old chart (cleanup before drawing again)
+    d3.select(svgRef.current).selectAll("*").remove();
+
+    // Select or create the main SVG element
     const svg = d3
         .select(svgRef.current)
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
-        .style("background", "#ffffff")
-    /*.append("g")
-    .attr("transform", `translate(${margin.left}, ${margin.top})`);*/
+        .style("background", "#ffffff");
 
-    // Contenitore del grafico con margini
+    // Append main group to contain the chart
     const mainGroup = svg
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // Creazione degli scale
+    // Scales
     const xScale = d3.scaleLinear().domain([2004, 2025]).range([0, width]);
+
     const yScale = d3
         .scalePoint()
-        .domain([" ", "Text", "Concept", "1:100000", "1:10000", "1:5000", "1:1000", "Blueprints/effects", ""])
+        .domain(fixedYDomain)
         .range([0, height])
         .padding(0.2);
 
+    // Axes
     const xAxis = d3.axisBottom(xScale).ticks(21).tickFormat(d3.format("d"));
     const yAxis = d3.axisLeft(yScale);
 
-    // Aggiunta degli assi
+    // Draw axes
     mainGroup.append("g").call(yAxis);
     mainGroup
         .append("g")
         .attr("transform", `translate(0, ${height})`)
         .call(xAxis);
 
-    // Griglie orizzontali
+    // Horizontal grid
     mainGroup
         .append("g")
         .attr("class", "grid grid-horizontal")
@@ -94,7 +141,7 @@ const FullPageChart = () => {
         .attr("stroke", "#ddd")
         .attr("stroke-dasharray", "4,4");
 
-    // Griglie verticali
+    // Vertical grid
     mainGroup
         .append("g")
         .attr("class", "grid grid-vertical")
@@ -105,9 +152,8 @@ const FullPageChart = () => {
 
     // Tooltip container
     const tooltip = d3
-        .select(svgRef.current.parentNode)
+        .select("body")
         .append("div")
-        .attr("class", "tooltip")
         .style("position", "absolute")
         .style("padding", "8px")
         .style("background", "rgba(0, 0, 0, 0.8)")
@@ -115,25 +161,28 @@ const FullPageChart = () => {
         .style("border-radius", "4px")
         .style("pointer-events", "none")
         .style("font-size", "12px")
-        .style("height", "auto");
+        .style("height", "auto")
+        .style("opacity", 0);
 
-    // **ZOOM: Definizione e gestione**
+    // Zoom behavior
     const zoom = d3.zoom()
-        .scaleExtent([1, 5]) // Minimo zoom = 1 (posizione iniziale), massimo zoom = 10
+        .scaleExtent([1, 5]) // Min and max zoom
         .translateExtent([
-          [-50, -50], // Limiti di pan: posizione iniziale in alto a sinistra
-          [width+30, height+30], // Limiti di pan: posizione iniziale in basso a destra
+          [-50, -50],
+          [width + 30, height + 30],
         ])
         .on("zoom", (event) => {
-          mainGroup.attr("transform", event.transform); // Applica la trasformazione dello zoom
-          setZoomLevel(event.transform.k); // Aggiorna lo stato con il livello di zoom corrente
+          mainGroup.attr("transform", event.transform);
+          setZoomLevel(event.transform.k);
         });
 
-    // Applica lo zoom all'intero SVG
+    // Apply zoom
     svg.call(zoom);
 
-    // Calcolare le posizioni dei documenti
+    // Positions for documents
     const documentPositions = {};
+
+    // Render document icons
     mainGroup
         .selectAll(".document-icon")
         .data(documentsToShow)
@@ -145,31 +194,31 @@ const FullPageChart = () => {
           const xStart = xScale(year);
           const xEnd = xScale(year + 1);
           const xPos = xStart + Math.random() * (xEnd - xStart) - 15;
-          documentPositions[d.id] = { x: xPos }; // Salva la posizione X
+          documentPositions[d.id] = { x: xPos };
           return xPos;
         })
         .attr("y", (d) => {
-          const normalizedScale = normalizeScale(d.scale);
-          const numericScale = parseNumericScale(normalizedScale);
+          const scaleNorm = normalizeScale(d.scale);
+          const numericScaleValue = parseNumericScale(scaleNorm);
 
-          let yPos = yScale("Text") - 15; // Valore di default
+          let yPos = yScale("Text") - 15; // default
 
-          if (numericScale) {
-            // Caso specifico per scale <= 1:1000
-            if (numericScale <= 1000 && numericScale >= 1) {
+          if (numericScaleValue) {
+            if (numericScaleValue <= 1000 && numericScaleValue >= 1) {
+              // place between 1:1000 and Blueprints/effects
               const yBlueprints = yScale("Blueprints/effects");
               const y1000 = yScale("1:1000");
               yPos = yBlueprints + Math.random() * (y1000 - yBlueprints) - 15;
             } else {
-              // Calcola la posizione Y in base agli altri intervalli
+              // place in numeric domain
               for (let i = 0; i < numericDomain.length - 1; i++) {
                 const currentScale = parseNumericScale(numericDomain[i]);
                 const nextScale = parseNumericScale(numericDomain[i + 1]);
                 if (
                     currentScale !== null &&
                     nextScale !== null &&
-                    numericScale > nextScale &&
-                    numericScale <= currentScale
+                    numericScaleValue > nextScale &&
+                    numericScaleValue <= currentScale
                 ) {
                   yPos =
                       yScale(numericDomain[i + 1]) +
@@ -179,17 +228,17 @@ const FullPageChart = () => {
                 }
               }
             }
-          } else if (normalizedScale === "Blueprints/effects") {
-            // Caso specifico per scale "Blueprints/effects"
-            const yMin = yScale(""); // Assumendo "" sia il valore minimo Y
+          } else if (scaleNorm === "Blueprints/effects") {
+            // place between "" and Blueprint/effects
+            const yMin = yScale("");
             const yBlueprints = yScale("Blueprints/effects");
             yPos = yMin + Math.random() * (yBlueprints - yMin) - 15;
           } else {
-            // Fallback
-            yPos = yScale(normalizeScale(d.scale)) - 15;
+            // fallback
+            yPos = yScale(scaleNorm) - 15;
           }
 
-          documentPositions[d.id].y = yPos; // Salva la posizione Y
+          documentPositions[d.id].y = yPos;
           return yPos;
         })
         .attr("width", 30)
@@ -198,10 +247,10 @@ const FullPageChart = () => {
         .on("mouseover", function (event, d) {
           tooltip
               .style("opacity", 1)
-              .html(`<strong>${d.title}</strong><p>Scale: ${d.scale}</p>`) // Mostra il titolo del documento
+              .html(`<strong>${d.title}</strong><p>Scale: ${d.scale}</p>`)
               .style("left", `${event.pageX + 10}px`)
               .style("top", `${event.pageY + 10}px`);
-          d3.select(this).attr("opacity", 0.9); // Modifica l'opacità dell'icona
+          d3.select(this).attr("opacity", 0.9);
         })
         .on("mousemove", (event) => {
           tooltip
@@ -209,50 +258,45 @@ const FullPageChart = () => {
               .style("top", `${event.pageY + 10}px`);
         })
         .on("mouseout", function () {
-          tooltip.style("opacity", 0); // Nascondi il tooltip
-          d3.select(this).attr("opacity", 1); // Ripristina l'opacità dell'icona
-        })
+          tooltip.style("opacity", 0);
+          d3.select(this).attr("opacity", 1);
+        });
 
-    // Disegna le linee curve per i collegamenti tra i documenti
-    const drawnLinks = new Set(); // Set per memorizzare le coppie di documenti già considerate
+    // Draw links
+    const drawnLinks = new Set();
+    const offset = 10;
 
-    const offset = 10; // Lunghezza da accorciare all'inizio e alla fine della linea
-
-    documentsToShow.forEach((document) => {
-      document.links.forEach((link, index) => {
-        const targetDocument = documentsToShow.find((d) => d.id === link.documentId);
-        if (targetDocument) {
+    documentsToShow.forEach((doc) => {
+      doc.links.forEach((link, index) => {
+        const target = documentsToShow.find((d) => d.id === link.documentId);
+        if (target) {
           const linkType = link.linkType;
+          // Unique ID for a link
+          const linkId = [doc.id, target.id].sort((a, b) => a - b).join("-") + `-${linkType}`;
 
-          // Genera un identificativo unico per la coppia di documenti e il tipo di link
-          const linkId = [document.id, targetDocument.id].sort((a, b) => a - b).join("-") + `-${linkType}`;
-
-          // Disegna la linea solo se questa coppia di documenti con questo tipo non è già stata processata
           if (!drawnLinks.has(linkId)) {
-            drawnLinks.add(linkId); // Segna questa coppia e tipo come processati
+            drawnLinks.add(linkId);
 
-            const startX = documentPositions[document.id].x + 15; // Aggiungi un offset per centrarsi sull'icona
-            const startY = documentPositions[document.id].y + 15;
-            const endX = documentPositions[targetDocument.id].x + 15;
-            const endY = documentPositions[targetDocument.id].y + 15;
+            const startX = documentPositions[doc.id].x + 15;
+            const startY = documentPositions[doc.id].y + 15;
+            const endX = documentPositions[target.id].x + 15;
+            const endY = documentPositions[target.id].y + 15;
 
-            // Calcola la distanza tra i due punti
             const deltaX = endX - startX;
             const deltaY = endY - startY;
             const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
 
-            // Calcola i nuovi punti accorciati
+            // Shift the line so it doesn't enter the icon
             const newStartX = startX + (offset * deltaX) / distance;
             const newStartY = startY + (offset * deltaY) / distance;
             const newEndX = endX - (offset * deltaX) / distance;
             const newEndY = endY - (offset * deltaY) / distance;
 
-            // Calcola la curvatura in base all'indice del link
-            const curveOffset = 20 * (index - Math.floor(document.links.length / 1.2)); // Valore di curvatura
+            // Slight curvature based on index
+            const curveOffset = 20 * (index - Math.floor(doc.links.length / 1.2));
             const controlPointX = (newStartX + newEndX) / 2 + curveOffset;
             const controlPointY = (newStartY + newEndY) / 2 - Math.abs(curveOffset) / 2;
 
-            // Crea una curva con il path, applicando il tipo di linea
             mainGroup
                 .append("path")
                 .attr(
@@ -262,23 +306,22 @@ const FullPageChart = () => {
                 .attr("fill", "none")
                 .attr("stroke", getLinkColor(linkType))
                 .attr("stroke-width", 2)
-                .attr("stroke-dasharray", getLinkDashArray(linkType)); // Usa il tipo di linea
+                .attr("stroke-dasharray", getLinkDashArray(linkType));
           }
         }
       });
     });
 
-
-    // Alza le icone dei documenti sopra le linee
+    // Raise document icons above links
     mainGroup.selectAll(".document-icon").raise();
 
-    // Cleanup
+    // Cleanup (remove tooltip)
     return () => {
-      d3.select(svgRef.current).selectAll("*").remove();
       tooltip.remove();
     };
-  }, [documentsToShow]);
+  }, [documentsToShow, dimensions]);
 
+  // Fetch documents
   useEffect(() => {
     API.getAllDocumentSnippetsWithLinks()
         .then((data) => setDocumentsToShow(data))
@@ -287,7 +330,11 @@ const FullPageChart = () => {
 
   return (
       <div style={{ position: "relative" }}>
-        <LegendModal diagram={true} show={showLegend} onHide={() => setShowLegend(false)} />
+        <LegendModal
+            diagram={true}
+            show={showLegend}
+            onHide={() => setShowLegend(false)}
+        />
         <Button
             title={"legend"}
             className="position-absolute top-0 end-0 m-3"
@@ -301,6 +348,6 @@ const FullPageChart = () => {
         <svg ref={svgRef}></svg>
       </div>
   );
-}
+};
 
 export default FullPageChart;
