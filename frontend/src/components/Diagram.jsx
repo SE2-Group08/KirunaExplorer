@@ -113,7 +113,7 @@ const FullPageChart = () => {
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     // Scales
-    const xScale = d3.scaleLinear().domain([2004, 2025]).range([0, width]);
+    const xScale = d3.scaleLinear().domain([2004, 2026]).range([0, width]);
 
     const yScale = d3
         .scalePoint()
@@ -122,7 +122,7 @@ const FullPageChart = () => {
         .padding(0.2);
 
     // Axes
-    const xAxis = d3.axisBottom(xScale).ticks(21).tickFormat(d3.format("d"));
+    const xAxis = d3.axisBottom(xScale).tickFormat(d3.format("d"));
     const yAxis = d3.axisLeft(yScale);
 
     // Draw axes
@@ -293,7 +293,7 @@ const FullPageChart = () => {
             const newEndY = endY - (offset * deltaY) / distance;
 
             // Slight curvature based on index
-            const curveOffset = 20 * (index - Math.floor(doc.links.length / 1.2));
+            const curveOffset = 20 * (index - Math.floor(doc.links.length / 2));
             const controlPointX = (newStartX + newEndX) / 2 + curveOffset;
             const controlPointY = (newStartY + newEndY) / 2 - Math.abs(curveOffset) / 2;
 
