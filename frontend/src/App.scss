@@ -124,6 +124,7 @@ html, body {
 .document-modal {
   width: 70%;
   border-radius: 8px;
+  z-index: 1000;
 }
 
 .modal-header {
@@ -313,7 +314,7 @@ button {
 }
 
 .notification-toast {
-  z-index: 1051; /* Ensure this is higher than the modal's z-index */
+  z-index: 1056;
   position: fixed;
   top: 105px;
   right: 20px;

@@ -105,8 +105,9 @@ const FullPageChart = () => {
 
     // Tooltip container
     const tooltip = d3
-        .select("body")
+        .select(svgRef.current.parentNode)
         .append("div")
+        .attr("class", "tooltip")
         .style("position", "absolute")
         .style("padding", "8px")
         .style("background", "rgba(0, 0, 0, 0.8)")
