@@ -34,6 +34,13 @@ To configure JWT, you need to set the following environment variables in the .en
 - `JWT_EXPIRY`: This is the maximum duration for a user session, specified in milliseconds. For example, to set the
   session duration to 1 hour, you can use the value `3600000`.
 
+### 5. Urban Planner Credentials
+
+The application includes a default user account for the urban planner role. Use the following credentials to log in:
+
+- **Username:** `kiruna_user`
+- **Password:** `kiruna_password`
+
 ## Starting the Application
 
 1. Open a terminal and navigate to the directory containing the `docker-compose.yml` and `.env` files.
