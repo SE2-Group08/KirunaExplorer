@@ -1,0 +1,46 @@
+networks:
+  kiruna-network:
+    driver: bridge
+
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    container_name: kiruna-db
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DB}
+    ports:
+      - "5332:5432"
+    networks:
+      - kiruna-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  backend:
+    image: ghcr.io/nassimmnsr/se2-kiruna-explorer-group08/backend:v0.1.0
+    container_name: kiruna-backend
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kiruna-network
+
+  frontend:
+    image: ghcr.io/nassimmnsr/se2-kiruna-explorer-group08/frontend:v0.1.0
+    container_name: kiruna-frontend
+    ports:
+      - "5173:4173"
+    depends_on:
+      - backend
+    networks:
+      - kiruna-network

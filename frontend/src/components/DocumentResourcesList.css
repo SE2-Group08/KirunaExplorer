@@ -1,0 +1,41 @@
+.document-resource-list {
+    width: 100%;
+    max-width: 800px; /* Optional: limit the width */
+    margin: 0 auto;
+    padding: 0;
+}
+
+.document-resource-list .list-group-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.document-resource-list .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.resource-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #e9ecef;
+}
+
+.resource-name {
+    font-size: 1rem;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resource-actions .hover-btn {
+    font-size: 12px;
+    padding: 4px 6px;
+}

@@ -1,0 +1,22 @@
+// src/styles/custom.scss
+$theme-colors: (
+  "primary": #5B272E,
+  "secondary": #AAA598,
+  "danger": #E62667,
+  "success": #64993C,
+  "dark": #181C14,
+  "white": #FBFAF3,
+  "light": #ACC9CC,
+  "warning": #FBBD6F,
+  "info": #7C615D
+);
+
+@import "node_modules/bootstrap/scss/bootstrap";
+
+.btn-success {
+  color: map-get($theme-colors, "white");
+}
+
+.btn-success:hover {
+  color: map-get($theme-colors, "white" );
+}

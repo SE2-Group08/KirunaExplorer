@@ -1,0 +1,41 @@
+.homepage-hero {
+  height: 55vh;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.homepage-hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.homepage-hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.homepage-hero-title {
+  font-size: 50px;
+  color: white;
+}
+
+.homepage-hero-subtitle {
+  font-size: 25px;
+  color: white;
+}
+
+.homepage-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.homepage-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}

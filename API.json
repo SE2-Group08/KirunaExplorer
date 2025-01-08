@@ -1,0 +1,1650 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Kiruna eXplorer",
+    "description": "REST APIs for the interaction with the Kiruna eXplorer service.",
+    "termsOfService": "http://swagger.io/terms/",
+    "version": "0.5"
+  },
+  "components": {
+    "schemas": {
+      "document": {
+        "title": "Document",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "format": "uri",
+            "description": "path to the JSON schema to use for the validation of the JSON file describing a document"
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the document"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the document",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "stakeholders": {
+            "type": "array",
+            "description": "The stakeholders of the document",
+            "items": {
+              "type": "string",
+              "description": "The name of the stakeholder",
+              "minLength": 2,
+              "maxLength": 64
+            },
+            "minLength": 1
+          },
+          "scale": {
+            "description": "The scale of the document",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "issuanceDate": {
+            "type": "string",
+            "description": "The issuance date of the document in the format YYYY-MM-DD, YYYY-MM, or YYYY",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}$"
+              }
+            ]
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the document",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "nrConnections": {
+            "type": "integer",
+            "description": "The number of connections of the document",
+            "minimum": 0
+          },
+          "language": {
+            "type": "string",
+            "description": "The language of the document",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "nrPages": {
+            "type": "integer",
+            "description": "The number of pages of the document",
+            "minimum": 0
+          },
+          "geolocation": {
+<<<<<<< HEAD
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AreaSnippet"
+              },
+              {
+                "$ref": "#/components/schemas/PointCoordinates"
+=======
+            "description": "The coordinates of the document",
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "description": "The latitude of the document"
+              },
+              "longitude": {
+                "type": "number",
+                "description": "The longitude of the document"
+              },
+              "area": {
+                "type": "string",
+                "description": "The area of the document",
+                "pattern": "Entire municipality",
+                "minLength": 2,
+                "maxLength": 64
+>>>>>>> origin/dev
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the document",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "title",
+          "stakeholders",
+          "scale",
+          "issuanceDate",
+          "type"
+        ]
+      },
+      "documentDiagram": {
+        "title": "documentDiagram",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "format": "uri",
+            "description": "path to the JSON schema to use for the validation of the JSON file describing a document"
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the document"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the document",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "stakeholders": {
+            "type": "array",
+            "description": "The stakeholders of the document",
+            "items": {
+              "type": "string",
+              "description": "The name of the stakeholder",
+              "minLength": 2,
+              "maxLength": 64
+            },
+            "minLength": 1
+          },
+          "scale": {
+            "description": "The scale of the document",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "issuanceDate": {
+            "type": "string",
+            "description": "The issuance date of the document in the format YYYY-MM-DD, YYYY-MM, or YYYY",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}$"
+              }
+            ]
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the document",
+<<<<<<< HEAD
+=======
+            "enum": [
+              "Design document",
+              "Material effect",
+              "Technical document",
+              "Prescriptive document",
+              "Informative document"
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "scale",
+          "issuanceDate",
+          "type"
+        ]
+      },
+      "documentSnippet": {
+        "title": "DocumentSnippet",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "format": "uri",
+            "description": "path to the JSON schema to use for the validation of the JSON file describing a document"
+          },
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the document"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the document",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "stakeholders": {
+            "type": "array",
+            "description": "The stakeholders of the document",
+            "items": {
+              "type": "string",
+              "description": "The name of the stakeholder",
+              "minLength": 2,
+              "maxLength": 64
+            },
+            "minLength": 1
+          },
+          "scale": {
+            "description": "The scale of the document",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "issuanceDate": {
+            "type": "string",
+            "description": "The issuance date of the document in the format YYYY-MM-DD, YYYY-MM, or YYYY",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}$"
+              }
+            ]
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the document",
+>>>>>>> origin/dev
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "geolocation": {
+<<<<<<< HEAD
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AreaSnippet"
+              },
+              {
+                "$ref": "#/components/schemas/PointCoordinates"
+=======
+            "description": "The coordinates of the document",
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "description": "The latitude of the document"
+              },
+              "longitude": {
+                "type": "number",
+                "description": "The longitude of the document"
+              },
+              "area": {
+                "type": "string",
+                "description": "The area of the document",
+                "pattern": "Entire municipality",
+                "minLength": 2,
+                "maxLength": 64
+>>>>>>> origin/dev
+              }
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "scale",
+          "issuanceDate",
+          "type"
+        ]
+      },
+      "listPage": {
+        "title": "ListPage",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "description": "path to the JSON schema to use for the validation of the JSON file describing a document"
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The total number of pages"
+          },
+          "currentPage": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The total number of items in the current page"
+          },
+          "documentSnippets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/documentSnippet"
+            }
+          }
+        },
+        "required": [
+          "totalPages"
+        ]
+      },
+      "link": {
+        "title": "Link",
+        "description": "JSON schema for a link data structure",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of the link",
+            "enum": [
+              "Direct consequence",
+              "Collateral consequence",
+              "Projection",
+              "Update"
+            ]
+          },
+          "linkId": {
+            "type": "integer",
+            "description": "The id link"
+          },
+          "documentId": {
+            "type": "integer",
+            "description": "The id of the document linked"
+          }
+        },
+        "required": [
+          "type",
+          "documentId"
+        ]
+      },
+      "Stakeholder": {
+        "title": "Stakeholder",
+        "description": "JSON schema for a stakeholder data structure",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the stakeholder"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the stakeholder",
+            "minLength": 2,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "Scale": {
+        "title": "Scale",
+        "description": "JSON schema for a scale data structure",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the scale"
+          },
+          "scale": {
+            "type": "string",
+            "description": "The name of the scale",
+            "minLength": 2,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "scale"
+        ]
+      },
+      "DocumentType": {
+        "title": "DocumentType",
+        "description": "JSON schema for a document type data structure",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier of the document type"
+          },
+          "type_name": {
+            "type": "string",
+            "description": "The name of the document type",
+            "minLength": 2,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "File": {
+        "title": "File",
+        "type": "string",
+        "format": "binary",
+        "description": "The binary content of the file"
+      },
+      "FileSnippet": {
+        "title": "FileSnippet",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fileId": {
+            "type": "integer",
+            "description": "The unique identifier of the file"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "The name of the file",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "The size of the file in bytes"
+          }
+        },
+        "required": [
+          "fileId",
+          "fileName"
+        ]
+      },
+      "PointCoordinates": {
+        "title": "PointCoordinates",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pointId": {
+            "type": "integer",
+            "description": "The unique identifier of the point"
+          },
+          "pointName": {
+            "type": "string",
+            "description": "The name of the point",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "latitude": {
+            "type": "number",
+            "description": "The latitude of the point",
+            "minimum": 67.82295,
+            "maximum": 67.88398
+          },
+          "longitude": {
+            "type": "number",
+            "description": "The longitude of the point",
+            "minimum": 20.14402,
+            "maximum": 20.3687
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "AreaSnippet": {
+        "title": "Area",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "areaId": {
+            "type": "integer",
+            "description": "The unique identifier of the area"
+          },
+          "areaName": {
+            "type": "string",
+            "description": "The name of the area",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "areaCentroid": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "description": "The latitude of the area centroid",
+                "minimum": 67.82295,
+                "maximum": 67.88398
+              },
+              "longitude": {
+                "type": "number",
+                "description": "The longitude of the area centroid",
+                "minimum": 20.14402,
+                "maximum": 20.3687
+              }
+            }
+          }
+        },
+        "required": [
+          "areaCentroid",
+          "geometry"
+        ]
+      },
+      "Area": {
+        "title": "Area",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "areaId": {
+            "type": "integer",
+            "description": "The unique identifier of the area"
+          },
+          "areaName": {
+            "type": "string",
+            "description": "The name of the area",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "areaCentroid": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "description": "The latitude of the area centroid",
+                "minimum": 67.82295,
+                "maximum": 67.88398
+              },
+              "longitude": {
+                "type": "number",
+                "description": "The longitude of the area centroid",
+                "minimum": 20.14402,
+                "maximum": 20.3687
+              }
+            }
+          },
+          "geometry": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The type of the geometry",
+                "enum": [
+                  "Polygon",
+                  "MultiPolygon"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "description": "The coordinates of the geometry",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "areaCentroid",
+          "geometry"
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/documents/map": {
+      "get": {
+        "summary": "Get the info for the map",
+        "tags": [
+          "map"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "documentSnippet": {
+                        "$ref": "#/components/schemas/documentSnippet"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/diagram": {
+      "get": {
+        "summary": "Get the info for the diagram",
+        "tags": [
+          "diagram"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "documentSnippet": {
+                        "$ref": "#/components/schemas/documentDiagram"
+                      },
+                      "links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "documentId": {
+                              "type": "integer",
+                              "description": "The linked document id"
+                            },
+                            "linkType": {
+                              "type": "string",
+                              "description": "The type of the link",
+                              "enum": [
+                                "Direct consequence",
+                                "Collateral consequence",
+                                "Projection",
+                                "Update"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents": {
+      "get": {
+        "summary": "Get all documents",
+        "tags": [
+          "document"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pageNo",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The page number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/listPage"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new document",
+        "tags": [
+          "document"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/document"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a document",
+        "tags": [
+          "document"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/document"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}": {
+      "get": {
+        "summary": "Get a document",
+        "tags": [
+          "document"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/document"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a document",
+        "tags": [
+          "document"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/area/{areaName}": {
+      "get": {
+        "summary": "Get all documents in a specific area",
+        "tags": [
+          "document"
+        ],
+        "parameters": [
+          {
+            "name": "areaName",
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/documentSnippet"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/map": {
+      "get": {
+        "summary": "Gett all documents for the map",
+        "tags": [
+          "document"
+        ],
+        "parameters": [
+          {
+            "name": "filter",
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|area-only|point-only|no-geolocation)$"
+            },
+            "in": "query",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/documentSnippet"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/links": {
+      "put": {
+        "summary": "Update a link",
+        "tags": [
+          "link"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/link"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/links/{linkId}": {
+      "delete": {
+        "summary": "Delete the {linkId} link for a document",
+        "tags": [
+          "link"
+        ],
+        "parameters": [
+          {
+            "name": "linkId",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/links": {
+      "parameters": [
+        {
+          "name": "id",
+          "schema": {
+            "type": "integer"
+          },
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get all links of a document",
+        "tags": [
+          "link"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "documentSnippet": {
+                        "$ref": "#/components/schemas/documentSnippet"
+                      },
+                      "links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "linkId": {
+                              "type": "integer",
+                              "description": "The id link"
+                            },
+                            "linkType": {
+                              "type": "string",
+                              "description": "The type of the link",
+                              "enum": [
+                                "Direct consequence",
+                                "Collateral consequence",
+                                "Projection",
+                                "Update"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new link for the {id} document",
+        "tags": [
+          "link"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/link"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/files/{fileId}": {
+      "parameters": [
+        {
+          "name": "fileId",
+          "schema": {
+            "type": "integer"
+          },
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Download the {fileId} file",
+        "tags": [
+          "file"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {}
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete the {fileId} file",
+        "tags": [
+          "file"
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/files": {
+      "parameters": [
+        {
+          "name": "id",
+          "schema": {
+            "type": "integer"
+          },
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get description of all files of a document",
+        "tags": [
+          "file"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FileSnippet"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "summary": "Upload one or more files for the {id} document",
+        "tags": [
+          "file"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/File"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/links/{linkId}": {
+      "delete": {
+        "summary": "Delete the {linkId} link for a document",
+        "tags": [
+          "link"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "linkId",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/stakeholders": {
+      "get": {
+        "summary": "Get all stakeholders",
+        "tags": [
+          "stakeholder"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Stakeholder"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new stakeholder",
+        "tags": [
+          "stakeholder"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Stakeholder"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/scales": {
+      "get": {
+        "summary": "Get all scales",
+        "tags": [
+          "scale"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Scale"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new scale",
+        "tags": [
+          "scale"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Scale"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/document-types": {
+      "get": {
+        "summary": "Get all document types",
+        "tags": [
+          "documentType"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new document type",
+        "tags": [
+          "documentType"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentType"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/areas": {
+      "get": {
+        "summary": "Get all areas",
+        "tags": [
+          "area"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AreaSnippet"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new area",
+        "tags": [
+          "area"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Area"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/areas/{areaId}": {
+      "get": {
+        "summary": "Get the {areaId} area",
+        "tags": [
+          "area"
+        ],
+        "parameters": [
+          {
+            "name": "areaId",
+            "schema": {
+              "type": "integer"
+            },
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Area"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/points": {
+      "get": {
+        "summary": "Get all saved points",
+        "tags": [
+          "point"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PointCoordinates"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new point to be saved",
+        "tags": [
+          "point"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PointCoordinates"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The reason why the request was bad"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  }
+}
