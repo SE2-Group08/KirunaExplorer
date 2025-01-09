@@ -86,7 +86,7 @@ const FullPageChart = () => {
     };
 
     const normalizeScale = (scale) => {
-      if (scale === "Blueprint/Material effects") {
+      if (scale === "Blueprint/Material effects" || scale == "blueprints/effects") {
         return "Blueprints/effects";
       }
       return scale;
@@ -273,44 +273,47 @@ const FullPageChart = () => {
           const linkType = link.linkType;
           // Unique ID for a link
           const linkId = [doc.id, target.id].sort((a, b) => a - b).join("-") + `-${linkType}`;
-
+    
           if (!drawnLinks.has(linkId)) {
             drawnLinks.add(linkId);
-
+    
             const startX = documentPositions[doc.id].x + 15;
             const startY = documentPositions[doc.id].y + 15;
             const endX = documentPositions[target.id].x + 15;
             const endY = documentPositions[target.id].y + 15;
-
+    
             const deltaX = endX - startX;
             const deltaY = endY - startY;
             const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
-
+    
             // Shift the line so it doesn't enter the icon
             const newStartX = startX + (offset * deltaX) / distance;
             const newStartY = startY + (offset * deltaY) / distance;
             const newEndX = endX - (offset * deltaX) / distance;
             const newEndY = endY - (offset * deltaY) / distance;
-
-            // Slight curvature based on index
-            const curveOffset = 20 * (index - Math.floor(doc.links.length / 2));
-            const controlPointX = (newStartX + newEndX) / 2 + curveOffset;
-            const controlPointY = (newStartY + newEndY) / 2 - Math.abs(curveOffset) / 2;
-
+    
+            // Curvature calculation based on index
+            const totalLinks = doc.links.length; // Total links from this document
+            const curveScale = 20; // Scale of curvature
+            const curveOffset = curveScale * (index - (totalLinks - 1) / 2); // Center the curvature
+            const controlPointX = (newStartX + newEndX) / 2 + (deltaY / distance) * curveOffset;
+            const controlPointY = (newStartY + newEndY) / 2 - (deltaX / distance) * curveOffset;
+    
             mainGroup
-                .append("path")
-                .attr(
-                    "d",
-                    `M ${newStartX},${newStartY} Q ${controlPointX},${controlPointY} ${newEndX},${newEndY}`
-                )
-                .attr("fill", "none")
-                .attr("stroke", getLinkColor(linkType))
-                .attr("stroke-width", 2)
-                .attr("stroke-dasharray", getLinkDashArray(linkType));
+              .append("path")
+              .attr(
+                "d",
+                `M ${newStartX},${newStartY} Q ${controlPointX},${controlPointY} ${newEndX},${newEndY}`
+              )
+              .attr("fill", "none")
+              .attr("stroke", getLinkColor(linkType))
+              .attr("stroke-width", 2)
+              .attr("stroke-dasharray", getLinkDashArray(linkType));
           }
         }
       });
     });
+    
 
     // Raise document icons above links
     mainGroup.selectAll(".document-icon").raise();
