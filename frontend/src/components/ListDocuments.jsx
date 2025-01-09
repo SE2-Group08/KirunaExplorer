@@ -309,55 +309,59 @@ export default function ListDocuments({
 
       <Row className="g-2 mx-auto" style={{ width: "100%" }}>
         {content}
-        {totalPages > 1 && (
-          <div style={{ position: "fixed", bottom: 100, width: "100%" }}>
+      </Row>
+
+      {totalPages > 1 && (
+        <Row className="mt-4">
+          <Col>
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
             />
-          </div>
-        )}
-        {/* Modal for viewing a document's description */}
-        {selectedDocument && (
-          <DocumentDescriptionComponent
-            onLinkToClick={handleLinkToClick}
-            show={showDescriptionModal}
-            onHide={() => {
-              setSelectedDocument(null);
-              setShowDescriptionModal(false);
-            }}
-            document={selectedDocument}
-            onSnippetClick={handleSelection}
-            // handleDelete={handleDelete}
-            authToken={authToken}
-          />
-        )}
-        {selectedDocumentToLink && showLinkModal && (
-          <LinkModal
-            showModal={showLinkModal}
-            handleClose={() => {
-              setSelectedDocument(null);
-              setShowLinkModal(false);
-            }}
-            setSelectedLinkDocuments={setSelectedLinkDocuments}
-            selectedLinkDocuments={selectedLinkDocuments}
-            document={selectedDocument}
-            onLinkConfirm={handleLinkConfirm}
-            links={links}
-            selectedDocumentToLink={selectedDocumentToLink}
-            authToken={authToken}
-          />
-        )}
-        {showFormModal && (
-          <DocumentFormComponent
-            document={undefined}
-            show={showFormModal}
-            onHide={() => setShowFormModal(false)}
-            authToken={authToken}
-          />
-        )}
-      </Row>
+          </Col>
+        </Row>
+      )}
+
+      {/* Modal for viewing a document's description */}
+      {selectedDocument && (
+        <DocumentDescriptionComponent
+          onLinkToClick={handleLinkToClick}
+          show={showDescriptionModal}
+          onHide={() => {
+            setSelectedDocument(null);
+            setShowDescriptionModal(false);
+          }}
+          document={selectedDocument}
+          onSnippetClick={handleSelection}
+          // handleDelete={handleDelete}
+          authToken={authToken}
+        />
+      )}
+      {selectedDocumentToLink && showLinkModal && (
+        <LinkModal
+          showModal={showLinkModal}
+          handleClose={() => {
+            setSelectedDocument(null);
+            setShowLinkModal(false);
+          }}
+          setSelectedLinkDocuments={setSelectedLinkDocuments}
+          selectedLinkDocuments={selectedLinkDocuments}
+          document={selectedDocument}
+          onLinkConfirm={handleLinkConfirm}
+          links={links}
+          selectedDocumentToLink={selectedDocumentToLink}
+          authToken={authToken}
+        />
+      )}
+      {showFormModal && (
+        <DocumentFormComponent
+          document={undefined}
+          show={showFormModal}
+          onHide={() => setShowFormModal(false)}
+          authToken={authToken}
+        />
+      )}
     </Container>
   );
 }
