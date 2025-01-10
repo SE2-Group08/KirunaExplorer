@@ -207,7 +207,7 @@ const MapKiruna = () => {
         setFilteredDocuments(filtered);
     };
     return (
-        <div style={{ display: "flex", height: "91vh", position: "relative" }}>
+        <div style={{ display: "flex", height: "88vh", position: "relative" }}>
             <div
                 style={{
                     position: "absolute",

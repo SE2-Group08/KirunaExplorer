@@ -39,3 +39,45 @@
   transform: scale(1.05);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
+
+@media (max-width: 768px) {
+  .homepage-hero {
+    height: auto;
+    padding: 20px 0;
+  }
+
+  .homepage-hero-title {
+    font-size: 30px;
+  }
+
+  .homepage-hero-subtitle {
+    font-size: 18px;
+  }
+
+  .homepage-card {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .homepage-hero {
+    height: auto;
+    padding: 20px 0;
+  }
+
+  .homepage-hero-title {
+    font-size: 24px;
+  }
+
+  .homepage-hero-subtitle {
+    font-size: 16px;
+  }
+
+  .homepage-card {
+    margin-bottom: 20px;
+  }
+}
+
+body, html {
+  overflow-y: auto; 
+}
