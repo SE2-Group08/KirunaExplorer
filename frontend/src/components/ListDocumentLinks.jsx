@@ -62,7 +62,7 @@ const ListDocumentLinks = ({
                         className="ms-2"
                         onClick={() => onSnippetClick(snippet.document)}
                         title="Open document"
-                        style={{ position: "absolute", top: "24px", right: "10px" }}
+                        style={{ position: "absolute", top: "8px", right: "5px" }}
                       >
                         <i className="bi bi-eye"></i>
                       </Button>
