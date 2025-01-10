@@ -6,6 +6,7 @@ import { DocumentDescriptionFields } from "./DocumentDescription.jsx";
 import API from "../API.mjs";
 import "./DocumentOffcanvas.scss";
 import PropTypes from "prop-types";
+import { getIconUrlForDocument } from "../utils/iconMapping";
 
 const DocumentOffcanvas = ({ document, area, onClose }) => {
   const [documents, setDocuments] = useState([]);
@@ -55,9 +56,18 @@ const DocumentOffcanvas = ({ document, area, onClose }) => {
     >
       <Offcanvas.Header closeButton>
         <Offcanvas.Title>
-          {selectedDocument
-            ? selectedDocument.title
-            : `Documents in ${area?.name || "this area"}`}
+          {selectedDocument ? (
+            <>
+              <img
+                src={getIconUrlForDocument(selectedDocument.type, selectedDocument.stakeholders)}
+                alt={`${selectedDocument.type} icon`}
+                style={{ width: "40px", height: "40px", marginRight: "10px" }}
+              />
+              {selectedDocument.title}
+            </>
+          ) : (
+            `Documents in ${area?.name || "this area"}`
+          )}
         </Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
