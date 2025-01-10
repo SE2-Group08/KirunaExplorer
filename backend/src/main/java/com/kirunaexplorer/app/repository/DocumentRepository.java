@@ -23,6 +23,16 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     Page<Document> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     @Query("SELECT d FROM Document d WHERE " +
+            "(:keyword IS NULL OR LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+            "(:type IS NULL OR d.type = :type) AND " +
+            "(:stakeholderNames IS NULL OR EXISTS (SELECT s FROM d.stakeholders s WHERE s.name IN :stakeholderNames)) AND " +
+            "(:scale IS NULL OR d.scale = :scale)")
+    List<Document> searchMap(@Param("keyword") String keyword,
+                             @Param("type") String type,
+                             @Param("stakeholderNames") List<String> stakeholderNames,
+                             @Param("scale") String scale);
+
+    @Query("SELECT d FROM Document d WHERE " +
         "(:keyword IS NULL OR LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
         "(:type IS NULL OR d.type = :type) AND " +
         "(:stakeholderNames IS NULL OR EXISTS (SELECT s FROM d.stakeholders s WHERE s.name IN :stakeholderNames)) AND " +
