@@ -11,7 +11,6 @@ import com.kirunaexplorer.app.exception.ResourceNotFoundException;
 import com.kirunaexplorer.app.model.*;
 import com.kirunaexplorer.app.repository.*;
 import com.kirunaexplorer.app.util.DocumentFieldsChecker;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -142,13 +141,21 @@ public class DocumentService {
         updateGeolocation(documentRequest, geoReference);
     }
 
-    public List<DocumentBriefResponseDTO> searchDocuments(String keyword, String type, List<String> stakeholderNames, String scale, int pageNo) {
+    public List<DocumentBriefResponseDTO> searchMap(String keyword, String type, List<String> stakeholderNames, String scale) {
+        List<Document> documents = documentRepository.searchMap(keyword, type, stakeholderNames, scale);
+        if (documents == null) {
+            return Collections.emptyList();
+        }
+        return documents.stream().map(Document::toDocumentBriefResponseDTO).toList();
+    }
+
+    public List<DocumentBriefPageResponseDTO> searchDocuments(String keyword, String type, List<String> stakeholderNames, String scale, int pageNo) {
         Pageable pageable = PageRequest.of(pageNo, PAGE_SIZE);
         Page<Document> documents = documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable);
         if (documents == null) {
             return Collections.emptyList();
         }
-        return documents.stream().map(Document::toDocumentBriefResponseDTO).toList();
+        return List.of(DocumentBriefPageResponseDTO.from(documents));
     }
 
     /**
