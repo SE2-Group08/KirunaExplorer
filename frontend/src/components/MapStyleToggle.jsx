@@ -1,37 +1,30 @@
 import PropTypes from "prop-types";
-import { Dropdown } from "react-bootstrap";
+import { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./MapUI.css";
 
 const MapStyleToggle = ({ setTileLayer }) => {
+    const [isSatellite, setIsSatellite] = useState(true);
+
+    const toggleMapStyle = () => {
+        if (isSatellite) {
+            setTileLayer("paper");
+        } else {
+            setTileLayer("satellite");
+        }
+        setIsSatellite(!isSatellite);
+    };
+
     return (
         <div className="map-style-toggle">
-            <Dropdown>
-                <Dropdown.Toggle
-                    variant="light"
-                    className="main-button no-caret"
-                    id="map-style-toggle"
-                >
-                    <i className="bi bi-layers"></i>
-                </Dropdown.Toggle>
-
-                <Dropdown.Menu className="dropdown-menu">
-                    <Dropdown.Item
-                        className="dropdown-item"
-                        onClick={() => setTileLayer("paper")}
-                    >
-                        Paper Map
-
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                        className="dropdown-item"
-                        onClick={() => setTileLayer("satellite")}
-                    >
-                        Satellite Map
-                    </Dropdown.Item>
-                </Dropdown.Menu>
-            </Dropdown>
+            <button
+                className={`main-button no-caret ${isSatellite ? "satellite" : "paper"}`}
+                onClick={toggleMapStyle}
+                title={isSatellite ? "Switch to Paper Map" : "Switch to Satellite Map"}
+            >
+                <i className="bi bi-layers"></i>
+            </button>
         </div>
     );
 };

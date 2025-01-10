@@ -87,7 +87,7 @@ function SearchBar({ onSearch, onRealTimeSearch }) {
             scales: scaleFilter,
         };
 
-        onRealTimeSearch(filters);
+        onSearch(filters);
     };
 
     return (

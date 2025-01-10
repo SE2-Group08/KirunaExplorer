@@ -28,6 +28,16 @@
     transform: scale(1.05);
 }
 
+.map-style-toggle .main-button.satellite {
+    background-color: grey;
+    color: white;
+}
+
+.map-style-toggle .main-button.paper {
+    background-color: rgb(66, 155, 22);
+    color: white;
+}
+
 .map-style-toggle .dropdown-menu {
     position: absolute;
     top: calc(100%);
@@ -74,3 +84,11 @@
     left: 10px;
     z-index: 1000;
   }
+
+.document-icon.paper-map {
+    filter: drop-shadow(0 0 10px rgb(255, 255, 255));
+}
+
+.document-icon.satellite-map {
+    filter: drop-shadow(0 0 5px rgb(0, 0, 0));
+}

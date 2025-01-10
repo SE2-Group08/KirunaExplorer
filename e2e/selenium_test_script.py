@@ -83,6 +83,41 @@ def check_card_preview(card, expected_title, expected_scale, expected_date, expe
         return False
 
 try:
+    # Find and click the Login button in the header
+    login_button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'btn-outline-light') and text()='Login']"))
+    )
+    login_button.click()
+    logging.getLogger().success("Clicked Login button in the header")
+    total_operations += 1
+    successful_operations += 1
+
+    # Wait for the login form to appear
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "login-form"))
+    )
+
+    # Enter username and password
+    username_input = driver.find_element(By.ID, "username")
+    password_input = driver.find_element(By.ID, "password")
+    username_input.send_keys("User1")
+    password_input.send_keys("1234")
+    logging.getLogger().success("Entered login credentials")
+    total_operations += 1
+    successful_operations += 1
+
+    # Submit the login form
+    login_button = driver.find_element(By.XPATH, "//button[@type='submit' and contains(@class, 'btn-primary') and text()='Login']")
+    login_button.click()
+    logging.getLogger().success("Submitted login form")
+    total_operations += 1
+    successful_operations += 1
+
+    # Wait for the login to complete and redirect
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//a[@href='/documents' and contains(@class, 'nav-link')]"))
+    )
+
     # Find and click the Documents link
     documents_link = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//a[@href='/documents' and contains(@class, 'nav-link')]"))

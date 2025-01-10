@@ -277,6 +277,7 @@ const MapKiruna = () => {
                             handleDocumentClick={handleDocumentClick}
                             kirunaPolygonRef={kirunaPolygonRef}
                             kirunaBorderCoordinates={kirunaBorderCoordinates}
+                            mapType={tileLayer}
                         />
                         <AreaMarkers areas={areas} handleAreaClick={handleAreaClick} />
                     </MarkerClusterGroup>
@@ -298,7 +299,7 @@ const MapKiruna = () => {
     );
 };
 
-const DocumentMarkers = ({ filteredDocuments, handleDocumentClick }) => {
+const DocumentMarkers = ({ filteredDocuments, handleDocumentClick, mapType }) => {
     return filteredDocuments.map((doc, index) => {
         const position = doc.geolocation.pointCoordinates
             ? [
@@ -321,6 +322,9 @@ const DocumentMarkers = ({ filteredDocuments, handleDocumentClick }) => {
                 .openTooltip();
         };
 
+        const icon = getIconForDocument(doc.type, doc.stakeholders);
+        icon.options.className = `document-icon ${mapType === "paper" ? "paper-map" : "satellite-map"}`;
+
         return (
             <Marker
                 key={index}
@@ -340,6 +344,7 @@ DocumentMarkers.propTypes = {
     handleDocumentClick: PropTypes.func.isRequired,
     kirunaPolygonRef: PropTypes.object.isRequired,
     kirunaBorderCoordinates: PropTypes.array.isRequired,
+    mapType: PropTypes.string.isRequired,
 };
 
 const AreaMarkers = ({ areas, handleAreaClick }) => {

@@ -40,12 +40,20 @@ const iconMapping = {
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun,Residents": new L.Icon({
       iconUrl: consultation_kommun_residents,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
   },
   "Conflict": {
@@ -54,6 +62,10 @@ const iconMapping = {
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
   },
   "Agreement": {
@@ -62,24 +74,40 @@ const iconMapping = {
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "County,Kiruna kommun,LKAB": new L.Icon({
       iconUrl: agreement_County_kommun_LKAB,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun,LKAB": new L.Icon({
       iconUrl: agreement_kommun_LKAB,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun": new L.Icon({
       iconUrl: agreement_kommun,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
   },
   "Prescriptive document": {
@@ -88,24 +116,40 @@ const iconMapping = {
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun,White Arkitekter": new L.Icon({
       iconUrl: prescriptive_kommun_whiteArkitekter,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun": new L.Icon({
       iconUrl: prescriptive_kommun,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Others": new L.Icon({
       iconUrl: prescriptive_others,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
   },
   "Informative document": {
@@ -114,36 +158,60 @@ const iconMapping = {
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "LKAB": new L.Icon({
       iconUrl: informative_LKAB,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun": new L.Icon({
       iconUrl: informative_kommun,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun,Residents": new L.Icon({
       iconUrl: informative_kommun_residents,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun,White Arkitekter": new L.Icon({
       iconUrl: informative_kommun_whiteArkitekter,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Others": new L.Icon({
       iconUrl: informative_others,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
   },
   "Design document": {
@@ -152,36 +220,60 @@ const iconMapping = {
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "White Arkitekter": new L.Icon({
       iconUrl: design_whiteArkitekter,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "LKAB,White Arkitekter": new L.Icon({
       iconUrl: design_LKAB_whiteArkitekter,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun,White Arkitekter": new L.Icon({
       iconUrl: design_kommun_whiteArkitekter,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun": new L.Icon({
       iconUrl: design_kommun,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Others": new L.Icon({
       iconUrl: design_others,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
   },
   "Material effect": {
@@ -190,12 +282,20 @@ const iconMapping = {
       iconSize: [50, 50],
       iconAnchor: [20, 37],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Others": new L.Icon({
       iconUrl: material_others,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
   },
   "Technical document": {
@@ -204,45 +304,73 @@ const iconMapping = {
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "County": new L.Icon({
       iconUrl: technical_County,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "LKAB,White Arkitekter": new L.Icon({
       iconUrl: technical_LKAB_whiteArkitekter,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "LKAB": new L.Icon({
       iconUrl: technical_LKAB,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun": new L.Icon({
       iconUrl: technical_kommun,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
     "Kiruna kommun,White Arkitekter": new L.Icon({
       iconUrl: technical_kommun_whiteArkitekter,
       iconSize: [40, 40],
       iconAnchor: [20, 35],
       popupAnchor: [1, -25],
+      shadowUrl: null,
+      shadowSize: null,
+      shadowAnchor: null,
+      className: 'document-icon'
     }),
   },
 };
 
 const defaultIcon = new L.Icon({
   iconUrl: default_doc,
-  iconSize: [40, 40],
+  iconSize: [30, 35],
   iconAnchor: [20, 35],
   popupAnchor: [1, -25],
+  shadowUrl: null,
+  shadowSize: null,
+  shadowAnchor: null,
+  className: 'document-icon'
 });
 
 const getIconForDocument = (type, stakeholders) => {

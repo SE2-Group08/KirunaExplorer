@@ -147,27 +147,27 @@ export default function ListDocuments({
     stakeholders = [],
     scales = [],
   }) => {
-    const lowerCaseKeyword = keyword.toLowerCase();
+    // const lowerCaseKeyword = keyword.toLowerCase();
 
-    const filtered = allDocuments.filter((doc) => {
-      const matchesKeyword =
-        !keyword || doc.title.toLowerCase().includes(lowerCaseKeyword);
-      const matchesDocumentTypes =
-        documentTypes.length === 0 || documentTypes.includes(doc.type);
-      const matchesStakeholders =
-        stakeholders.length === 0 ||
-        stakeholders.some((id) => doc.stakeholders.includes(id));
-      const matchesScales = scales.length === 0 || scales.includes(doc.scale);
+    // const filtered = allDocuments.filter((doc) => {
+    //   const matchesKeyword =
+    //     !keyword || doc.title.toLowerCase().includes(lowerCaseKeyword);
+    //   const matchesDocumentTypes =
+    //     documentTypes.length === 0 || documentTypes.includes(doc.type);
+    //   const matchesStakeholders =
+    //     stakeholders.length === 0 ||
+    //     stakeholders.some((id) => doc.stakeholders.includes(id));
+    //   const matchesScales = scales.length === 0 || scales.includes(doc.scale);
 
-      return (
-        matchesKeyword &&
-        matchesDocumentTypes &&
-        matchesStakeholders &&
-        matchesScales
-      );
-    });
+    //   return (
+    //     matchesKeyword &&
+    //     matchesDocumentTypes &&
+    //     matchesStakeholders &&
+    //     matchesScales
+    //   );
+    // });
 
-    setFilteredDocuments(filtered);
+    // setFilteredDocuments(filtered);
   };
 
   const handleSearch = async ({
@@ -177,6 +177,7 @@ export default function ListDocuments({
     scales = [],
   }) => {
     try {
+      console.log("search button pressed: " + keyword + " ")
       const params = new URLSearchParams();
       if (keyword) params.append("keyword", keyword);
       if (documentTypes.length > 0)
@@ -186,8 +187,9 @@ export default function ListDocuments({
       if (scales.length > 0) params.append("scale", scales.join(","));
 
       const response = await API.searchDocuments(params.toString());
+      console.log("Rsp: ", response);
       setAllDocuments(response); // Update the master list with backend results
-      setFilteredDocuments(response); // Update the filtered list
+      // setFilteredDocuments(response); // Update the filtered list
     } catch (error) {
       setFeedbackFromError(error);
     }
