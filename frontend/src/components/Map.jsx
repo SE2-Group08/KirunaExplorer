@@ -206,6 +206,12 @@ const MapKiruna = () => {
 
         setFilteredDocuments(filtered);
     };
+
+    const maxBounds = [
+        [66.0, 15.2],
+        [70.5, 25.0],
+    ];
+
     return (
         <div style={{ display: "flex", height: "88vh", position: "relative" }}>
             <div
@@ -258,6 +264,8 @@ const MapKiruna = () => {
                     zoom={zoomLevel}
                     style={{ height: "100%", width: "100%" }}
                     ref={setMapRef}
+                    maxBounds={maxBounds}
+                    minZoom={7}
                 >
                     <TileLayer
                         url={

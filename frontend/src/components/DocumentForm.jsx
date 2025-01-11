@@ -1833,6 +1833,11 @@ function DocumentFormFields({
                                 zoom={10}
                                 style={{height: "100%", width: "100%"}}
                                 key={JSON.stringify(document.area)}
+                                maxBounds={[
+                                    [66.0, 15.2],
+                                    [70.5, 25.0],
+                                ]}
+                                minZoom={5}
                             >
                                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
                                 {locationMode === "point" && markerPosition && (
