@@ -203,7 +203,12 @@ const FullPageChart = () => {
 
           let yPos = yScale("Text") - 15; // default
 
-          if (numericScaleValue) {
+          if (scaleNorm === "Text") {
+            // Posizionamento casuale nell'intero riquadro del campo "Text"
+            const yTextStart = yScale("Text") - yScale.step() / 2;
+            const yTextEnd = yScale(" ") + yScale.step();
+            yPos = yTextStart + Math.random() * (yTextEnd - yTextStart) - 15;
+          } else if (numericScaleValue) {
             if (numericScaleValue <= 1000 && numericScaleValue >= 1) {
               // place between 1:1000 and Blueprints/effects
               const yBlueprints = yScale("Blueprints/effects");
