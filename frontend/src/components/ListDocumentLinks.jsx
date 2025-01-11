@@ -35,7 +35,7 @@ const ListDocumentLinks = ({
         className="btn-close"
         aria-label="Close"
         onClick={onClose}
-        style={{ position: "absolute", top: "20px", right: "10px" }}
+        style={{ position: "absolute", top: "8px", right: "3px" }}
       ></button>
       <div className="snippet-list">
         <Row xs={1} className="g-4" style={{ width: "100%" }}>
@@ -62,7 +62,7 @@ const ListDocumentLinks = ({
                         className="ms-2"
                         onClick={() => onSnippetClick(snippet.document)}
                         title="Open document"
-                        style={{ position: "absolute", top: "8px", right: "5px" }}
+                        style={{ position: "absolute", top: "8px", right: "8px", fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
                       >
                         <i className="bi bi-eye"></i>
                       </Button>
