@@ -206,6 +206,12 @@ const MapKiruna = () => {
 
         setFilteredDocuments(filtered);
     };
+
+    const maxBounds = [
+        [66.0, 10.0],
+        [70.5, 30.0],
+    ];
+
     return (
         <div style={{ display: "flex", height: "87vh", position: "relative" }}>
             <div
@@ -258,6 +264,9 @@ const MapKiruna = () => {
                     zoom={zoomLevel}
                     style={{ height: "100%", width: "100%" }}
                     ref={setMapRef}
+                    maxBounds={maxBounds}
+                    maxBoundsViscosity={1.0}
+                    minZoom={6}
                 >
                     <TileLayer
                         url={
@@ -277,6 +286,7 @@ const MapKiruna = () => {
                             handleDocumentClick={handleDocumentClick}
                             kirunaPolygonRef={kirunaPolygonRef}
                             kirunaBorderCoordinates={kirunaBorderCoordinates}
+                            mapType={tileLayer}
                         />
                         <AreaMarkers areas={areas} handleAreaClick={handleAreaClick} />
                     </MarkerClusterGroup>
@@ -298,7 +308,7 @@ const MapKiruna = () => {
     );
 };
 
-const DocumentMarkers = ({ filteredDocuments, handleDocumentClick }) => {
+const DocumentMarkers = ({ filteredDocuments, handleDocumentClick, mapType }) => {
     return filteredDocuments.map((doc, index) => {
         const position = doc.geolocation.pointCoordinates
             ? [
@@ -321,6 +331,9 @@ const DocumentMarkers = ({ filteredDocuments, handleDocumentClick }) => {
                 .openTooltip();
         };
 
+        const icon = getIconForDocument(doc.type, doc.stakeholders);
+        icon.options.className = `document-icon ${mapType === "paper" ? "paper-map" : "satellite-map"}`;
+
         return (
             <Marker
                 key={index}
@@ -340,6 +353,7 @@ DocumentMarkers.propTypes = {
     handleDocumentClick: PropTypes.func.isRequired,
     kirunaPolygonRef: PropTypes.object.isRequired,
     kirunaBorderCoordinates: PropTypes.array.isRequired,
+    mapType: PropTypes.string.isRequired,
 };
 
 const AreaMarkers = ({ areas, handleAreaClick }) => {

@@ -50,8 +50,9 @@ export default function DocumentDescriptionComponent({
   };
 
   return (
+  <>
     <Modal
-      show={show}
+      show={show && !editDocument}
       onHide={onHide}
       centered
       className="docuemnt-modal"
@@ -106,6 +107,8 @@ export default function DocumentDescriptionComponent({
         document={document}
         authToken={authToken}
       />
+    </Modal>
+    {editDocument && (
       <DocumentFormComponent
         document={document}
         show={editDocument}
@@ -115,7 +118,8 @@ export default function DocumentDescriptionComponent({
         }}
         authToken={authToken}
       />
-    </Modal>
+    )}
+  </>
   );
 }
 

@@ -34,6 +34,7 @@ import getKirunaArea from "./KirunaArea.jsx";
 import {Document} from "../model/Document.mjs";
 import {validateForm} from "../utils/formValidation.js";
 import {allowedLanguages} from "../utils/allowedLanguages.js";
+import { getIconUrlForDocument } from "../utils/iconMapping";
 
 export default function DocumentFormComponent({document, show, onHide, authToken}) {
     const kirunaBorderCoordinates = getKirunaArea();
@@ -506,6 +507,11 @@ export default function DocumentFormComponent({document, show, onHide, authToken
             size="xl"
         >
             <Modal.Header closeButton className="modal-header">
+                <img
+                    src={getIconUrlForDocument(formDocument.type, formDocument.stakeholders)}
+                    alt={`${formDocument.type} icon`}
+                    style={{ width: "40px", height: "40px", marginRight: "10px" }}
+                />
                 <Modal.Title>Enter the values in the following fields</Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -1827,6 +1833,12 @@ function DocumentFormFields({
                                 zoom={10}
                                 style={{height: "100%", width: "100%"}}
                                 key={JSON.stringify(document.area)}
+                                maxBounds={[
+                                    [66.0, 10.0],
+                                    [70.5, 30.0],
+                                ]}
+                                minZoom={5}
+                                maxBoundsViscosity={1.0}
                             >
                                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
                                 {locationMode === "point" && markerPosition && (

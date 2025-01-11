@@ -330,7 +330,10 @@ const searchDocuments = async (keyword) => {
     }
   )
     .then(handleInvalidResponse)
-    .then((response) => response.json())
+    .then((response) => {
+      console.log(response);
+      response.json()
+    })
     .then(mapAPISnippetsToSnippet);
 
   return response;
