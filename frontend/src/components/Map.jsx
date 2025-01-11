@@ -208,8 +208,8 @@ const MapKiruna = () => {
     };
 
     const maxBounds = [
-        [66.0, 15.2],
-        [70.5, 25.0],
+        [66.0, 10.0],
+        [70.5, 30.0],
     ];
 
     return (
@@ -265,7 +265,8 @@ const MapKiruna = () => {
                     style={{ height: "100%", width: "100%" }}
                     ref={setMapRef}
                     maxBounds={maxBounds}
-                    minZoom={7}
+                    maxBoundsViscosity={1.0}
+                    minZoom={6}
                 >
                     <TileLayer
                         url={

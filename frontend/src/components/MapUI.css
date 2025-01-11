@@ -86,7 +86,7 @@
   }
 
 .document-icon.paper-map {
-    filter: drop-shadow(0 0 5px rgb(50, 50, 50)) brightness(1.3);
+    filter: drop-shadow(0 0 5px rgb(7, 12, 37)) brightness(1.3);
 }
 
 .document-icon.satellite-map {
