@@ -122,7 +122,7 @@ const MapKiruna = () => {
                 );
                 highlightArea(areaResponse);
             } else {
-                mapRef.flyTo([position.latitude, position.longitude], 11, {
+                mapRef.flyTo([position.latitude, position.longitude], 14, {
                     duration: 1.5,
                 });
             }
@@ -207,7 +207,7 @@ const MapKiruna = () => {
         setFilteredDocuments(filtered);
     };
     return (
-        <div style={{ display: "flex", height: "91vh", position: "relative" }}>
+        <div style={{ display: "flex", height: "87vh", position: "relative" }}>
             <div
                 style={{
                     position: "absolute",
