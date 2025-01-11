@@ -92,8 +92,16 @@ public class DocumentController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/search-map")
+    public List<DocumentBriefResponseDTO> searchMap(@RequestParam(required = false) String keyword,
+                                                    @RequestParam(required = false) String type,
+                                                    @RequestParam(required = false) List<String> stakeholderNames,
+                                                    @RequestParam(required = false) String scale) {
+        return documentService.searchMap(keyword, type, stakeholderNames, scale);
+    }
+
     @GetMapping("/search")
-    public List<DocumentBriefResponseDTO> searchDocuments(@RequestParam(required = false) String keyword,
+    public List<DocumentBriefPageResponseDTO> searchDocuments(@RequestParam(required = false) String keyword,
                                                           @RequestParam(required = false) String type,
                                                           @RequestParam(required = false) List<String> stakeholderNames,
                                                           @RequestParam(required = false) String scale,

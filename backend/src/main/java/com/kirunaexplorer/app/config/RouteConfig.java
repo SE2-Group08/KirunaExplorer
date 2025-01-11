@@ -46,6 +46,7 @@ public class RouteConfig {
                         // Documents (public GET)
                         .requestMatchers(GET, "/api/v1/documents").permitAll()
                         .requestMatchers(GET, "/api/v1/documents/search").permitAll()
+                        .requestMatchers(GET, "/api/v1/documents/search-map").permitAll()
                         .requestMatchers(GET, "/api/v1/documents/{id}/files").permitAll()
                         .requestMatchers(GET, "/api/v1/documents/area/{areaName}").permitAll()
 

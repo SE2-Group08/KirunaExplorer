@@ -3,7 +3,7 @@ package com.kirunaexplorer.app.service;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.kirunaexplorer.app.dto.response.DocumentBriefResponseDTO;
+import com.kirunaexplorer.app.dto.response.DocumentBriefPageResponseDTO;
 import com.kirunaexplorer.app.model.Document;
 import com.kirunaexplorer.app.model.GeoReference;
 import com.kirunaexplorer.app.model.Stakeholder;
@@ -56,12 +56,12 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("example1", result.get(0).title());
+        assertEquals("example1", result.get(0).documentSnippets().get(0).title());
         verify(documentRepository, times(1)).searchDocuments(keyword, type, stakeholderNames, scale, pageable);
     }
 
@@ -83,12 +83,12 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments(null, null, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(null, null, stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments(null, null, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("doc1", result.get(0).title());
+        assertEquals("doc1", result.get(0).documentSnippets().get(0).title());
         verify(documentRepository, times(1)).searchDocuments(null, null, stakeholderNames, scale, pageable);
     }
 
@@ -111,12 +111,12 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments(keyword, null, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, null, stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments(keyword, null, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("example1", result.get(0).title());
+        assertEquals("example1", result.get(0).documentSnippets().get(0).title());
         verify(documentRepository, times(1)).searchDocuments(keyword, null, stakeholderNames, scale, pageable);
     }
 
@@ -139,12 +139,12 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments(null, type, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(null, type, stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments(null, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("example1", result.get(0).title());
+        assertEquals("example1", result.get(0).documentSnippets().get(0).title());
         verify(documentRepository, times(1)).searchDocuments(null, type, stakeholderNames, scale, pageable);
     }
 
@@ -159,7 +159,7 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments("nonexistent", "txt", stakeholderNames, scale, pageable)).thenReturn(emptyPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments("nonexistent", "txt", stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments("nonexistent", "txt", stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
@@ -180,7 +180,7 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable)).thenReturn(null);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
@@ -208,12 +208,12 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments(keyword, type, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments(keyword, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("doc1", result.get(0).title());
+        assertEquals("doc1", result.get(0).documentSnippets().get(0).title());
         verify(documentRepository, times(1)).searchDocuments(keyword, type, stakeholderNames, scale, pageable);
     }
 
@@ -235,12 +235,12 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments("", "", stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments("", "", stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments("", "", stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("doc1", result.get(0).title());
+        assertEquals("doc1", result.get(0).documentSnippets().get(0).title());
         verify(documentRepository, times(1)).searchDocuments("", "", stakeholderNames, scale, pageable);
     }
 
@@ -264,12 +264,12 @@ class DocumentSearchTest {
         when(documentRepository.searchDocuments(longKeyword, type, stakeholderNames, scale, pageable)).thenReturn(documentPage);
 
         // Execution
-        List<DocumentBriefResponseDTO> result = documentService.searchDocuments(longKeyword, type, stakeholderNames, scale, 0);
+        List<DocumentBriefPageResponseDTO> result = documentService.searchDocuments(longKeyword, type, stakeholderNames, scale, 0);
 
         // Verification
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(longKeyword, result.get(0).title());
+        assertEquals(longKeyword, result.get(0).documentSnippets().get(0).title());
         verify(documentRepository, times(1)).searchDocuments(longKeyword, type, stakeholderNames, scale, pageable);
     }
 }
